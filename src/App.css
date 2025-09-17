@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Playfair+Display:wght@600;800&display=swap');
+#root {
+  /* max-width: 1280px; */
+  margin: 0 auto;
+  text-align: center;
+}
+
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* For medium devices (tablets/laptops) */
+@media (min-width: 601px) and (max-width: 1200px) {
+  body {
+    font-size: 16px;
+  }
+}
+
+/* For large devices (desktops) */
+@media (min-width: 1201px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+.public-speaking {
+  font-family: 'Poppins', sans-serif;
+}
+
+
+
+@import "tailwindcss";

@@ -1,0 +1,25 @@
+{
+  "Concept": "Dictionaries, Functions, Conditionals, Loops, Random",
+  "ProjectTasks": {
+    "Task1": {
+      "1": "Create a dictionary mapping moods to a list of songs and artists",
+      "2": "Optionally create a list of motivational messages",
+      "title": "Prepare Mood Data"
+    },
+    "Task2": {
+      "1": "Write recommend_song(mood) function",
+      "2": "Use random.choice() to pick a song and message based on mood",
+      "3": "Print song name, artist, and a motivational message",
+      "title": "Build Recommendation Function"
+    },
+    "Task3": {
+      "1": "Use while loop to keep asking user for their mood",
+      "2": "Allow exit option to quit the program",
+      "3": "Handle unknown moods with friendly fallback messages",
+      "title": "Handle User Interaction"
+    }
+  },
+  "XP": 350,
+  "description": "Create a Python app that recommends songs based on the user's current mood using dictionaries and randomization.",
+  "title": "Mood-Based Song Recommender"
+}

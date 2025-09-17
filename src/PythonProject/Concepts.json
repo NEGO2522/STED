@@ -1,0 +1,61 @@
+{
+    "category": {
+      "basic": {
+        "0": "Variables",
+        "1": "Data Types",
+        "2": "Input",
+        "3": "Output",
+        "4": "Operators",
+        "5": "If-Else",
+        "6": "Loops",
+        "7": "Break and Continue",
+        "8": "Lists",
+        "9": "Tuples",
+        "10": "Sets",
+        "11": "Dictionaries",
+        "12": "Strings",
+        "13": "Type Casting",
+        "14": "Functions"
+      },
+      "intermediate": {
+        "0": "Function Arguments",
+        "1": "Recursion",
+        "2": "File Handling",
+        "3": "List Comprehension",
+        "4": "Dictionary Comprehension",
+        "5": "Lambda Functions",
+        "6": "map, filter, reduce",
+        "7": "Modules",
+        "8": "Packages",
+        "9": "Import Statements",
+        "10": "Exception Handling",
+        "11": "Set Operations",
+        "12": "String Formatting",
+        "13": "Enumerate and Zip",
+        "14": "Slicing",
+        "15": "Mutable vs Immutable",
+        "16": "Iterators",
+        "17": "Generators",
+        "18": "Scope",
+        "19": "Special Keywords"
+      },
+      "advanced": {
+        "0": "OOP",
+        "1": "Classes and Objects",
+        "2": "Inheritance",
+        "3": "Polymorphism",
+        "4": "Encapsulation",
+        "5": "Constructor",
+        "6": "Static and Class Methods",
+        "7": "Decorators",
+        "8": "Regular Expressions",
+        "9": "JSON Handling",
+        "10": "Multithreading",
+        "11": "Multiprocessing",
+        "12": "File System",
+        "13": "Logging",
+        "14": "APIs"
+      }
+    }
+  }
+  

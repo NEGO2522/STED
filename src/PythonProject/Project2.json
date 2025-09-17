@@ -1,0 +1,221 @@
+{
+  "title": "To-Do List App",
+  "description": "Build a command-line To-Do List application in Python. Users should be able to add tasks, view all tasks, mark tasks as completed, and delete tasks. The app should use a menu system and store tasks in a list.",
+  "expectedCode": "def show_menu():\n    print(\"\\n📝 To-Do List App\")\n    print(\"1. Add Task\")\n    print(\"2. View Tasks\")\n    print(\"3. Mark Task as Completed\")\n    print(\"4. Delete Task\")\n    print(\"5. Exit\")\n\ntasks = []\n\nwhile True:\n    show_menu()\n    choice = input(\"Choose an option (1-5): \")\n\n    if choice == '1':\n        task = input(\"Enter new task: \")\n        tasks.append({\"task\": task, \"completed\": False})\n        print(\"✅ Task added.\")\n    elif choice == '2':\n        print(\"\\nYour Tasks:\")\n        for idx, t in enumerate(tasks, 1):\n            status = \"✔️\" if t[\"completed\"] else \"❌\"\n            print(f\"{idx}. {t['task']} [{status}]\")\n    elif choice == '3':\n        idx = int(input(\"Enter task number to mark as completed: \")) - 1\n        if 0 <= idx < len(tasks):\n            tasks[idx][\"completed\"] = True\n            print(\"✅ Task marked as completed.\")\n        else:\n            print(\"❌ Invalid task number.\")\n    elif choice == '4':\n        idx = int(input(\"Enter task number to delete: \")) - 1\n        if 0 <= idx < len(tasks):\n            tasks.pop(idx)\n            print(\"🗑️ Task deleted.\")\n        else:\n            print(\"❌ Invalid task number.\")\n    elif choice == '5':\n        print(\"👋 Exiting. Have a productive day!\")\n        break\n    else:\n        print(\"❌ Invalid choice. Please try again.\")",
+  "validationRules": {
+    "requiredComponents": [
+      "def show_menu()",
+      "while True:",
+      "tasks = []",
+      "input(",
+      "input_async(",
+      "append(",
+      "pop("
+    ],
+    "requiredLogic": [
+      "if choice == '1'",
+      "elif choice == '2'",
+      "elif choice == '3'",
+      "elif choice == '4'",
+      "elif choice == '5'",
+      "break",
+      "else:",
+      "Invalid choice"
+    ],
+    "requiredFunctionCalls": [
+      "show_menu()",
+      "append(",
+      "pop("
+    ]
+  },
+  "tasks": {
+    "task1": {
+      "title": "Create Menu System",
+      "subtasks": [
+        "Create show_menu() function",
+        "Add print statements for menu options",
+        "Create main while loop",
+        "Call show_menu() in loop",
+        "Get user input with input()"
+      ],
+      "codeChecks": [
+        "def show_menu",
+        "async def show_menu",
+        "print",
+        "To-Do List App",
+        "while True",
+        "input(",
+        "input_async(",
+        "await show_menu"
+      ]
+    },
+    "task2": {
+      "title": "Add Task Feature",
+      "subtasks": [
+        "Prompt user for new task",
+        "Append task to tasks list",
+        "Show confirmation message"
+      ],
+      "codeChecks": [
+        "input(",
+        "input_async(",
+        "append(",
+        "Task added",
+        "✅ Task added",
+        "Task added."
+      ]
+    },
+    "task3": {
+      "title": "View Tasks Feature",
+      "subtasks": [
+        "Display all tasks with status",
+        "Show completed and incomplete status"
+      ],
+      "codeChecks": [
+        "for idx, t in enumerate",
+        "print",
+        "completed",
+        "Your Tasks",
+        "✔️",
+        "❌"
+      ]
+    },
+    "task4": {
+      "title": "Mark Task as Completed",
+      "subtasks": [
+        "Prompt for task number",
+        "Mark selected task as completed",
+        "Show confirmation or error"
+      ],
+      "codeChecks": [
+        "input(",
+        "input_async(",
+        "completed",
+        "Task marked as completed",
+        "✅ Task marked as completed",
+        "Task marked as completed.",
+        "✅ Task marked as completed.",
+        "t[\"completed\"] = True",
+        "Invalid task number",
+        "❌ Invalid task number"
+      ]
+    },
+    "task5": {
+      "title": "Delete Task Feature",
+      "subtasks": [
+        "Prompt for task number",
+        "Delete selected task from list",
+        "Show confirmation or error"
+      ],
+      "codeChecks": [
+        "input(",
+        "input_async(",
+        "pop(",
+        "Task deleted",
+        "🗑️ Task deleted",
+        "Task deleted."
+      ]
+    },
+    "task6": {
+      "title": "Menu Logic Implementation",
+      "subtasks": [
+        "Handle choice == '1' (Add Task)",
+        "Handle choice == '2' (View Tasks)",
+        "Handle choice == '3' (Mark Completed)",
+        "Handle choice == '4' (Delete Task)",
+        "Handle choice == '5' (Exit)",
+        "Handle invalid choices"
+      ],
+      "codeChecks": [
+        "if choice == '1'",
+        "elif choice == '2'",
+        "elif choice == '3'",
+        "elif choice == '4'",
+        "elif choice == '5'",
+        "else:",
+        "Invalid choice",
+        "❌ Invalid choice"
+      ]
+    }
+  },
+  "terminalChecks": {
+    "menuDisplay": {
+      "keywords": [
+        "To-Do List App",
+        "Add Task",
+        "View Tasks",
+        "Mark Task as Completed",
+        "Delete Task",
+        "Exit"
+      ],
+      "successMessage": "✅ Menu is displaying correctly",
+      "failureMessage": "❌ Menu is not displaying"
+    },
+    "inputPrompts": {
+      "keywords": [
+        "Choose an option",
+        "Enter new task",
+        "Enter task number",
+        "option",
+        "task"
+      ],
+      "successMessage": "✅ Input prompts are working",
+      "failureMessage": "❌ No input prompts detected"
+    },
+    "addTask": {
+      "keywords": [
+        "Task added",
+        "✅ Task added"
+      ],
+      "successMessage": "✅ Task addition is working",
+      "failureMessage": "❌ Task addition not tested or not working"
+    },
+    "viewTasks": {
+      "keywords": [
+        "Your Tasks",
+        "✔️",
+        "❌"
+      ],
+      "successMessage": "✅ Task viewing is working",
+      "failureMessage": "❌ Task viewing not tested or not working"
+    },
+    "markCompleted": {
+      "keywords": [
+        "Task marked as completed",
+        "✅ Task marked as completed"
+      ],
+      "successMessage": "✅ Mark as completed is working",
+      "failureMessage": "❌ Mark as completed not tested or not working"
+    },
+    "deleteTask": {
+      "keywords": [
+        "Task deleted",
+        "🗑️ Task deleted"
+      ],
+      "successMessage": "✅ Task deletion is working",
+      "failureMessage": "❌ Task deletion not tested or not working"
+    },
+    "exitFunctionality": {
+      "keywords": [
+        "Exiting. Have a productive day!",
+        "productive day!"
+      ],
+      "successMessage": "✅ Exit functionality is working",
+      "failureMessage": "❌ Exit functionality not tested or not working"
+    }
+  },
+  "aiPrompts": {
+    "welcomeMessage": "Hi! I'm here to help you with your **To-Do List App** project. What would you like help with?",
+    "contextInstructions": "You are a helpful Python programming tutor. The user is working on a To-Do List App project. Give small, chat-like responses (2-3 sentences max). Be encouraging and helpful. Don't provide complete code solutions - give hints and syntax examples instead. Focus on the current incomplete task only.",
+    "fallbackHint": "💡 **Hint**: Try breaking your problem into smaller steps. What is the first thing you need to do?"
+  },
+  "Concept": [
+    "Functions",
+    "Lists",
+    "Dictionaries",
+    "Loops",
+    "Conditionals",
+    "User Input",
+    "Menu Systems"
+  ]
+}

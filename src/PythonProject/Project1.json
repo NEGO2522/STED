@@ -1,0 +1,162 @@
+{
+  "Concept": "Lists, Loops, Functions, Conditionals, Input",
+  "aiPrompts": {
+    "contextInstructions": "You are a helpful Python programming tutor. The user is working on a Personal Finance Tracker project. Give small, chat-like responses (2-3 sentences max). Be encouraging and helpful. Don't provide complete code solutions - give hints and syntax examples instead. Focus on the current incomplete task only.",
+    "fallbackHint": "💡 **Hint**: Take it step by step! Break down your problem into smaller parts. What's the first thing you need to do?",
+    "welcomeMessage": "Hi! I'm here to help you with your **Personal Finance Tracker** project. What would you like help with?"
+  },
+  "description": "Create a menu-driven Personal Finance Tracker application that allows users to add income, add expenses, view summary, and exit the program.",
+  "expectedCode": "def show_menu():\n    print(\"\\n📊 Personal Finance Tracker\")\n    print(\"1. Add Income\")\n    print(\"2. Add Expense\")\n    print(\"3. View Summary\")\n    print(\"4. Exit\")\n\nasync def add_income():\n    amount = float(await input_async(\"Enter income amount: ₹\"))\n    return amount\n\nasync def add_expense():\n    name = await input_async(\"Enter expense name: \")\n    amount = float(await input_async(\"Enter amount: ₹\"))\n    return {\"name\": name, \"amount\": amount}\n\ndef show_summary(incomes, expenses):\n    total_income = sum(incomes)\n    total_expense = sum(item[\"amount\"] for item in expenses)\n    balance = total_income - total_expense\n\n    print(\"\\n💼 Summary\")\n    print(f\"Total Income   : ₹{total_income}\")\n    print(f\"Total Expenses : ₹{total_expense}\")\n    print(f\"Balance        : ₹{balance}\")\n\n    if expenses:\n        print(\"\\n🧾 Expense Breakdown:\")\n        for e in expenses:\n            print(f\"- {e['name']}: ₹{e['amount']}\")\n\nincomes = []\nexpenses = []\n\nwhile True:\n    show_menu()\n    choice = await input_async(\"Choose an option (1-4): \")\n\n    if choice == '1':\n        incomes.append(await add_income())\n        print(\"✅ Income added.\")\n    elif choice == '2':\n        expenses.append(await add_expense())\n        print(\"✅ Expense added.\")\n    elif choice == '3':\n        show_summary(incomes, expenses)\n    elif choice == '4':\n        print(\"👋 Exiting. Have a good day!\")\n        break\n    else:\n        print(\"❌ Invalid choice. Please try again.\")",
+  "id": "project1",
+  "tasks": {
+    "task1": {
+      "subtasks": [
+        "Define show_menu()",
+        "Print: Add Income, Add Expense, View Summary, Exit",
+        "Create while loop to show menu",
+        "Take user input (1-4)",
+        "Handle invalid input"
+      ],
+      "title": "Create Menu System"
+    },
+    "task2": {
+      "subtasks": [
+        "Define add_income()",
+        "Ask income amount using input()",
+        "Convert input to float",
+        "Append amount to incomes list",
+        "Print success message"
+      ],
+      "title": "Add Income Feature"
+    },
+    "task3": {
+      "subtasks": [
+        "Define add_expense()",
+        "Ask expense name & amount",
+        "Store as dictionary",
+        "Append to expenses list",
+        "Print success message"
+      ],
+      "title": "Add Expense Feature"
+    },
+    "task4": {
+      "subtasks": [
+        "Define show_summary()",
+        "Sum incomes and expenses",
+        "Calculate balance",
+        "Print totals: income, expense, balance",
+        "Print breakdown of expenses"
+      ],
+      "title": "Create Summary Function"
+    },
+    "task5": {
+      "subtasks": [
+        "Call add_income() on 1",
+        "Call add_expense() on 2",
+        "Call show_summary() on 3",
+        "Break loop on 4",
+        "Print error for others"
+      ],
+      "title": "Handle Menu Choices"
+    }
+  },
+  "terminalChecks": {
+    "exitFunctionality": {
+      "failureMessage": "❌ Exit functionality not tested or not working",
+      "keywords": [
+        "👋 Exiting. Have a good day!",
+        "Exiting. Have a good day",
+        "Have a good day!"
+      ],
+      "successMessage": "✅ Exit functionality is working"
+    },
+    "expenseAddition": {
+      "failureMessage": "❌ Expense addition not tested or not working",
+      "keywords": [
+        "Expense added",
+        "expense added",
+        "✅ Expense added"
+      ],
+      "successMessage": "✅ Expense addition is working"
+    },
+    "incomeAddition": {
+      "failureMessage": "❌ Income addition not tested or not working",
+      "keywords": [
+        "Income added",
+        "income added",
+        "✅ Income added"
+      ],
+      "successMessage": "✅ Income addition is working"
+    },
+    "inputPrompts": {
+      "failureMessage": "❌ No input prompts detected",
+      "keywords": [
+        "Choose an option",
+        "Enter income amount",
+        "Enter expense name",
+        "Enter amount",
+        "Enter",
+        "option",
+        "amount",
+        "name"
+      ],
+      "successMessage": "✅ Input prompts are working"
+    },
+    "menuDisplay": {
+      "failureMessage": "❌ Menu is not displaying",
+      "keywords": [
+        "Personal Finance Tracker",
+        "Add Income",
+        "Add Expense",
+        "View Summary",
+        "Finance Tracker",
+        "1. Add",
+        "2. Add",
+        "3. View",
+        "4. Exit"
+      ],
+      "successMessage": "✅ Menu is displaying correctly"
+    },
+    "summaryDisplay": {
+      "failureMessage": "❌ Summary display not tested or not working",
+      "keywords": [
+        "💼 Summary",
+        "Total Income   : ₹",
+        "Total Expenses : ₹",
+        "Balance        : ₹",
+        "🧾 Expense Breakdown:"
+      ],
+      "successMessage": "✅ Summary display is working"
+    }
+  },
+  "title": "Personal Finance Tracker",
+  "validationRules": {
+    "requiredComponents": [
+      "def show_menu()",
+      "async def add_income()",
+      "async def add_expense()",
+      "def show_summary(",
+      "while True:",
+      "incomes = []",
+      "expenses = []",
+      "input_async(",
+      "sum(",
+      "input("
+    ],
+    "requiredFunctionCalls": [
+      "show_menu()",
+      "add_income()",
+      "add_expense()",
+      "show_summary("
+    ],
+    "requiredLogic": [
+      "if choice == '1'",
+      "elif choice == '2'",
+      "elif choice == '3'",
+      "elif choice == '4'",
+      "break",
+      "else:",
+      "Invalid choice"
+    ]
+  }
+}
