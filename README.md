@@ -65,7 +65,7 @@ STED is an innovative platform that revolutionizes how individuals and organizat
 
 Join thousands of learners already transforming their skills with STED.
 
-[Sign Up Free](https://app.sted.com/signup) | [Schedule Demo](https://sted.com/demo)
+[Sign Up Free](https://sted-founder.vercel.app/) | [Schedule Demo](https://sted-founder.vercel.app/)
 
 ---
 
