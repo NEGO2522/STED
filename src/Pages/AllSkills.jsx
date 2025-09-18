@@ -198,9 +198,15 @@ function AllSkills() {
             const skill = skillMap[pendingSkill];
             if (!skill) throw new Error('Unknown skill');
             const userRef = ref(db, 'users/' + user.id);
-            const updates = {
-                [`${skill.node}/${skill.currentProjectField}`]: skill.value,
-            };
+            // Build updates safely; do NOT write undefined values to Firebase
+            const updates = {};
+            // If you have an initial project value per skill, set it here. Otherwise, skip setting currentProjectField.
+            // Example: const initialProjectBySkill = { pandas: 'intro', python: 'basics' };
+            // const initialValue = initialProjectBySkill[skill.node];
+            const initialValue = undefined; // No default; avoid writing undefined
+            if (initialValue !== undefined) {
+                updates[`${skill.node}/${skill.currentProjectField}`] = initialValue;
+            }
 
             // Add ProjectStarted field for each skill
             const projectStartedFields = {
