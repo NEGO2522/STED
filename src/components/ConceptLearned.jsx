@@ -680,7 +680,7 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
 
       {/* Overlay for adding concepts */}
       {showOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md">
           <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
             <button
               className="absolute top-2 right-2 text-slate-500 hover:text-slate-800 text-xl"
@@ -1264,7 +1264,7 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
 
       {/* STED Points History Overlay */}
       {showPointsHistoryOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md">
           <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
             <button
               className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"

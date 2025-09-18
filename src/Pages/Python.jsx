@@ -541,30 +541,7 @@ IMPORTANT INSTRUCTIONS:
                 </div>
               </motion.div>
 
-            {/* Concepts Applied Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => {
-                if (window.handleAppliedConceptsClick) {
-                  window.handleAppliedConceptsClick();
-                }
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600">Tasks Completed</p>
-                  <h3 className="text-2xl font-bold text-slate-800 mt-1">
-                    04
-                  </h3>
-                </div>
-                <div className="bg-yellow-50 p-3 rounded-full">
-                  <span className="text-2xl"><img className="w-7" src={AssignmentIcon} alt="" /></span>
-                </div>
-              </div>
-            </motion.div>
+            
 
                         {/* Concepts Learned Card */}
               <motion.div
@@ -580,25 +557,23 @@ IMPORTANT INSTRUCTIONS:
                       {conceptStats.learned} / {conceptStats.total}
                     </h3>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-full">
+                  <div className="bg-yellow-50 p-3 rounded-full">
                     <span className="text-2xl"><img className="w-7" src={Learned} alt="" /></span>
                   </div>
                 </div>
               </motion.div>
 
-
-
             {/* Concepts Applied Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => {
-                if (window.handleAppliedConceptsClick) {
-                  window.handleAppliedConceptsClick();
-                }
-              }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => {
+                  if (window.handleAppliedConceptsClick) {
+                    window.handleAppliedConceptsClick();
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -613,30 +588,6 @@ IMPORTANT INSTRUCTIONS:
                 </div>
               </motion.div>
 
-            {/* Concepts Applied Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => {
-                if (window.handleAppliedConceptsClick) {
-                  window.handleAppliedConceptsClick();
-                }
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-600">Concepts Applied</p>
-                  <h3 className="text-2xl font-bold text-slate-800 mt-1">
-                    {conceptStats.applied} / {conceptStats.learned}
-                  </h3>
-                </div>
-                <div className="bg-yellow-50 p-3 rounded-full">
-                  <span className="text-2xl"><img className="w-7" src={Applied} alt="" /></span>
-                </div>
-              </div>
-            </motion.div>
             </div>
 
           {/* Assignment Section */}
@@ -827,7 +778,7 @@ IMPORTANT INSTRUCTIONS:
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-blur backdrop-blur-md"
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md"
                   onClick={handleCloseProjectOverlay}
                 >
                   <motion.div
@@ -1335,7 +1286,7 @@ IMPORTANT INSTRUCTIONS:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-[2px] drop-shadow-2xl"
+            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md"
             onClick={() => setShowCustomProjectOverlay(false)}
           >
             <motion.div
