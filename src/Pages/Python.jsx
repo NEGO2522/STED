@@ -60,7 +60,21 @@ function Python() {
     const userRef = ref(db, 'users/' + user.id);
     const unsubscribeUser = onValue(userRef, (snapshot) => {
           if (snapshot.exists()) {
-            setUserData(snapshot.val());
+            const userDataFromDb = snapshot.val();
+            // Ensure python object exists with defaults (mirrors Pandas page behavior)
+            if (!userDataFromDb.python) {
+              userDataFromDb.python = {};
+            }
+            if (userDataFromDb.python.PythonProjectStarted === undefined) {
+              update(ref(db, 'users/' + user.id + '/python'), { PythonProjectStarted: false });
+              userDataFromDb.python.PythonProjectStarted = false;
+            }
+            setUserData(userDataFromDb);
+          } else {
+            // Initialize minimal structure if user node doesn't exist
+            const initialUserData = { python: { PythonProjectStarted: false } };
+            update(ref(db, 'users/' + user.id), initialUserData);
+            setUserData(initialUserData);
           }
           setIsLoading(false);
         });
@@ -85,28 +99,30 @@ function Python() {
   }, [user]);
 
   useEffect(() => {
-    if (userData.python && userData.python.PythonCurrentProject) {
-      setProjectLoading(true);
-      setProjectError("");
-      const projectRef = ref(db, `PythonProject/${userData.python.PythonCurrentProject}`);
-      get(projectRef)
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            setProjectData(snapshot.val());
+    const loadProject = async () => {
+      if (userData.python && userData.python.PythonCurrentProject) {
+        setProjectLoading(true);
+        setProjectError("");
+        try {
+          const config = await getProjectConfig(userData.python.PythonCurrentProject);
+          if (config) {
+            setProjectData(config);
           } else {
             setProjectError("Project not found.");
+            setProjectData(null);
           }
-        })
-        .catch((err) => {
-          setProjectError("Failed to fetch project: " + err.message);
-        })
-        .finally(() => {
+        } catch (err) {
+          setProjectError("Failed to fetch project: " + (err?.message || String(err)));
+          setProjectData(null);
+        } finally {
           setProjectLoading(false);
-        });
-    } else {
-      setProjectData(null);
-      setProjectError("");
-    }
+        }
+      } else {
+        setProjectData(null);
+        setProjectError("");
+      }
+    };
+    loadProject();
   }, [userData.python]);
 
   const fetchConceptStats = async () => {
