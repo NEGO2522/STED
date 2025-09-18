@@ -337,11 +337,16 @@ IMPORTANT INSTRUCTIONS:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
+          contents: [{ role: 'user', parts: [{ text: prompt }] }]
         })
       });
 
       const data = await response.json();
+      if (!response.ok) {
+        const msg = data?.error?.message || 'Gemini API request failed';
+        throw new Error(msg);
+      }
+
       const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       
       if (!generatedText) {

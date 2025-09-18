@@ -405,16 +405,21 @@ STRICT RULES:
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
       });
       const data = await response.json();
+      if (!response.ok) {
+        const msg = data?.error?.message || 'Gemini API request failed';
+        throw new Error(msg);
+      }
       let aiText = 'Sorry, I encountered an error. Please try again.';
       if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
         aiText = data.candidates[0].content.parts[0].text;
       }
       setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: aiText, timestamp: new Date() }]);
     } catch (error) {
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date() }]);
+      const errMsg = (error && error.message) ? `Error: ${error.message}` : 'Sorry, I encountered an error. Please try again.';
+      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: errMsg, timestamp: new Date() }]);
     } finally {
       setIsLoading(false);
     }
