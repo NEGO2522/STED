@@ -330,30 +330,42 @@ What would you like help with?`,
     try {
       const context = getAIContext(projectConfig, userCode, inputMessage);
       const { taskTitle, subtasks } = getIncompleteTaskAndSubtasks();
-      // Build conversation history (last 6 messages)
-      const history = messages.slice(-6).map(
+      // Build conversation history (last 4 messages, trimmed)
+      const HISTORY_LIMIT = 4;
+      const TRIM = (txt, max = 800) => {
+        if (!txt) return '';
+        return txt.length > max ? txt.slice(0, max) + '…' : txt;
+      };
+      const history = messages.slice(-HISTORY_LIMIT).map(
         m => `${m.type === 'user' ? 'User' : 'AI'}: ${m.content}`
-      ).join('\n');
-      // Build a list of all tasks and subtasks
+      ).map(t => TRIM(t, 500)).join('\n');
+      // Build a list of tasks and subtasks (cap to 3 tasks x 3 subtasks)
       let allTasksText = '';
       if (projectConfig && (projectConfig.tasks || projectConfig.ProjectTasks)) {
         const tasks = projectConfig.tasks || projectConfig.ProjectTasks;
-        allTasksText = Object.entries(tasks).map(
+        const limited = Object.entries(tasks).slice(0, 3).map(
           ([taskKey, task], idx) => {
-            let subtasks = task.subtasks || [];
-            
-            // Handle ProjectTasks structure where subtasks are individual properties
-            if (subtasks.length === 0 && task.title) {
-              subtasks = Object.entries(task)
+            let subs = task.subtasks || [];
+            if (subs.length === 0 && task.title) {
+              subs = Object.entries(task)
                 .filter(([key]) => key !== 'title')
                 .map(([key, value]) => value);
             }
-            
-            const subtasksList = subtasks.map((s, i) => `    ${i + 1}. ${s}`).join('\n');
-            return `${idx + 1}. ${task.title}${subtasksList ? '\n' + subtasksList : ''}`;
+            const subsList = subs.slice(0, 3).map((s, i) => `    ${i + 1}. ${s}`).join('\n');
+            return `${idx + 1}. ${task.title}${subsList ? '\n' + subsList : ''}`;
           }
-        ).join('\n');
+        );
+        allTasksText = limited.join('\n');
       }
+      // Trim code and terminal output
+      const codeLines = (context.userCode || 'No code written yet').split('\n');
+      const MAX_CODE_LINES = 120;
+      const trimmedCode = codeLines.length > MAX_CODE_LINES
+        ? [...codeLines.slice(0, 80), '…', ...codeLines.slice(-40)].join('\n')
+        : codeLines.join('\n');
+      const term = Array.isArray(terminalOutput) ? terminalOutput : [];
+      const trimmedTerminal = term.slice(-50).join('\n');
+
       const prompt = `You are a helpful Python programming tutor. The user is working on a project called "${context.projectTitle}".
 
 Project Description: ${context.projectDescription}
@@ -363,12 +375,12 @@ ${allTasksText}
 
 User's Current Code:
 \u0060\u0060\u0060python
-${context.userCode || 'No code written yet'}
+${trimmedCode}
 \u0060\u0060\u0060
 
 Latest Terminal Output (including errors, if any):
 \u0060\u0060\u0060
-${(terminalOutput && terminalOutput.length > 0) ? terminalOutput.join('\n') : 'No output yet.'}
+${trimmedTerminal || 'No output yet.'}
 \u0060\u0060\u0060
 
 Conversation so far:
@@ -402,11 +414,20 @@ STRICT RULES:
 - If user asks about a specific function - explain only that function
 - Do NOT add related information they didn't ask for
 - Do NOT explain why something works unless asked`;
+      // Timeout and abort for slow responses
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] })
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 256, temperature: 0.2 }
+        }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await response.json();
       if (!response.ok) {
         const msg = data?.error?.message || 'Gemini API request failed';
