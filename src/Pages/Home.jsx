@@ -13,7 +13,7 @@ import DiscoverStudents from './DiscoverStudents';
 
 function Home() {
   const { user, isLoaded, isSignedIn } = useUser();
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('sted-active-tab') || 'feed');
+  const [activeTab, setActiveTab] = useState('feed');
   const [userData, setUserData] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const navigate = useNavigate();
@@ -25,6 +25,12 @@ function Home() {
   const [powerbiProjects, setPowerbiProjects] = useState([]);
   const [pandasStats, setPandasStats] = useState({ learned: 0, applied: 0, total: 0 });
   const [pandasProjects, setPandasProjects] = useState([]);
+
+  // Always default to Learning Feed on page visit
+  useEffect(() => {
+    setActiveTab('feed');
+    localStorage.setItem('sted-active-tab', 'feed');
+  }, []);
 
   // Calculate SP for each skill
   const pythonSP = pythonProjects.length * 10 + pythonStats.learned * 2 + pythonStats.applied * 5;
@@ -109,60 +115,138 @@ function Home() {
 
       // Fetch Python data
       const fetchPythonData = async () => {
-        const [projectsSnap, conceptsSnap] = await Promise.all([
+        const [projectsSnap, conceptsSnap, learnedSnap] = await Promise.all([
           get(ref(db, `users/${user.id}/python/PythonCompletedProjects`)),
-          get(ref(db, 'PythonProject/AllConcepts/category'))
+          get(ref(db, 'PythonProject/AllConcepts/category')),
+          get(ref(db, `users/${user.id}/python/learnedConcepts`))
         ]);
 
+        // Completed projects
+        let projects = [];
         if (projectsSnap.exists()) {
-          setPythonProjects(Object.values(projectsSnap.val() || {}));
+          projects = Object.values(projectsSnap.val() || {});
+          setPythonProjects(projects);
+        } else {
+          setPythonProjects([]);
         }
 
+        // Total concepts from catalog
+        let total = 0;
         if (conceptsSnap.exists()) {
           const data = conceptsSnap.val();
-          const total = [
+          total = [
             ...Object.values(data.basic || {}),
             ...Object.values(data.intermediate || {}),
             ...Object.values(data.advanced || {}),
           ].length;
-          setPythonStats(prev => ({ ...prev, total }));
         }
+
+        // Learned concepts
+        let learnedConcepts = [];
+        if (learnedSnap.exists()) {
+          const val = learnedSnap.val() || [];
+          learnedConcepts = Array.isArray(val) ? val : Object.values(val);
+        }
+        const learned = learnedConcepts.length;
+
+        // Applied concepts: learned concepts that appear in any completed project.conceptUsed
+        const conceptsUsedInProjects = new Set();
+        projects.forEach(project => {
+          if (project.conceptUsed) {
+            project.conceptUsed.split(', ').map(c => c.trim()).forEach(c => { if (c) conceptsUsedInProjects.add(c); });
+          }
+        });
+        const applied = learnedConcepts.filter(c => conceptsUsedInProjects.has(c.concept || c)).length;
+
+        setPythonStats({ learned, applied, total });
       };
 
       // Fetch PowerBI data
       const fetchPowerBIData = async () => {
-        const [projectsSnap, conceptsSnap] = await Promise.all([
+        const [projectsSnap, conceptsSnap, learnedSnap] = await Promise.all([
           get(ref(db, `users/${user.id}/powerbi/PowerBiCompletedProjects`)),
-          get(ref(db, 'PowerBiProject/AllConcepts/category'))
+          get(ref(db, 'PowerBiProject/AllConcepts/category')),
+          get(ref(db, `users/${user.id}/powerbi/learnedConcepts`))
         ]);
 
+        // Completed projects
+        let projects = [];
         if (projectsSnap.exists()) {
-          setPowerbiProjects(Object.values(projectsSnap.val() || {}));
+          projects = Object.values(projectsSnap.val() || {});
+          setPowerbiProjects(projects);
+        } else {
+          setPowerbiProjects([]);
         }
 
+        // Total concepts
+        let total = 0;
         if (conceptsSnap.exists()) {
           const data = conceptsSnap.val();
-          const total = Object.values(data).reduce((acc, arr) => acc + Object.values(arr || {}).length, 0);
-          setPowerbiStats(prev => ({ ...prev, total }));
+          total = Object.values(data).reduce((acc, arr) => acc + Object.values(arr || {}).length, 0);
         }
+
+        // Learned concepts
+        let learnedConcepts = [];
+        if (learnedSnap.exists()) {
+          const val = learnedSnap.val() || [];
+          learnedConcepts = Array.isArray(val) ? val : Object.values(val);
+        }
+        const learned = learnedConcepts.length;
+
+        // Applied concepts
+        const conceptsUsedInProjects = new Set();
+        projects.forEach(project => {
+          if (project.conceptUsed) {
+            project.conceptUsed.split(', ').map(c => c.trim()).forEach(c => { if (c) conceptsUsedInProjects.add(c); });
+          }
+        });
+        const applied = learnedConcepts.filter(c => conceptsUsedInProjects.has(c.concept || c)).length;
+
+        setPowerbiStats({ learned, applied, total });
       };
 
       // Fetch Pandas data
       const fetchPandasData = async () => {
-        const [projectsSnap, conceptsSnap] = await Promise.all([
+        const [projectsSnap, conceptsSnap, learnedSnap] = await Promise.all([
           get(ref(db, `users/${user.id}/pandas/PandasCompletedProjects`)),
-          get(ref(db, 'PandasProject/AllConcepts/category'))
+          get(ref(db, 'PandasProject/AllConcepts/category')),
+          get(ref(db, `users/${user.id}/pandas/learnedConcepts`))
         ]);
 
+        // Completed projects
+        let projects = [];
         if (projectsSnap.exists()) {
-          setPandasProjects(Object.values(projectsSnap.val() || {}));
+          projects = Object.values(projectsSnap.val() || {});
+          setPandasProjects(projects);
+        } else {
+          setPandasProjects([]);
         }
 
+        // Total concepts
+        let total = 0;
         if (conceptsSnap.exists()) {
           const data = conceptsSnap.val();
-          const total = Object.values(data).reduce((acc, arr) => acc + Object.values(arr || {}).length, 0);
-          setPandasStats(prev => ({ ...prev, total }));
+          total = Object.values(data).reduce((acc, arr) => acc + Object.values(arr || {}).length, 0);
         }
+
+        // Learned concepts
+        let learnedConcepts = [];
+        if (learnedSnap.exists()) {
+          const val = learnedSnap.val() || [];
+          learnedConcepts = Array.isArray(val) ? val : Object.values(val);
+        }
+        const learned = learnedConcepts.length;
+
+        // Applied concepts
+        const conceptsUsedInProjects = new Set();
+        projects.forEach(project => {
+          if (project.conceptUsed) {
+            project.conceptUsed.split(', ').map(c => c.trim()).forEach(c => { if (c) conceptsUsedInProjects.add(c); });
+          }
+        });
+        const applied = learnedConcepts.filter(c => conceptsUsedInProjects.has(c.concept || c)).length;
+
+        setPandasStats({ learned, applied, total });
       };
 
       fetchPythonData();
@@ -194,28 +278,30 @@ function Home() {
     if (isCompact) {
       const progress = total > 0 ? Math.round((learned / total) * 100) : 0;
       return (
-        <div key={key} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:border-indigo-100 transition-colors">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-              {key === 'python' && <img src={python} alt="Python" className="w-6 h-6" />}
-              {key === 'powerbi' && <img src={PowerBi} alt="Power BI" className="w-6 h-6" />}
-              {key === 'pandas' && <span className="text-indigo-600 font-bold">PD</span>}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{skillName}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">{learned}/{total} concepts</span>
-                <span className="text-xs font-medium text-indigo-600">{progress}%</span>
+        <Link to={skillData.route} key={key} className="block">
+          <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:border-indigo-100 transition-colors hover:shadow">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                {key === 'python' && <img src={python} alt="Python" className="w-6 h-6" />}
+                {key === 'powerbi' && <img src={PowerBi} alt="Power BI" className="w-6 h-6" />}
+                {key === 'pandas' && <span className="text-indigo-600 font-bold">PD</span>}
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
-                <div 
-                  className="bg-indigo-600 h-1.5 rounded-full" 
-                  style={{ width: `${progress}%` }}
-                ></div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{skillName}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{learned}/{total} concepts</span>
+                  <span className="text-xs font-medium text-indigo-600">{progress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                  <div 
+                    className="bg-indigo-600 h-1.5 rounded-full" 
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </Link>
       );
     }
 
