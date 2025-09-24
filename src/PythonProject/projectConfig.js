@@ -191,32 +191,37 @@ export const checkTasksAndSubtasks = (userCode, config) => {
   return tasks;
 };
 
-export const checkTasksAndSubtasksGemini = async (userCode, config) => {
+export const checkTasksAndSubtasksOpenAI = async (userCode, config) => {
   if (!config || !config.tasks) return {};
   const tasks = {};
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  const model = 'gemini-1.5-flash';
 
   for (const [taskKey, task] of Object.entries(config.tasks)) {
     const subtasks = task.subtasks || [];
     const completed = [];
     const reasons = {};
     for (const subtask of subtasks) {
-      // More forgiving yes/no prompt
       const prompt = `Project: ${config.title}\nDescription: ${config.description}\n\nUser's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIs this subtask completed in the user's code? Respond only with true or false. Consider the subtask complete if the main functionality is present, even if minor improvements (like error handling) are missing.`;
       let isComplete = false;
       let answer = '';
       try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0,
+            max_tokens: 10
+          })
         });
         const data = await response.json();
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-          answer = data.candidates[0].content.parts[0].text.trim().toLowerCase();
+        if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+          answer = data.choices[0].message.content.trim().toLowerCase();
         }
-        if (answer === 'true') {
+        if (answer.startsWith('true')) {
           completed.push(subtask);
           isComplete = true;
         }
@@ -227,20 +232,27 @@ export const checkTasksAndSubtasksGemini = async (userCode, config) => {
       const reasonPrompt = `Project: ${config.title}\nDescription: ${config.description}\n\nUser's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIf this subtask is not completed, explain why in one sentence. If it is completed, explain why it is considered complete.`;
       let reason = '';
       try {
-        const reasonResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        const reasonResponse = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: reasonPrompt }] }] })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: reasonPrompt }],
+            temperature: 0.2,
+            max_tokens: 128
+          })
         });
         const reasonData = await reasonResponse.json();
-        if (reasonData.candidates && reasonData.candidates[0] && reasonData.candidates[0].content && reasonData.candidates[0].content.parts) {
-          reason = reasonData.candidates[0].content.parts[0].text.trim();
+        if (reasonData.choices && reasonData.choices[0] && reasonData.choices[0].message && reasonData.choices[0].message.content) {
+          reason = reasonData.choices[0].message.content.trim();
         }
         reasons[subtask] = reason;
       } catch (e) {
         reasons[subtask] = '';
       }
-      // If explanation says subtask is complete, mark as complete
       if (!isComplete && reason && /subtask (is|has been)? ?complete|main functionality is present|core functionality is present|the code fulfills|the code implements|the code achieves/i.test(reason)) {
         completed.push(subtask);
       }

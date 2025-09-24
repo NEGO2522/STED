@@ -28,7 +28,7 @@ function Navbar() {
       {/* Logo */}
       <div className="flex-shrink-0">
         <Link to="/home" className="text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors tracking-tight">
-          STED-LS
+          STED
         </Link>
       </div>
 

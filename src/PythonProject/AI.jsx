@@ -418,24 +418,29 @@ STRICT RULES:
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`, {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+        },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 256, temperature: 0.2 }
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 256
         }),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
       const data = await response.json();
       if (!response.ok) {
-        const msg = data?.error?.message || 'Gemini API request failed';
+        const msg = data?.error?.message || 'OpenAI API request failed';
         throw new Error(msg);
       }
       let aiText = 'Sorry, I encountered an error. Please try again.';
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-        aiText = data.candidates[0].content.parts[0].text;
+      if (data.choices && data.choices[0] && data.choices[0].message && typeof data.choices[0].message.content === 'string') {
+        aiText = data.choices[0].message.content;
       }
       setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: aiText, timestamp: new Date() }]);
     } catch (error) {

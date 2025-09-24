@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { ref, get, onValue, off } from 'firebase/database';
 import { db } from '../firebase';
-import { getProjectConfig, checkTasksAndSubtasks, checkTasksAndSubtasksGemini } from './projectConfig';
+import { getProjectConfig, checkTasksAndSubtasks } from './projectConfig';
 import { FaChevronDown } from 'react-icons/fa';
 import { FaQuestionCircle } from 'react-icons/fa';
 import cross from '../assets/cross.png';
@@ -194,31 +194,45 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
         let isSubtaskComplete = false;
         let reason = '';
         try {
-          const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-          const model = 'gemini-1.5-flash';
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0,
+              max_tokens: 10
+            })
           });
           const data = await response.json();
           let answer = '';
-          if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-            answer = data.candidates[0].content.parts[0].text.trim().toLowerCase();
+          if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+            answer = data.choices[0].message.content.trim().toLowerCase();
           }
           const normalized = answer.replace(/[^a-z]/g, '');
           if (normalized.startsWith('true')) isSubtaskComplete = true;
           else if (normalized.startsWith('false')) isSubtaskComplete = false;
           // Now get the reason/explanation
           const reasonPrompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIf this subtask is not completed, explain why in one sentence. If it is completed, explain why it is considered complete.\nIMPORTANT: Ignore whether other subtasks are complete or not. Only check if THIS subtask is implemented, regardless of the rest of the code.\nIMPORTANT: Only consider the subtask statement itself. Make your decision strictly according to the subtask statement. Do not overthink or infer extra requirements.`;
-          const reasonResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          const reasonResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: reasonPrompt }] }] })
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content: reasonPrompt }],
+              temperature: 0.2,
+              max_tokens: 128
+            })
           });
           const reasonData = await reasonResponse.json();
-          if (reasonData.candidates && reasonData.candidates[0] && reasonData.candidates[0].content && reasonData.candidates[0].content.parts) {
-            reason = reasonData.candidates[0].content.parts[0].text.trim();
+          if (reasonData.choices && reasonData.choices[0] && reasonData.choices[0].message && reasonData.choices[0].message.content) {
+            reason = reasonData.choices[0].message.content.trim();
           }
         } catch (e) {
           // On error, treat as not complete and no reason
