@@ -29,7 +29,7 @@ function extractImports(code) {
   
   return [...new Set(imports)]; // Remove duplicates
 }
-
+ 
 export async function runPythonCode({ code, onOutput, onInput, isPreview, onComplete }) {
   if (isPreview) {
     onOutput && onOutput(['⚠️ Preview mode - code execution not available']);
