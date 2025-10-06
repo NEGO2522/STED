@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { debounce } from 'lodash';
 import Editor from '@monaco-editor/react';
 import { runPythonCode } from './pythonRunner';
 
@@ -10,8 +11,27 @@ def main():
 
 main()`;
 
-function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnly, hideTerminal }) {
-  const [code, setCode] = useState(defaultCode);
+// Generate a unique key for localStorage based on the component's props
+const getStorageKey = (id = 'default') => `saved_code_${id}`;
+
+function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnly, hideTerminal, editorId = 'default' }) {
+  const storageKey = getStorageKey(editorId);
+  // Use a ref to store the current code value to avoid dependency issues
+  const codeRef = useRef('');
+  
+  const [code, setCode] = useState(() => {
+    // Load saved code from localStorage on initial render
+    try {
+      const savedCode = localStorage.getItem(storageKey);
+      const initialCode = savedCode !== null ? savedCode : defaultCode;
+      codeRef.current = initialCode;
+      return initialCode;
+    } catch (error) {
+      console.error('Failed to load code from localStorage:', error);
+      codeRef.current = defaultCode;
+      return defaultCode;
+    }
+  });
   const [outputLines, setOutputLines] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -23,20 +43,50 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   const outputBuffer = useRef([]);
   const outputTimeout = useRef(null);
   
-  // Clear any pending timeouts when component unmounts
+  // Clear any pending timeouts and save code when component unmounts
   useEffect(() => {
     return () => {
       if (outputTimeout.current) {
         clearTimeout(outputTimeout.current);
       }
+      // Save code one last time when unmounting, unless project ended
+      if (localStorage.getItem('projectEnded') !== 'true') {
+        try {
+          localStorage.setItem(storageKey, code);
+        } catch (error) {
+          console.error('Failed to save code to localStorage on unmount:', error);
+        }
+      }
     };
-  }, []);
+  }, [code, storageKey]);
 
-  useEffect(() => {
+  // Debounced save to localStorage
+  const saveToStorage = useCallback(
+    debounce((codeToSave) => {
+      if (localStorage.getItem('projectEnded') !== 'true') {
+        try {
+          localStorage.setItem(storageKey, codeToSave);
+        } catch (error) {
+          console.error('Failed to save code to localStorage:', error);
+        }
+      }
+    }, 500), // 500ms debounce delay
+    [storageKey]
+  );
+
+  const handleEditorChange = (newValue) => {
+    const newCode = newValue || '';
+    setCode(newCode);
+    codeRef.current = newCode; // Update the ref
+    
+    // Debounced save to localStorage
+    saveToStorage(newCode);
+    
+    // Notify parent component immediately
     if (onCodeChange) {
-      onCodeChange(code);
+      onCodeChange(newCode);
     }
-  }, [code, onCodeChange]);
+  };
 
   useEffect(() => {
     if (onOutputChange) {
@@ -128,7 +178,7 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
           language="python"
           theme="vs-dark"
           value={value !== undefined ? value : code}
-          onChange={readOnly ? undefined : (val) => setCode(val || '')}
+          onChange={readOnly ? undefined : handleEditorChange}
           options={{
             readOnly: !!readOnly,
             minimap: { enabled: false },

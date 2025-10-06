@@ -18,6 +18,10 @@ import {
 import { runPythonCode } from './pythonRunner';
 
 function Project() {
+  // Clear projectEnded flag when entering the project
+  useEffect(() => {
+    localStorage.removeItem('projectEnded');
+  }, []);
   const [rightPanel, setRightPanel] = useState('statement');
   const [isExplaining, setIsExplaining] = useState(false);
   const [showEndProjectOverlay, setShowEndProjectOverlay] = useState(false);
@@ -83,6 +87,15 @@ function Project() {
 
   const handleEndProject = async () => {
   try {
+    // Remove all saved_code_* keys from localStorage
+    console.log('Before removal:', Object.keys(localStorage).filter(key => key.startsWith('saved_code_')));
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('saved_code_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    localStorage.setItem('projectEnded', 'true');
+    console.log('After removal:', Object.keys(localStorage).filter(key => key.startsWith('saved_code_')));
     if (user) {
       const userRef = ref(db, 'users/' + user.id);
       // Only update PythonProjectStarted, leave PythonCurrentProject as is
