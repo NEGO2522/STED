@@ -254,7 +254,7 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete
                   onOutput && onOutput(errorLines.map(line => `❌ ${line}`));
                 }
                 break;
-                
+                 
               case 'input_request':
                 console.log('[DEBUG] Input requested:', data.prompt);
                 if (onInput) {
