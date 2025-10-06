@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { runPythonCode } from './pythonRunner';
 
@@ -18,6 +18,19 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   const [waitingInput, setWaitingInput] = useState(false);
   const [promptText, setPromptText] = useState('');
   const inputResolver = useRef(null);
+  
+  // Buffer for batching output updates
+  const outputBuffer = useRef([]);
+  const outputTimeout = useRef(null);
+  
+  // Clear any pending timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      if (outputTimeout.current) {
+        clearTimeout(outputTimeout.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (onCodeChange) {
@@ -31,9 +44,28 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
     }
   }, [outputLines, onOutputChange]);
 
-  const appendOutput = (lines) => {
-    setOutputLines(prev => [...prev, ...lines]);
-  };
+  const appendOutput = useCallback((lines) => {
+    // Add new lines to buffer
+    outputBuffer.current = [...outputBuffer.current, ...lines];
+    
+    // Clear any pending updates
+    if (outputTimeout.current) {
+      clearTimeout(outputTimeout.current);
+    }
+    
+    // Batch updates to reduce re-renders
+    outputTimeout.current = setTimeout(() => {
+      setOutputLines(prev => {
+        // If the first line is our loading message, replace it
+        if (prev.length === 1 && prev[0] === '⏳ Running your code...') {
+          return [...outputBuffer.current];
+        }
+        return [...prev, ...outputBuffer.current];
+      });
+      outputBuffer.current = [];
+      outputTimeout.current = null;
+    }, 30); // Small delay to batch rapid updates
+  }, []);
 
   const handleInput = (prompt, resolve) => {
     setPromptText(prompt);
@@ -52,16 +84,24 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
     }
   };
 
-  const runPython = async () => {
-    if (isRunning) return;
-    
-    setIsRunning(true);
-    setOutputLines([]);
-    setWaitingInput(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  const runPython = async () => {
+    // Clear any pending output updates
+    if (outputTimeout.current) {
+      clearTimeout(outputTimeout.current);
+      outputTimeout.current = null;
+    }
+    outputBuffer.current = [];
+    
+    // Clear previous output and input state
+    setOutputLines(['⏳ Running your code...']);
+    setWaitingInput(false);
+    
     try {
       const codeToRun = value !== undefined ? value : code;
       
+      // Run the Python code
       await runPythonCode({
         code: codeToRun,
         onOutput: appendOutput,
@@ -69,9 +109,14 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
         isPreview: false
       });
     } catch (err) {
-      appendOutput([`❌ Error: ${err.message}`]);
-    } finally {
-      setIsRunning(false);
+      // Use setTimeout to ensure state updates are batched
+      setTimeout(() => {
+        setOutputLines(prev => 
+          prev[0] === '⏳ Running your code...' 
+            ? [`❌ Error: ${err.message}`] 
+            : [...prev, `❌ Error: ${err.message}`]
+        );
+      }, 0);
     }
   };
 
@@ -102,18 +147,17 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: '#1e1e1e', borderTop: '1px solid #555' }}>
             <button
               onClick={runPython}
-              disabled={isRunning}
               style={{
-                background: isRunning ? '#555' : '#007acc',
+                background: '#007acc',
                 color: 'white',
                 padding: '8px 16px',
                 border: 'none',
-                cursor: isRunning ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 borderRadius: '5px',
-                opacity: isRunning ? 0.6 : 1
+                opacity: 1
               }}
             >
-              {isRunning ? 'Running...' : 'Run'}
+              Run
             </button>
             {onStuckClick && (
               <button

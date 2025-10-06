@@ -270,17 +270,21 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         {
           id: 1,
           type: 'ai',
-          content: `## Welcome! 
+          content: `## 👋 Welcome to Your Python Journey!
 
-Hi! I'm here to help you with your **${projectConfig.title}** project. 
+Hi there! I'm Codey, your friendly AI coding mentor. I see you're working on **${projectConfig.title}** - that sounds exciting! 🚀
 
-Here's what I can help you with:
-- Debug your code
-- Explain error messages  
-- Guide you through tasks
-- Answer Python questions
+I'm here to help you:
+- **Understand** programming concepts
+- **Debug** your code when things go wrong
+- **Learn** by doing, not just copying
+- **Grow** your problem-solving skills
 
-What would you like help with?`,
+What would you like to tackle first? You can ask me anything about:
+- Your current project
+- Python concepts
+- Error messages
+- Or anything else on your mind!`,
           timestamp: new Date()
         }
       ]);
@@ -366,7 +370,7 @@ What would you like help with?`,
       const term = Array.isArray(terminalOutput) ? terminalOutput : [];
       const trimmedTerminal = term.slice(-50).join('\n');
 
-      const prompt = `You are a helpful Python programming tutor. The user is working on a project called "${context.projectTitle}".
+      const prompt = `You are Codey, a friendly and supportive Python programming mentor. The user is working on a project called "${context.projectTitle}".
 
 Project Description: ${context.projectDescription}
 
@@ -389,8 +393,8 @@ ${history}
 User's latest question: ${inputMessage}
 
 IMPORTANT INSTRUCTIONS:
-- Answer ONLY what the user specifically asked
-- Keep responses extremely short and direct
+- Be helpful and provide clear, supportive guidance. Answer their question while being encouraging and educational.
+- Be concise but thorough in your explanations, breaking down complex concepts into simple steps
 - Do NOT provide extra information or context unless asked
 - Do NOT give encouragement or generic advice
 - Do NOT suggest next steps unless specifically asked
@@ -453,38 +457,63 @@ STRICT RULES:
 
   const analyzeUserCode = (code) => {
     if (!code || code.trim() === '') {
-      return "You haven't written any code yet. Start by creating the basic structure!";
+      return "I see you're just getting started! 🎯 Every great program begins with a single line of code. What would you like to create first?";
     }
 
     const analysis = [];
+    let score = 0;
+    const totalChecks = 6;
     
     if (code.includes('def ')) {
-      analysis.push("✅ You have functions defined");
+      analysis.push("✨ Great job using functions! Breaking code into functions makes it more organized and reusable.");
+      score++;
     } else {
-      analysis.push("⚠️ No functions found - you'll need to create functions for this project");
+      analysis.push("💡 Tip: Consider using functions to organize your code better. They make your code more readable and reusable!");
     }
     
     if (code.includes('input(')) {
-      analysis.push("✅ You're getting user input");
+      analysis.push("👏 Nice work making your program interactive with user input! This makes your code much more dynamic.");
+      score++;
+    } else {
+      analysis.push("🤔 Have you thought about adding user input? It can make your program more interactive!");
     }
     
     if (code.includes('while ') || code.includes('for ')) {
-      analysis.push("✅ You have loops in your code");
+      analysis.push("🔄 Excellent use of loops! They help automate repetitive tasks efficiently.");
+      score++;
+    } else if (code.length > 100) {
+      analysis.push("💭 I notice some repetition in your code. A loop might help make it cleaner and more efficient!");
     }
     
     if (code.includes('[') && code.includes(']')) {
-      analysis.push("✅ You're using lists");
+      analysis.push("📋 Good use of lists! They're perfect for storing collections of items.");
+      score++;
     }
     
     if (code.includes('{') && code.includes('}')) {
-      analysis.push("✅ You're using dictionaries");
+      analysis.push("📚 Nice work with dictionaries! They're great for storing key-value pairs.");
+      score++;
     }
     
     if (code.includes('if ') || code.includes('elif ') || code.includes('else:')) {
-      analysis.push("✅ You have conditional statements");
+      analysis.push("🎯 Great use of conditionals! They help your program make decisions.");
+      score++;
+    }
+
+    const progress = Math.round((score / totalChecks) * 100);
+    
+    if (score === totalChecks) {
+      analysis.unshift(`## 🎉 Amazing Progress! (${progress}% of key concepts used)`);
+      analysis.push("\nYou're doing fantastic! Your code shows you understand many important programming concepts. What would you like to learn more about?");
+    } else if (score >= totalChecks / 2) {
+      analysis.unshift(`## 👍 Good Work! (${progress}% of key concepts used)`);
+      analysis.push(`\nYou're making great progress! Keep experimenting with different programming concepts. What would you like to try next?`);
+    } else {
+      analysis.unshift(`## 🌱 Getting Started (${progress}% of key concepts used)`);
+      analysis.push(`\nYou're on the right track! Programming is a journey, and everyone starts somewhere. What would you like to work on?`);
     }
     
-    return analysis.length > 0 ? analysis.join('\n') : "Your code looks good! Keep going!";
+    return analysis.join('\n\n');
   };
 
   const handleKeyPress = (e) => {

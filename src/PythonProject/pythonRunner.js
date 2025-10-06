@@ -30,7 +30,7 @@ function extractImports(code) {
   return [...new Set(imports)]; // Remove duplicates
 }
 
-export async function runPythonCode({ code, onOutput, onInput, isPreview }) {
+export async function runPythonCode({ code, onOutput, onInput, isPreview, onComplete }) {
   if (isPreview) {
     onOutput && onOutput(['⚠️ Preview mode - code execution not available']);
     return;
@@ -105,21 +105,22 @@ export async function runPythonCode({ code, onOutput, onInput, isPreview }) {
     
     if (hasInput && onInput) {
       // Use interactive execution for code with input()
-      await runInteractiveCode(code, sessionId, onOutput, onInput);
+      await runInteractiveCode(code, sessionId, onOutput, onInput, onComplete);
     } else {
       // Use simple execution for code without input()
-      await runSimpleCode(code, sessionId, onOutput);
+      await runSimpleCode(code, sessionId, onOutput, onComplete);
     }
 
   } catch (error) {
     console.error('Python execution error:', error);
     onOutput && onOutput([`❌ Connection error: ${error.message}`]);
     onOutput && onOutput(['💡 Make sure the backend server is running on port 8000']);
+    onComplete && onComplete();
   }
 }
 
 // Simple execution for code without input()
-async function runSimpleCode(code, sessionId, onOutput) {
+async function runSimpleCode(code, sessionId, onOutput, onComplete) {
   try {
     const response = await fetch(`${BACKEND_URL}/api/execute-python`, {
       method: 'POST',
@@ -195,11 +196,13 @@ async function runSimpleCode(code, sessionId, onOutput) {
   } catch (error) {
     console.error('Simple execution error:', error);
     onOutput && onOutput([`❌ Execution error: ${error.message}`]);
+  } finally {
+    onComplete && onComplete();
   }
 }
 
 // Interactive execution for code with input()
-async function runInteractiveCode(code, sessionId, onOutput, onInput) {
+async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete) {
   try {
     // Use Server-Sent Events for interactive execution
     const response = await fetch(`${BACKEND_URL}/api/execute-python-interactive`, {
@@ -240,8 +243,8 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput) {
                 
               case 'output':
                 if (data.data && data.data.trim()) {
-                  const outputLines = data.data.split('\n').filter(line => line.trim() !== '');
-                  onOutput && onOutput(outputLines);
+                  // Send output as a single string to reduce re-renders
+                  onOutput && onOutput([data.data.trimEnd()]);
                 }
                 break;
                 
@@ -287,11 +290,13 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput) {
                 if (data.code !== 0) {
                   onOutput && onOutput([`Process exited with code ${data.code}`]);
                 }
+                onComplete && onComplete();
                 return;
                 
               case 'timeout':
                 onOutput && onOutput(['❌ Execution timeout']);
                 onOutput && onOutput(['💡 Program took too long to execute']);
+                onComplete && onComplete();
                 return;
             }
           } catch (e) {
@@ -305,6 +310,7 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput) {
   } catch (error) {
     console.error('Interactive execution error:', error);
     onOutput && onOutput([`❌ Interactive execution error: ${error.message}`]);
+    onComplete && onComplete();
   }
 }
 
