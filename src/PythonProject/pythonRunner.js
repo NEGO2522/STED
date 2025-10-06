@@ -272,7 +272,7 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete
                           input: inputValue
                         })
                       });
-
+ 
                       if (!inputResponse.ok) {
                         console.error('Failed to send input');
                         onOutput && onOutput(['❌ Failed to send input to program']);
