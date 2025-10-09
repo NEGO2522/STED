@@ -25,7 +25,7 @@ import { SignedIn, SignedOut, useAuth, ClerkProvider, RedirectToSignIn, SignIn, 
 import Progress from './Pages/Progress';
 
 // Clerk Frontend API key
-const clerkPubKey = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 // Clerk Provider Wrapper Component
 const ClerkProviderWithRoutes = ({ children }) => {
