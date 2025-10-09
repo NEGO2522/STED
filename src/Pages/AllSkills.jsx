@@ -4,7 +4,7 @@ import { useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ref, get, update } from 'firebase/database';
 import { db } from '../firebase';
-import { FiArrowRight, FiCheckCircle, FiPlay, FiClock, FiAward, FiBarChart2 } from 'react-icons/fi';
+import { FiArrowRight, FiCheckCircle, FiPlay, FiClock, FiAward, FiBarChart2, FiLock } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 
 // Skill Icons
@@ -174,6 +174,10 @@ function AllSkills() {
 };
 
     const handleStartLearning = (skillKey) => {
+        // Only allow Python skill to be started
+        if (skillKey !== 'python') {
+            return;
+        }
         const skill = skillMap[skillKey];
         if (userData && skill && userData[skill.node] && userData[skill.node][skill.currentProjectField]) {
             navigate(skill.route);
@@ -433,13 +437,13 @@ function AllSkills() {
                         <h2 className="text-2xl font-bold text-slate-800">My Skills</h2>
                         <div className="flex space-x-2 bg-slate-100 p-1 rounded-lg">
                             {['All', 'In Progress', 'Completed'].map((tab) => (
-                                <button
+                                <button 
                                     key={tab}
-                                    onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
-                                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                                        activeTab === tab.toLowerCase().replace(' ', '-') 
-                                            ? 'bg-white shadow-sm text-blue-600' 
-                                            : 'text-slate-600 hover:text-slate-800'
+                                    onClick={() => setActiveTab(tab.toLowerCase())}
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                        activeTab === tab.toLowerCase()
+                                            ? 'bg-blue-600 text-white shadow-md'
+                                            : 'bg-white text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
                                     {tab}
@@ -447,12 +451,10 @@ function AllSkills() {
                             ))}
                         </div>
                     </div>
-
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {Object.entries(skillMap).map(([key, skill]) => {
                             // Define the ProjectStarted field name for this skill
                             const projectStartedField = {
-                                'python': 'PythonProjectStarted',
                                 'dataScience': 'DataScienceProjectStarted',
                                 'publicSpeaking': 'PublicSpeakingProjectStarted',
                                 'powerbi': 'PowerBiProjectStarted',
@@ -498,14 +500,29 @@ function AllSkills() {
                             return (
                                 <motion.div 
                                     key={key}
-                                    whileHover={{ y: -5 }}
-                                    className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-md flex flex-col h-full"
+                                    whileHover={key === 'python' ? { y: -5 } : {}}
+                                    className={`bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 ${key === 'python' ? 'hover:shadow-md' : ''} flex flex-col h-full relative`}
                                 >
+                                    {key !== 'python' && (
+                                        <div className="absolute inset-0 bg-white/90 z-10 rounded-xl flex items-center justify-center">
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
+                                                    <FiLock className="w-5 h-5" />
+                                                </div>
+                                                <span className="text-sm font-medium text-slate-500">{skillTitles[key]}</span>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="p-6 flex-grow">
                                         <div className="flex items-start justify-between mb-4">
                                             <div className="flex items-center space-x-3">
-                                                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-2xl">
+                                                <div className={`w-12 h-12 rounded-xl ${key === 'python' ? 'bg-blue-50' : 'bg-slate-100'} flex items-center justify-center text-2xl relative`}>
                                                     {skillIcons[key]}
+                                                    {key !== 'python' && (
+                                                        <div className="absolute -top-1 -right-1 bg-yellow-400 text-white rounded-full p-1">
+                                                            <FiLock className="w-3 h-3" />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-slate-800">{skillTitles[key]}</h3>
@@ -521,38 +538,62 @@ function AllSkills() {
                                             )}
                                         </div>
                                         
-                                        <p className="text-slate-600 text-sm mb-6">{skillDescriptions[key]}</p>
+                                        <p className={`text-sm mb-6 ${key !== 'python' ? 'text-slate-400' : 'text-slate-600'}`}>
+                                            {skillDescriptions[key]}
+                                        </p>
                                         
-                                        <div className="mb-4">
-                                            <div className="flex justify-between text-xs text-slate-500 mb-1">
-                                                <span>Progress</span>
-                                                <span>{progress}%</span>
+                                        {key === 'python' ? (
+                                            <div className="mb-4">
+                                                <div className="flex justify-between text-xs text-slate-500 mb-1">
+                                                    <span>Progress</span>
+                                                    <span>{progress}%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 rounded-full h-2">
+                                                    <div 
+                                                        className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" 
+                                                        style={{ width: `${progress}%` }}
+                                                    ></div>
+                                                </div>
                                             </div>
-                                            <div className="w-full bg-slate-100 rounded-full h-2">
-                                                <div 
-                                                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" 
-                                                    style={{ width: `${progress}%` }}
-                                                ></div>
+                                        ) : (
+                                            <div className="mb-4 opacity-50">
+                                                <div className="flex justify-between text-xs text-slate-400 mb-1">
+                                                    <span>Progress</span>
+                                                    <span>0%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 rounded-full h-2">
+                                                    <div className="bg-slate-200 h-2 rounded-full"></div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                     
                                     <div className="p-4 border-t border-slate-100">
-                                        {isStarted ? (
-                                            <button 
-                                                onClick={() => navigate(skill.route)}
-                                                className="w-full flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
-                                            >
-                                                <span>Continue Learning</span>
-                                                <FiArrowRight className="w-4 h-4" />
-                                            </button>
+                                        {key === 'python' ? (
+                                            isStarted ? (
+                                                <button 
+                                                    onClick={() => navigate(skill.route)}
+                                                    className="w-full flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
+                                                >
+                                                    <span>Continue Learning</span>
+                                                    <FiArrowRight className="w-4 h-4" />
+                                                </button>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleStartLearning(key)}
+                                                    className="w-full flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
+                                                >
+                                                    <FiPlay className="w-4 h-4" />
+                                                    <span>Start Learning</span>
+                                                </button>
+                                            )
                                         ) : (
                                             <button 
-                                                onClick={() => handleStartLearning(key)}
-                                                className="w-full flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700 text-white py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
+                                                disabled
+                                                className="w-full flex items-center justify-center space-x-2 bg-slate-200 text-slate-400 py-2.5 px-4 rounded-lg text-sm font-medium cursor-not-allowed"
                                             >
-                                                <FiPlay className="w-4 h-4" />
-                                                <span>Start Learning</span>
+                                                <FiLock className="w-4 h-4" />
+                                                <span>Coming Soon</span>
                                             </button>
                                         )}
                                     </div>
@@ -561,7 +602,7 @@ function AllSkills() {
                         })}
                     </div>
                 </div>
-            </div>
+                </div>
             </div>
         </div>
     );
