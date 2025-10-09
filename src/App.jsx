@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import './App.css';
 import Start from './Pages/Start';
 import Login from './Pages/Login';
@@ -21,10 +21,42 @@ import PandasProject from './PandasProject/Project';
 import Profile from './Pages/Profile';
 import UserProfile from './Pages/UserProfile';
 import PublicPythonProject from './PythonProject/PublicPythonProject';
-import { SignedIn, SignedOut } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, useAuth, ClerkProvider, RedirectToSignIn, SignIn, SignUp } from '@clerk/clerk-react';
 import Progress from './Pages/Progress';
 
-function App() {
+// Clerk Frontend API key
+const clerkPubKey = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+// Clerk Provider Wrapper Component
+const ClerkProviderWithRoutes = ({ children }) => {
+  return (
+    <ClerkProvider publishableKey={clerkPubKey}>
+      {children}
+    </ClerkProvider>
+  );
+};
+
+// Component to handle authentication callbacks
+const ClerkAuthCallback = () => {
+  const { isLoaded, isSignedIn } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoaded) {
+      if (isSignedIn) {
+        // Redirect to home after successful sign-in
+        navigate('/home');
+      } else {
+        // If not signed in, redirect to sign-in page
+        navigate('/login');
+      }
+    }
+  }, [isLoaded, isSignedIn, navigate]);
+
+  return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+};
+
+function AppContent() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
@@ -65,6 +97,13 @@ function App() {
         }}
       />
       <Routes>
+        {/* Clerk Auth Routes */}
+        <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" />} />
+        <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
+        <Route path="/sso-callback" element={<ClerkAuthCallback />} />
+        <Route path="/login/sso-callback" element={<ClerkAuthCallback />} />
+        
+        {/* Public Routes */}
         <Route path="/" element={<Start />} />
         <Route path="/start" element={<Start />} />
         <Route path="/terms" element={<Terms />} />
@@ -92,5 +131,14 @@ function App() {
     </>
   );
 }
+
+// Main App component
+const App = () => {
+  return (
+    <ClerkProviderWithRoutes>
+      <AppContent />
+    </ClerkProviderWithRoutes>
+  );
+};
 
 export default App;
