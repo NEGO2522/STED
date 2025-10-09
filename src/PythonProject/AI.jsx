@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
@@ -385,6 +385,14 @@ What would you like to tackle first? You can ask me anything about:
       const trimmedTerminal = term.slice(-50).join('\n');
 
       const prompt = `You are Codey, a friendly and supportive Python programming mentor. The user is working on a project called "${context.projectTitle}".
+
+IMPORTANT: You are in HINT-ONLY mode. You must NEVER provide complete code solutions. Instead, you should:
+1. Ask guiding questions to help the user think through the problem
+2. Break down the problem into smaller, manageable steps
+3. Suggest concepts or functions to look up
+4. Point out where in their code they might be going wrong
+5. Encourage them to try different approaches
+6. Never write more than 2-3 lines of code at once, and only as an absolute last resort
 
 Project Description: ${context.projectDescription}
 
