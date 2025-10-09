@@ -21,12 +21,12 @@ import PandasProject from './PandasProject/Project';
 import Profile from './Pages/Profile';
 import UserProfile from './Pages/UserProfile';
 import PublicPythonProject from './PythonProject/PublicPythonProject';
-import { SignedIn, SignedOut, useAuth, ClerkProvider, RedirectToSignIn, SignIn, SignUp } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, useUser, SignIn, SignUp } from '@clerk/clerk-react';
 import Progress from './Pages/Progress';
 
 // Component to handle authentication callbacks
 const ClerkAuthCallback = () => {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useUser();
   const navigate = useNavigate();
 
   useEffect(() => {

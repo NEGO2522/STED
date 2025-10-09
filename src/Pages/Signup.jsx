@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SignUp, useAuth } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ function Signup() {
   const { isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (isLoaded && isSignedIn) {
       navigate('/start');
     }
