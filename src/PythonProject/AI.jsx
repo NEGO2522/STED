@@ -164,6 +164,8 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
   const inputRef = useRef(null);
   const prevMessagesLength = useRef(messages.length);
   const isFirstRender = useRef(true);
+  const [responseCount, setResponseCount] = useState(0);
+
 
   // Fetch project data when component mounts
   useEffect(() => {
@@ -322,6 +324,18 @@ What would you like to tackle first? You can ask me anything about:
 
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
+
+    if (responseCount >= 5) {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'ai',
+        content: "You've asked for help several times now. Try to solve this on your own. You can do it!",
+        timestamp: new Date()
+      }]);
+      setInputMessage('');
+      return;
+    }
+
     const userMessage = {
       id: Date.now(),
       type: 'user',
@@ -447,6 +461,7 @@ STRICT RULES:
         aiText = data.choices[0].message.content;
       }
       setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: aiText, timestamp: new Date() }]);
+      setResponseCount(prev => prev + 1);
     } catch (error) {
       const errMsg = (error && error.message) ? `Error: ${error.message}` : 'Sorry, I encountered an error. Please try again.';
       setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: errMsg, timestamp: new Date() }]);
