@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { debounce } from 'lodash';
+import React, { useEffect, useState, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { runPythonCode } from './pythonRunner';
 
@@ -38,55 +37,32 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   const [waitingInput, setWaitingInput] = useState(false);
   const [promptText, setPromptText] = useState('');
   const inputResolver = useRef(null);
-  
-  // Buffer for batching output updates
-  const outputBuffer = useRef([]);
-  const outputTimeout = useRef(null);
-  
-  // Clear any pending timeouts and save code when component unmounts
+
+  // Save code to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, code);
+      codeRef.current = code;
+      if (onCodeChange) {
+        onCodeChange(code);
+      }
+    } catch (error) {
+      console.error('Failed to save code to localStorage:', error);
+    }
+  }, [code, storageKey, onCodeChange]);
+
+  // Clear any saved code when component unmounts if project ended
   useEffect(() => {
     return () => {
-      if (outputTimeout.current) {
-        clearTimeout(outputTimeout.current);
-      }
-      // Save code one last time when unmounting, unless project ended
-      if (localStorage.getItem('projectEnded') !== 'true') {
+      if (localStorage.getItem('projectEnded') === 'true') {
         try {
-          localStorage.setItem(storageKey, code);
+          localStorage.removeItem(storageKey);
         } catch (error) {
-          console.error('Failed to save code to localStorage on unmount:', error);
+          console.error('Failed to clear code from localStorage:', error);
         }
       }
     };
-  }, [code, storageKey]);
-
-  // Debounced save to localStorage
-  const saveToStorage = useCallback(
-    debounce((codeToSave) => {
-      if (localStorage.getItem('projectEnded') !== 'true') {
-        try {
-          localStorage.setItem(storageKey, codeToSave);
-        } catch (error) {
-          console.error('Failed to save code to localStorage:', error);
-        }
-      }
-    }, 500), // 500ms debounce delay
-    [storageKey]
-  );
-
-  const handleEditorChange = (newValue) => {
-    const newCode = newValue || '';
-    setCode(newCode);
-    codeRef.current = newCode; // Update the ref
-    
-    // Debounced save to localStorage
-    saveToStorage(newCode);
-    
-    // Notify parent component immediately
-    if (onCodeChange) {
-      onCodeChange(newCode);
-    }
-  };
+  }, [storageKey]);
 
   useEffect(() => {
     if (onOutputChange) {
@@ -94,82 +70,37 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
     }
   }, [outputLines, onOutputChange]);
 
-  const appendOutput = useCallback((lines) => {
-    if (!Array.isArray(lines)) lines = [String(lines)];
-    
-    // Filter out empty lines if needed
-    lines = lines.filter(line => line !== '');
-    if (lines.length === 0) return;
-    
-    // Add new lines to buffer
-    outputBuffer.current = [...outputBuffer.current, ...lines];
-    
-    // Clear any pending updates
-    if (outputTimeout.current) {
-      clearTimeout(outputTimeout.current);
-    }
-    
-    // Batch updates to reduce re-renders
-    outputTimeout.current = setTimeout(() => {
-      setOutputLines(prev => {
-        // If the first line is our loading message, replace it
-        if (prev.length === 1 && prev[0] === '⏳ Running your code...') {
-          return [...outputBuffer.current];
-        }
-        // Otherwise, append to existing output
-        return [...prev, ...outputBuffer.current];
-      });
-      outputBuffer.current = [];
-      outputTimeout.current = null;
-    }, 30); // Small delay to batch rapid updates
-  }, []);
+  const appendOutput = (lines) => {
+    setOutputLines(prev => [...prev, ...lines]);
+  };
 
   const handleInput = (prompt, resolve) => {
-    // Show the prompt in the output
-    appendOutput([prompt]);
     setPromptText(prompt);
     setWaitingInput(true);
     inputResolver.current = resolve;
   };
 
   const handleInputSubmit = () => {
-    if (inputResolver.current && inputValue !== undefined) {
-      // Add the user's input to the output
-      appendOutput([inputValue]);
-      // Send the input to the Python process
+    if (inputResolver.current) {
+      appendOutput([`${promptText}${inputValue}`]);
       inputResolver.current(inputValue);
       inputResolver.current = null;
-      // Clear the input field but keep waiting state until next input is requested
       setInputValue('');
-      // Don't set waitingInput to false here - let the Python code handle the next input
+      setWaitingInput(false);
+      setPromptText('');
     }
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-
   const runPython = async () => {
-    // Clear any pending output updates
-    if (outputTimeout.current) {
-      clearTimeout(outputTimeout.current);
-      outputTimeout.current = null;
-    }
-    outputBuffer.current = [];
+    if (isRunning) return;
     
-    // Clear previous output but keep the history
-    setOutputLines(prev => {
-      // Only show loading message if there's no existing output
-      return prev.length === 0 ? ['⏳ Running your code...'] : [];
-    });
-    
-    // Reset input state
+    setIsRunning(true);
+    setOutputLines([]);
     setWaitingInput(false);
-    setInputValue('');
-    setPromptText('');
-    
+
     try {
       const codeToRun = value !== undefined ? value : code;
       
-      // Run the Python code
       await runPythonCode({
         code: codeToRun,
         onOutput: appendOutput,
@@ -177,14 +108,9 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
         isPreview: false
       });
     } catch (err) {
-      // Use setTimeout to ensure state updates are batched
-      setTimeout(() => {
-        setOutputLines(prev => 
-          prev[0] === '⏳ Running your code...' 
-            ? [`❌ Error: ${err.message}`] 
-            : [...prev, `❌ Error: ${err.message}`]
-        );
-      }, 0);
+      appendOutput([`❌ Error: ${err.message}`]);
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -196,7 +122,7 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
           language="python"
           theme="vs-dark"
           value={value !== undefined ? value : code}
-          onChange={readOnly ? undefined : handleEditorChange}
+          onChange={readOnly ? undefined : (val) => setCode(val || defaultCode)}
           options={{
             readOnly: !!readOnly,
             minimap: { enabled: false },
@@ -215,17 +141,18 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: '#1e1e1e', borderTop: '1px solid #555' }}>
             <button
               onClick={runPython}
+              disabled={isRunning}
               style={{
-                background: '#007acc',
+                background: isRunning ? '#555' : '#007acc',
                 color: 'white',
                 padding: '8px 16px',
                 border: 'none',
-                cursor: 'pointer',
+                cursor: isRunning ? 'not-allowed' : 'pointer',
                 borderRadius: '5px',
-                opacity: 1
+                opacity: isRunning ? 0.6 : 1
               }}
             >
-              Run
+              {isRunning ? 'Running...' : 'Run'}
             </button>
             {onStuckClick && (
               <button
