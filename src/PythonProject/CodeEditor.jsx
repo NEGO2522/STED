@@ -95,6 +95,12 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   }, [outputLines, onOutputChange]);
 
   const appendOutput = useCallback((lines) => {
+    if (!Array.isArray(lines)) lines = [String(lines)];
+    
+    // Filter out empty lines if needed
+    lines = lines.filter(line => line !== '');
+    if (lines.length === 0) return;
+    
     // Add new lines to buffer
     outputBuffer.current = [...outputBuffer.current, ...lines];
     
@@ -110,6 +116,7 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
         if (prev.length === 1 && prev[0] === '⏳ Running your code...') {
           return [...outputBuffer.current];
         }
+        // Otherwise, append to existing output
         return [...prev, ...outputBuffer.current];
       });
       outputBuffer.current = [];
@@ -118,19 +125,23 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   }, []);
 
   const handleInput = (prompt, resolve) => {
+    // Show the prompt in the output
+    appendOutput([prompt]);
     setPromptText(prompt);
     setWaitingInput(true);
     inputResolver.current = resolve;
   };
 
   const handleInputSubmit = () => {
-    if (inputResolver.current) {
-      appendOutput([`${promptText}${inputValue}`]);
+    if (inputResolver.current && inputValue !== undefined) {
+      // Add the user's input to the output
+      appendOutput([inputValue]);
+      // Send the input to the Python process
       inputResolver.current(inputValue);
       inputResolver.current = null;
+      // Clear the input field but keep waiting state until next input is requested
       setInputValue('');
-      setWaitingInput(false);
-      setPromptText('');
+      // Don't set waitingInput to false here - let the Python code handle the next input
     }
   };
 
@@ -144,9 +155,16 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
     }
     outputBuffer.current = [];
     
-    // Clear previous output and input state
-    setOutputLines(['⏳ Running your code...']);
+    // Clear previous output but keep the history
+    setOutputLines(prev => {
+      // Only show loading message if there's no existing output
+      return prev.length === 0 ? ['⏳ Running your code...'] : [];
+    });
+    
+    // Reset input state
     setWaitingInput(false);
+    setInputValue('');
+    setPromptText('');
     
     try {
       const codeToRun = value !== undefined ? value : code;
