@@ -24,18 +24,6 @@ import PublicPythonProject from './PythonProject/PublicPythonProject';
 import { SignedIn, SignedOut, useAuth, ClerkProvider, RedirectToSignIn, SignIn, SignUp } from '@clerk/clerk-react';
 import Progress from './Pages/Progress';
 
-// Clerk Frontend API key
-const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-
-// Clerk Provider Wrapper Component
-const ClerkProviderWithRoutes = ({ children }) => {
-  return (
-    <ClerkProvider publishableKey={clerkPubKey}>
-      {children}
-    </ClerkProvider>
-  );
-};
-
 // Component to handle authentication callbacks
 const ClerkAuthCallback = () => {
   const { isLoaded, isSignedIn } = useAuth();
@@ -134,11 +122,7 @@ function AppContent() {
 
 // Main App component
 const App = () => {
-  return (
-    <ClerkProviderWithRoutes>
-      <AppContent />
-    </ClerkProviderWithRoutes>
-  );
+  return <AppContent />;
 };
 
 export default App;
