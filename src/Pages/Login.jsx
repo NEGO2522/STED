@@ -9,7 +9,7 @@ function Login() {
 
   useEffect(() => {
     if (isLoaded && isSignedIn) {
-      navigate('/start');
+      navigate('/home');
     }
   }, [isLoaded, isSignedIn, navigate]);
 
@@ -27,8 +27,8 @@ function Login() {
             routing="path"
             path="/login"
             signUpUrl="/signup"
-            afterSignInUrl="/start"
-            afterSignUpUrl="/start"
+            afterSignInUrl="/home"
+            afterSignUpUrl="/home"
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-blue-600 hover:bg-blue-700',

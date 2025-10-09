@@ -22,6 +22,13 @@ function Start() {
   const { isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
   const [hoveredSkill, setHoveredSkill] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -31,6 +38,29 @@ function Start() {
 
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Loading...</div>;
+  }
+
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-200">
+          <div className="flex justify-center mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">
+            Desktop Experience Recommended
+          </h1>
+          <p className="text-gray-600 mb-2">
+            For the best learning experience, please switch to a desktop or tablet.
+          </p>
+           <p className="text-sm text-gray-500">
+            Education is a journey best taken on a larger screen. Avoid phone and bring laptop.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
