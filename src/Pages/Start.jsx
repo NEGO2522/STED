@@ -82,7 +82,7 @@ function Start() {
         {/* Navigation */}
         <header className="py-6">
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-blue-400">STED-LS</div>
+            <Link to="/home" className="text-2xl font-bold text-blue-400">STED-LS</Link>
             <div className="flex items-center space-x-4">
               {isSignedIn ? (
                 <ProfileIcon />
