@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
@@ -252,7 +252,7 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
     fetchProjectData();
   }, [user]);
 
-  // Auto-scroll to bottom when new messages arrive
+    // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (isFirstRender.current) {
       // On first render (tab switch), scroll instantly
@@ -260,7 +260,7 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
       isFirstRender.current = false;
     } else if (messages.length > prevMessagesLength.current) {
       // On new message, scroll smoothly
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
     prevMessagesLength.current = messages.length;
   }, [messages]);
@@ -272,21 +272,7 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         {
           id: 1,
           type: 'ai',
-          content: `## 👋 Welcome to Your Python Journey!
-
-Hi there! I'm Codey, your friendly AI coding mentor. I see you're working on **${projectConfig.title}** - that sounds exciting! 🚀
-
-I'm here to help you:
-- **Understand** programming concepts
-- **Debug** your code when things go wrong
-- **Learn** by doing, not just copying
-- **Grow** your problem-solving skills
-
-What would you like to tackle first? You can ask me anything about:
-- Your current project
-- Python concepts
-- Error messages
-- Or anything else on your mind!`,
+          content: 'Welcome to the STED Learning Assistant! \n\nI\'m here to help guide you through your Python learning journey. Instead of giving direct answers, I\'ll help you think through problems and learn how to find solutions on your own. \n\nHere\'s how I can help:\n- Break down complex problems into manageable parts\n- Suggest learning resources and documentation\n- Ask questions to guide your thinking\n- Help you debug by asking about your approach\n- Encourage you to try different solutions\n\nWhat would you like to work on today?',
           timestamp: new Date()
         }
       ]);
@@ -296,6 +282,7 @@ What would you like to tackle first? You can ask me anything about:
   // Generic: find first incomplete task and subtasks
   const getIncompleteTaskAndSubtasks = () => {
     if (!projectConfig || (!projectConfig.tasks && !projectConfig.ProjectTasks)) return {};
+    
     const tasks = projectConfig.tasks || projectConfig.ProjectTasks;
     const userCodeLower = (userCode || '').toLowerCase();
     for (const [taskKey, task] of Object.entries(tasks)) {
@@ -322,8 +309,44 @@ What would you like to tackle first? You can ask me anything about:
     return {};
   };
 
+  // Check if the message is a greeting
+  const isGreeting = (message) => {
+    const greetings = ['hi', 'hello', 'hey', 'hi there', 'hello there'];
+    return greetings.includes(message.trim().toLowerCase());
+  };
+
+  // Get a friendly greeting response based on the current task
+  const getGreetingResponse = () => {
+    const { taskTitle } = getIncompleteTaskAndSubtasks();
+    const greetings = [
+      `Hi there! Ready to continue working on ${taskTitle || 'your Python project'}?`,
+      `Hello! How can I help you with ${taskTitle || 'your code'} today?`,
+      `Hi! Let's keep going with ${taskTitle || 'your project'}. What would you like to focus on?`,
+      `Hey there! Still working on ${taskTitle || 'your task'}? I'm here to help!`
+    ];
+    return greetings[Math.floor(Math.random() * greetings.length)];
+  };
+
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    const userMessageText = inputMessage.trim();
+    if (!userMessageText || isLoading) return;
+
+    // Handle greeting messages
+    if (isGreeting(userMessageText)) {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'user',
+        content: userMessageText,
+        timestamp: new Date()
+      }, {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: getGreetingResponse(),
+        timestamp: new Date()
+      }]);
+      setInputMessage('');
+      return;
+    }
 
     if (responseCount >= 5) {
       setMessages(prev => [...prev, {
@@ -384,15 +407,20 @@ What would you like to tackle first? You can ask me anything about:
       const term = Array.isArray(terminalOutput) ? terminalOutput : [];
       const trimmedTerminal = term.slice(-50).join('\n');
 
-      const prompt = `You are Codey, a friendly and supportive Python programming mentor. The user is working on a project called "${context.projectTitle}".
+      const prompt = `You are Codey, a Python learning guide. The user is working on a project called "${context.projectTitle}".
 
-IMPORTANT: You are in HINT-ONLY mode. You must NEVER provide complete code solutions. Instead, you should:
-1. Ask guiding questions to help the user think through the problem
-2. Break down the problem into smaller, manageable steps
-3. Suggest concepts or functions to look up
-4. Point out where in their code they might be going wrong
-5. Encourage them to try different approaches
-6. Never write more than 2-3 lines of code at once, and only as an absolute last resort
+CRITICAL RULES:
+1. You must NEVER provide direct answers, code solutions, or explanations
+2. Your ONLY role is to guide the user to discover answers on their own
+3. Respond to ALL questions with guiding questions only
+4. Never confirm or deny if their approach is correct
+5. Always respond with questions that help the user think through the problem
+
+When responding, you MUST:
+1. Only ask questions that guide the user's thinking
+2. Never provide any form of answer or solution
+3. Keep responses to 1-2 questions maximum
+4. Focus on the current project context
 
 Project Description: ${context.projectDescription}
 
@@ -414,16 +442,16 @@ ${history}
 
 User's latest question: ${inputMessage}
 
-IMPORTANT INSTRUCTIONS:
-- Be helpful and provide clear, supportive guidance. Answer their question while being encouraging and educational.
-- Be concise but thorough in your explanations, breaking down complex concepts into simple steps
-- Do NOT provide extra information or context unless asked
-- Do NOT give encouragement or generic advice
-- Do NOT suggest next steps unless specifically asked
-- Focus only on the exact question asked
-- If user asks about an error, explain only that error
-- If user asks how to do something, give only the specific steps for that thing
-- Maximum 1-2 sentences per response unless the question requires more detail
+RESPONSE RULES:
+1. To ANY question, respond ONLY with guiding questions
+2. Example responses:
+   - "What have you tried so far?"
+   - "How do you think you could approach this?"
+   - "What do you think might be causing this issue?"
+   - "Have you checked the documentation for this function?"
+3. Never provide any form of answer, explanation, or confirmation
+4. If the user asks for an answer, respond with: "I can't provide the answer, but I can help you think through it. What's your current understanding?"
+5. Keep all responses under 2 sentences
 
 RESPONSE FORMAT REQUIREMENTS:
 - Use bullet points (-) only when listing multiple related items

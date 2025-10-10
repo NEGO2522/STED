@@ -633,8 +633,8 @@ function Project() {
      
 
       {/* Right side - Statement / AI Panel */}
-      <div className="w-150 h-full text-white p-5 border border-white border-white"
-      style={{"backgroundColor":"rgb(24, 24, 27)"}}
+      <div className="w-150 text-white p-5 border border-white border-white flex flex-col"
+      style={{"backgroundColor":"rgb(24, 24, 27)", height: 'calc(100vh - 48px)'}}
       >
         {/* Toggle Buttons */}
         <div className="flex gap-4 mb-4">
