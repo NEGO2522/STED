@@ -762,11 +762,10 @@ IMPORTANT INSTRUCTIONS:
                     </button>
                     
                     <button
-                      onClick={handleCustomProjectClick}
-                      className="w-full inline-flex items-center justify-center gap-2 text-white cursor-pointer font-semibold px-4 py-3 rounded-lg shadow-md transition-colors border border-white border-opacity-30"
+                      disabled
+                      className="w-full inline-flex items-center justify-center gap-2 text-white/50 font-semibold px-4 py-3 rounded-lg shadow-md transition-colors border border-white/20 bg-gray-400/20 cursor-not-allowed"
                     >
-                      ⚙️ Custom Project
-                      
+                      🔒 Custom Project
                     </button>
                   </div>
                   </div>
