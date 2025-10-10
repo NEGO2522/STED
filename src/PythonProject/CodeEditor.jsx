@@ -30,7 +30,9 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   const [inputValue, setInputValue] = useState('');
   const [waitingInput, setWaitingInput] = useState(false);
   const [promptText, setPromptText] = useState('');
+  const [showCopyPasteWarning, setShowCopyPasteWarning] = useState(false);
   const inputResolver = useRef(null);
+  const editorRef = useRef(null);
 
   // Save code to localStorage when it changes
   useEffect(() => {
@@ -68,11 +70,92 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
     setOutputLines(prev => [...prev, ...lines]);
   };
 
-  const handleInput = (prompt, resolve) => {
-    setPromptText(prompt);
-    setWaitingInput(true);
-    inputResolver.current = resolve;
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor;
+    
+    // Disable right-click context menu
+    editor.onContextMenu((e) => {
+      e.preventDefault();
+      showTemporaryWarning();
+    });
+    
+    // Add keydown event listener to prevent copy/paste shortcuts
+    const keyDownListener = editor.onKeyDown((e) => {
+      // Block all Ctrl/Cmd + key combinations that could be used for copy/paste
+      if (e.ctrlKey || e.metaKey) {
+        // Block Ctrl+C, Cmd+C, Ctrl+V, Cmd+V, Ctrl+X, Cmd+X
+        if ([67, 86, 88].includes(e.keyCode)) {
+          e.preventDefault();
+          showTemporaryWarning();
+          return;
+        }
+        // Block Ctrl+A, Cmd+A (select all) to prevent easy copying
+        if (e.keyCode === 65) {
+          e.preventDefault();
+          showTemporaryWarning();
+          return;
+        }
+      }
+      // Block right-click menu key
+      if (e.keyCode === 93) {
+        e.preventDefault();
+        showTemporaryWarning();
+      }
+    });
+
+    // Add paste event listener to the editor container
+    const editorContainer = editor.getDomNode();
+    if (editorContainer) {
+      const handlePaste = (e) => {
+        e.preventDefault();
+        showTemporaryWarning();
+      };
+      
+      const handleCopy = (e) => {
+        e.preventDefault();
+        showTemporaryWarning();
+      };
+      
+      const handleCut = (e) => {
+        e.preventDefault();
+        showTemporaryWarning();
+      };
+      
+      editorContainer.addEventListener('paste', handlePaste);
+      editorContainer.addEventListener('copy', handleCopy);
+      editorContainer.addEventListener('cut', handleCut);
+      
+      // Cleanup function
+      return () => {
+        keyDownListener.dispose();
+        editorContainer.removeEventListener('paste', handlePaste);
+        editorContainer.removeEventListener('copy', handleCopy);
+        editorContainer.removeEventListener('cut', handleCut);
+      };
+    }
+    
+    return keyDownListener;
   };
+  
+  const showTemporaryWarning = () => {
+    setShowCopyPasteWarning(true);
+    // Clear any existing timeout to prevent rapid toggling
+    if (window.copyPasteWarningTimeout) {
+      clearTimeout(window.copyPasteWarningTimeout);
+    }
+    window.copyPasteWarningTimeout = setTimeout(() => {
+      setShowCopyPasteWarning(false);
+    }, 2000);
+  };
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (window.copyPasteWarningTimeout) {
+        clearTimeout(window.copyPasteWarningTimeout);
+      }
+    };
+  }, []);
 
   const handleInputSubmit = () => {
     if (inputResolver.current) {
@@ -84,7 +167,6 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
       setPromptText('');
     }
   };
-
   const runPython = async () => {
     if (isRunning) return;
     
@@ -99,35 +181,68 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
         code: codeToRun,
         onOutput: appendOutput,
         onInput: handleInput,
-        isPreview: false
+        onError: (error) => {
+          appendOutput([`Error: ${error.message}`]);
+        }
       });
-    } catch (err) {
-      appendOutput([`❌ Error: ${err.message}`]);
+    } catch (error) {
+      appendOutput([`Error: ${error.message}`]);
     } finally {
       setIsRunning(false);
     }
   };
 
+  const handleCodeChange = (newValue) => {
+    if (!readOnly) {
+      setCode(newValue);
+    }
+  };
+
   return (
-    <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: 1 }}>
+    <div className="relative flex-1 flex flex-col h-full">
+      {showCopyPasteWarning && (
+        <div className="absolute top-2 right-2 bg-yellow-600 text-white px-3 py-1 rounded-md z-10 text-sm flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          Copy/Paste is disabled
+        </div>
+      )}
+      <div className="flex-1 overflow-hidden relative"
+        onPaste={(e) => {
+          e.preventDefault();
+          showTemporaryWarning();
+        }}
+        onCopy={(e) => {
+          e.preventDefault();
+          showTemporaryWarning();
+        }}
+        onCut={(e) => {
+          e.preventDefault();
+          showTemporaryWarning();
+        }}
+      >
+        <div className="absolute inset-0 z-10 pointer-events-none" />
         <Editor
           height="100%"
           language="python"
           theme="vs-dark"
           value={value !== undefined ? value : code}
-          onChange={readOnly ? undefined : (val) => setCode(val || defaultCode)}
+          onChange={handleCodeChange}
+          onMount={handleEditorDidMount}
           options={{
-            readOnly: !!readOnly,
             minimap: { enabled: false },
             fontSize: 14,
-            lineNumbers: 'on',
+            wordWrap: 'on',
+            readOnly: readOnly,
             scrollBeyondLastLine: false,
             automaticLayout: true,
-            tabSize: 4,
-            insertSpaces: true,
+            contextmenu: false,
+            copyWithSyntaxHighlighting: false,
+            quickSuggestions: false,
+            suggestOnTriggerCharacters: false,
+            tabCompletion: 'off',
           }}
-          loading={<div style={{height:'100%',width:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:700,fontSize:15,color:'white'}}>Loading Editor...</div>}
         />
       </div>
       {!hideTerminal && (
