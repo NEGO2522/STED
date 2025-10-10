@@ -267,16 +267,29 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
 
   return (
     <div
-      className="p-8 max-w-2xl shadow-lg mt-6 animate-fadeIn"
+      className="p-8 max-w-2xl mt-6 animate-fadeIn"
       style={{
         maxHeight: '79vh',
         overflowY: 'auto',
-        background: '#18181b', // slate-900
-        color: '#f3f4f6', // slate-100
-        boxShadow: '0 4px 32px #000a',
+        background: 'linear-gradient(145deg, #1a1a1e 0%, #1e1e24 100%)',
+        color: '#f3f4f6',
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(10px)',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#4a4a4a #2a2a2a',
       }}
     >
-      <h1 className="text-3xl text-center justify-center font-bold mb-2 flex gap-2 items-center relative" style={{ color: '#a78bfa' }}>
+      <h1 
+        className="text-3xl text-center justify-center font-bold mb-4 flex gap-2 items-center relative" 
+        style={{ 
+          color: '#8b5cf6',
+          textShadow: '0 0 10px rgba(139, 92, 246, 0.3)',
+          paddingBottom: '12px',
+          borderBottom: '1px solid rgba(139, 92, 246, 0.2)'
+        }}
+      >
         {project.title}
         <span ref={projectDescIconRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
           <FaQuestionCircle
@@ -329,43 +342,56 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
         </div>
       )}
 
-      <div className="space-y-6 mt-10">
+      <div className="space-y-4 mt-8">
                 {project.tasks || project.ProjectTasks
           ? Object.entries(project.tasks || project.ProjectTasks).map(([taskKey, task]) => {
               const isExpanded = expandedTask === taskKey;
               return (
                 <div
                   key={taskKey}
-                  className="p-4 shadow border"
+                  className="p-0 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg"
                   style={{
-                    background: '#23232a',
-                    borderColor: '#444',
-                    borderRadius: 0,
+                    background: 'rgba(30, 30, 35, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '10px',
+                    transition: 'all 0.3s ease-in-out',
                   }}
                 >
                   <div
-                    className="font-semibold mb-2 text-lg flex items-center justify-between cursor-pointer select-none"
-                    style={{ color: '#e5e7eb', borderRadius: 0, fontSize: 24, lineHeight: '2.2rem' }}
+                    className="px-6 py-4 flex items-center justify-between cursor-pointer select-none transition-colors duration-200 hover:bg-white/5"
+                    style={{ 
+                      color: '#f3f4f6',
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                      borderBottom: isExpanded ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
+                    }}
                     onClick={() => setExpandedTask(isExpanded ? null : taskKey)}
                   >
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <FaChevronDown
                         style={{
-                          transition: 'transform 0.3s',
+                          transition: 'all 0.3s ease',
                           transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                          fontSize: 16,
+                          fontSize: '0.9rem',
+                          color: '#8b5cf6',
+                          opacity: 0.8,
                         }}
                       />
-                      <span
-                        className="px-3 py-1"
-                        style={{ background: '#23232a', color: '#e5e7eb', borderRadius: 0, fontWeight: 400, fontSize: 20, lineHeight: '2.2rem' }}
-                      >
+                      <span className="text-lg font-medium text-white">
                         {task.title}
                       </span>
-                    </span>
+                    </div>
                     <button
-                      className="ml-4 px-3 py-1 text-white font-semibold text-sm flex items-center gap-2"
-                      style={{ minWidth: 70, minHeight: 32, position: 'relative', background: '#333', borderRadius: 0, border: '1px solid #444' }}
+                      className="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 flex items-center gap-2"
+                      style={{
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                        color: 'white',
+                        border: 'none',
+                        boxShadow: '0 2px 10px rgba(139, 92, 246, 0.3)',
+                        minWidth: '80px',
+                        justifyContent: 'center',
+                        opacity: loadingTaskKey === taskKey ? 0.7 : 1,
+                      }}
                       onClick={e => {
                         e.stopPropagation();
                         handleTaskCheck(taskKey, task);
@@ -373,18 +399,26 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                       disabled={loadingTaskKey === taskKey}
                     >
                       {loadingTaskKey === taskKey ? (
-                        <span className="loader mr-2" style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+                        <span className="loader" style={{ 
+                          width: 16, 
+                          height: 16, 
+                          border: '2px solid rgba(255,255,255,0.3)', 
+                          borderTop: '2px solid #fff', 
+                          borderRadius: '50%', 
+                          display: 'inline-block', 
+                          animation: 'spin 0.8s linear infinite' 
+                        }} />
                       ) : taskCheckStatus[taskKey] === true ? (
-                        <img src={tick} alt="" className='w-5' />
+                        <img src={tick} alt="Completed" className='w-4 h-4' />
                       ) : taskCheckStatus[taskKey] === false ? (
-                        <img src={cross} alt="" className='w-5' />
+                        <img src={cross} alt="Not Completed" className='w-4 h-4' />
                       ) : (
-                        'Check'
+                        <span>Check</span>
                       )}
                     </button>
                   </div>
                   {isExpanded && (
-                    <ul className="space-y-2 ml-2 mt-2">
+                    <ul className="space-y-1 px-6 py-3 bg-black/10">
                       {task.subtasks && task.subtasks.map((subDesc, subIdx) => (
                         <li
                           key={subIdx}
@@ -392,17 +426,7 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                           style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4, paddingRight: 0 }}
                         >
                           <div className="flex items-center gap-3 flex-1">
-                            <input
-                              type="checkbox"
-                              checked={!!checked[taskKey]?.[subIdx]}
-                              onChange={() => handleCheck(taskKey, subIdx)}
-                              className="border-gray-600 focus:ring-2 bg-[#18181b]"
-                              style={{ background: '#18181b', width: 20, height: 20, minWidth: 20, minHeight: 20, flexShrink: 0, borderRadius: 0 }}
-                            />
-                            <span
-                              className={`text-base ${checked[taskKey]?.[subIdx] ? 'line-through text-gray-500' : ''}`}
-                              style={{ color: checked[taskKey]?.[subIdx] ? '#6b7280' : '#f3f4f6' }}
-                            >
+                            <span className="text-base" style={{ color: '#f3f4f6' }}>
                               {subDesc}
                             </span>
                           </div>
@@ -475,36 +499,49 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
               return (
                 <div
                   key={taskKey}
-                  className="p-4 shadow border"
+                  className="p-0 overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg"
                   style={{
-                    background: '#23232a',
-                    borderColor: '#444',
-                    borderRadius: 0,
+                    background: 'rgba(30, 30, 35, 0.8)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '10px',
+                    transition: 'all 0.3s ease-in-out',
                   }}
                 >
                   <div
-                    className="font-semibold mb-2 text-lg flex items-center justify-between cursor-pointer select-none"
-                    style={{ color: '#e5e7eb', borderRadius: 0, fontSize: 24, lineHeight: '2.2rem' }}
+                    className="px-6 py-4 flex items-center justify-between cursor-pointer select-none transition-colors duration-200 hover:bg-white/5"
+                    style={{ 
+                      color: '#f3f4f6',
+                      fontSize: '1.1rem',
+                      fontWeight: 500,
+                      borderBottom: isExpanded ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
+                    }}
                     onClick={() => setExpandedTask(isExpanded ? null : taskKey)}
                   >
-                    <span className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <FaChevronDown
                         style={{
-                          transition: 'transform 0.3s',
+                          transition: 'all 0.3s ease',
                           transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                          fontSize: 16,
+                          fontSize: '0.9rem',
+                          color: '#8b5cf6',
+                          opacity: 0.8,
                         }}
                       />
-                      <span
-                        className="px-3 py-1"
-                        style={{ background: '#23232a', color: '#e5e7eb', borderRadius: 0, fontWeight: 700, fontSize: 24, lineHeight: '2.2rem' }}
-                      >
+                      <span className="text-lg font-medium text-white">
                         {task.title}
                       </span>
-                    </span>
+                    </div>
                     <button
-                      className="ml-4 px-3 py-1 text-white font-semibold text-sm flex items-center gap-2"
-                      style={{ minWidth: 70, minHeight: 32, position: 'relative', background: '#333', borderRadius: 0, border: '1px solid #444' }}
+                      className="px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 flex items-center gap-2"
+                      style={{
+                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+                        color: 'white',
+                        border: 'none',
+                        boxShadow: '0 2px 10px rgba(139, 92, 246, 0.3)',
+                        minWidth: '80px',
+                        justifyContent: 'center',
+                        opacity: loadingTaskKey === taskKey ? 0.7 : 1,
+                      }}
                       onClick={e => {
                         e.stopPropagation();
                         handleTaskCheck(taskKey, task);
@@ -512,44 +549,49 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                       disabled={loadingTaskKey === taskKey}
                     >
                       {loadingTaskKey === taskKey ? (
-                        <span className="loader mr-2" style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+                        <span className="loader" style={{ 
+                          width: 16, 
+                          height: 16, 
+                          border: '2px solid rgba(255,255,255,0.3)', 
+                          borderTop: '2px solid #fff', 
+                          borderRadius: '50%', 
+                          display: 'inline-block', 
+                          animation: 'spin 0.8s linear infinite' 
+                        }} />
                       ) : taskCheckStatus[taskKey] === true ? (
-                        <img src={applied} alt="" className='w-5' />
+                        <img src={applied} alt="Completed" className='w-4 h-4' />
                       ) : taskCheckStatus[taskKey] === false ? (
-                        <img src={cross} alt="" className='w-5' />
+                        <img src={cross} alt="Not Completed" className='w-4 h-4' />
                       ) : (
-                        'Check'
+                        <span>Check</span>
                       )}
                     </button>
                   </div>
                   {isExpanded && (
-                    <ul className="space-y-2 ml-2 mt-2">
-                      {Object.entries(task)
-                        .filter(([k]) => k !== 'title')
-                        .map(([subKey, subDesc], idx) => (
-                          <li
-                            key={subKey}
-                            className="flex text-left items-center justify-between"
-                            style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4, paddingRight: 0 }}
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <input
-                                type="checkbox"
-                                checked={!!checked[taskKey]?.[idx]}
-                                onChange={() => handleCheck(taskKey, idx)}
-                                className="border-gray-600 focus:ring-2 bg-[#18181b]"
-                                style={{ background: '#18181b', width: 20, height: 20, minWidth: 20, minHeight: 20, flexShrink: 0, borderRadius: 0 }}
-                              />
-                              <span
-                                className={`text-base ${checked[taskKey]?.[idx] ? 'line-through text-gray-500' : ''}`}
-                                style={{ color: checked[taskKey]?.[idx] ? '#6b7280' : '#f3f4f6' }}
-                              >
-                                {subDesc}
-                              </span>
-                            </div>
-                          </li>
-                        ))}
-                    </ul>
+                    <>
+                      <ul className="space-y-2 ml-2 mt-2">
+                        {Object.entries(task)
+                          .filter(([k]) => k !== 'title')
+                          .map(([subKey, subDesc], idx) => (
+                            <li
+                              key={idx}
+                              className="flex text-left items-center justify-between py-2 px-3 rounded-md transition-colors duration-150 hover:bg-white/5"
+                              style={{
+                                borderLeft: '2px solid rgba(139, 92, 246, 0.3)',
+                                margin: '2px 0',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+                              }}
+                            >
+                              <div className="flex items-center gap-3 flex-1">
+                                <span className="text-sm text-gray-300 leading-relaxed">
+                                  {subDesc}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                      </ul>
+                      <div className="mt-4 border-t border-gray-600"></div>
+                    </>
                   )}
                 </div>
               );
