@@ -626,14 +626,14 @@ function Project() {
       </div>
 
       <div className="flex h-screen pt-12 p-3 bg-[#0F0F0F] w-screen">
-          <div className="w-280 border border-white h-full text-white border-white">
+          <div className="w-280 border border-[#828282] h-full text-white">
         <CodeEditor onCodeChange={setUserCode} onOutputChange={setTerminalOutput} />
         </div>
       {/* Left side - Code Editor */}
      
 
       {/* Right side - Statement / AI Panel */}
-      <div className="w-150 h-full text-white p-5 border border-white border-white"
+      <div className="w-150 border border-[#828282] h-full text-white p-5"
       style={{"backgroundColor":"rgb(24, 24, 27)"}}
       >
         {/* Toggle Buttons */}
