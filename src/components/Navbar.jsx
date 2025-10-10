@@ -54,9 +54,6 @@ function Navbar() {
       <div className="flex-shrink-0 flex items-center">
         {isSignedIn ? (
           <div className="flex items-center space-x-4">
-            <Link to="/start" className="text-gray-700 hover:text-indigo-600">
-                <FaHome size={24} />
-            </Link>
             <div className="text-right">
               <div className="text-sm font-medium text-gray-700 leading-tight">{user?.fullName || user?.username || 'User'}</div>
               <div className="text-xs text-gray-500">View Profile</div>

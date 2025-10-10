@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import { runPythonCode } from './pythonRunner';
 
-const defaultCode = `# Write your Python code here`;
+const defaultCode = `# Write your code here`;
 
 // Generate a unique key for localStorage based on the component's props
 const getStorageKey = (id = 'default') => `saved_code_${id}`;
