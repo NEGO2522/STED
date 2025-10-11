@@ -501,31 +501,6 @@ IMPORTANT INSTRUCTIONS:
 
           {/* Quick Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {/* SP (STED Points) Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              className="bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ring-1 ring-slate-200 hover:translate-y-[-1px]"
-              onClick={() => {
-                if (window.handlePointsClick) {
-                  window.handlePointsClick();
-                }
-              }}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-600">SP(STED Points)</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mt-1">
-                    {completedProjects.length * 10 + conceptStats.learned * 2 + conceptStats.applied * 5}
-                    </h3>
-                  </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-full ring-1 ring-purple-100">
-                    <span className="text-2xl leading-none">📊</span>
-                  </div>
-                </div>
-              </motion.div>
-
             {/* Projects Completed Card */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
