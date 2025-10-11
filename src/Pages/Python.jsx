@@ -468,20 +468,20 @@ IMPORTANT INSTRUCTIONS:
 
       {/* Project Continue/End Box */}
       {userData.python?.PythonProjectStarted && (
-        <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between mb-8 mt-6 max-w-3xl mx-auto shadow">
+        <div className="bg-yellow-50/80 backdrop-blur-xl border border-yellow-300/60 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between mb-8 mt-6 max-w-3xl mx-auto shadow-lg ring-1 ring-white/40">
           <div className="flex-1 flex flex-col md:flex-row items-center gap-4">
             <span className="text-lg font-semibold text-yellow-800">Current Project:</span>
             <span className="text-xl font-bold text-yellow-900">{currentProjectTitle || 'Untitled Project'}</span>
           </div>
           <div className="flex gap-4 mt-4 md:mt-0">
             <button
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-2 rounded-lg shadow"
+              className="bg-purple-600 hover:bg-purple-700 active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
               onClick={() => navigate('/python/project')}
             >
               Continue Project
             </button>
             <button
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-lg shadow"
+              className="bg-red-500 hover:bg-red-600 active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
               onClick={handleEndProject}
             >
               End Project
@@ -495,7 +495,7 @@ IMPORTANT INSTRUCTIONS:
           {/* Header Section */}
            
               <div className="text-left mt-6">
-                <h1 className="text-3xl font-bold text-slate-800">Python</h1>
+                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-slate-800 via-purple-800 to-indigo-700 bg-clip-text text-transparent tracking-tight">Python</h1>
             </div>
           
 
@@ -506,7 +506,7 @@ IMPORTANT INSTRUCTIONS:
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ring-1 ring-slate-200 hover:translate-y-[-1px]"
               onClick={() => {
                 if (window.handlePointsClick) {
                   window.handlePointsClick();
@@ -520,8 +520,8 @@ IMPORTANT INSTRUCTIONS:
                     {completedProjects.length * 10 + conceptStats.learned * 2 + conceptStats.applied * 5}
                     </h3>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-full">
-                    <span className="text-2xl">📊</span>
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-full ring-1 ring-purple-100">
+                    <span className="text-2xl leading-none">📊</span>
                   </div>
                 </div>
               </motion.div>
@@ -531,7 +531,7 @@ IMPORTANT INSTRUCTIONS:
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white rounded-lg shadow-md p-6"
+                className="bg-white rounded-xl shadow-md p-6 ring-1 ring-slate-200 hover:shadow-lg transition-all"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -540,7 +540,7 @@ IMPORTANT INSTRUCTIONS:
                     {completedProjects.length}
                     </h3>
                   </div>
-                  <div className="bg-purple-50 p-3 rounded-full">
+                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-full ring-1 ring-purple-100">
                     <span className=""><img className="w-7" src={Project} alt="" /></span>
                   </div>
                 </div>
@@ -553,7 +553,7 @@ IMPORTANT INSTRUCTIONS:
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-lg shadow-md p-6"
+                className="bg-white rounded-xl shadow-md p-6 ring-1 ring-slate-200 hover:shadow-lg transition-all"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -562,7 +562,7 @@ IMPORTANT INSTRUCTIONS:
                       {conceptStats.learned} / {conceptStats.total}
                     </h3>
                   </div>
-                  <div className="bg-yellow-50 p-3 rounded-full">
+                  <div className="bg-yellow-50 p-3 rounded-full ring-1 ring-yellow-100">
                     <span className="text-2xl"><img className="w-7" src={Learned} alt="" /></span>
                   </div>
                 </div>
@@ -573,7 +573,7 @@ IMPORTANT INSTRUCTIONS:
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+                className="bg-white rounded-2xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ring-1 ring-slate-200"
                 onClick={() => {
                   if (window.handleAppliedConceptsClick) {
                     window.handleAppliedConceptsClick();
@@ -587,7 +587,7 @@ IMPORTANT INSTRUCTIONS:
                       {conceptStats.applied} / {conceptStats.learned}
                     </h3>
                   </div>
-                  <div className="bg-yellow-50 p-3 rounded-full">
+                  <div className="bg-green-50 p-3 rounded-full ring-1 ring-green-100">
                     <span className="text-2xl"><img className="w-7" src={Applied} alt="" /></span>
                   </div>
                 </div>
@@ -605,13 +605,13 @@ IMPORTANT INSTRUCTIONS:
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-white w-full lg:w-2/3 rounded-lg shadow-md p-6"
+              className="bg-white/90 backdrop-blur-sm w-full lg:w-2/3 rounded-xl shadow-md p-6 ring-1 ring-slate-200"
             >
               <ConceptLearned completedProjects={completedProjects} />
             </motion.div>
 
             {/* Concept Status Box */}
-            <motion.div className="bg-white rounded-lg shadow-md p-6 w-150 h-76 flex flex-col justify-between">
+            <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-150 h-76 flex flex-col justify-between ring-1 ring-slate-200">
               <div>
               <p className="text-sm text-slate-600">Concepts Status</p>
               {(() => {
@@ -629,19 +629,19 @@ IMPORTANT INSTRUCTIONS:
                   return (
                     <div className="flex flex-col gap-2 mt-2">
                       <div className="flex items-center gap-2 mt-3 border-b border-slate-200 pb-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-black mr-2"></span>
-                        <span className="text-black font-normal">Clear</span>
-                        <span className="ml-auto text-black px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.Clear} / {totalLearned}</span>
+                        <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                        <span className="text-slate-800 font-normal">Clear</span>
+                        <span className="ml-auto text-slate-800 px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.Clear} / {totalLearned}</span>
                       </div>
                       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-black mr-2"></span>
-                        <span className="text-black font-normal">Unclear</span>
-                        <span className="ml-auto text-black px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.Unclear} / {totalLearned}</span>
+                        <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
+                        <span className="text-slate-800 font-normal">Unclear</span>
+                        <span className="ml-auto text-slate-800 px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.Unclear} / {totalLearned}</span>
                       </div>
                       <div className="flex items-center gap-2 pt-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-black mr-2"></span>
-                        <span className="text-black font-normal">Confused</span>
-                        <span className="ml-auto text-black px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.confused} / {totalLearned}</span>
+                        <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                        <span className="text-slate-800 font-normal">Confused</span>
+                        <span className="ml-auto text-slate-800 px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.confused} / {totalLearned}</span>
                       </div>
                     </div>
                   );
@@ -651,7 +651,7 @@ IMPORTANT INSTRUCTIONS:
           </div>
 
           {/* --- Project/Assignment Grid --- */}
-          <h2 className="text-2xl text-left font-bold text-slate-800 mb-6 mt-10">Apply learning</h2>
+          <h2 className="text-2xl text-left font-bold text-slate-800 mb-6 mt-10 tracking-tight">Apply learning</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
              {/* Assignment Box */}
@@ -659,7 +659,7 @@ IMPORTANT INSTRUCTIONS:
               <Assignment learnedConcepts={userData.python?.learnedConcepts || []} />
             </div>
             {/* Project Box */}
-            <motion.div className="bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full h-76 rounded-lg shadow-2xl p-6 lg:sticky lg:top-28">
+            <motion.div className="bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full h-76 rounded-2xl shadow-2xl p-6 lg:sticky lg:top-28 ring-1 ring-white/10">
               <h2 className="text-2xl font-bold text-white mb-6">
                 Project
               </h2>
@@ -674,7 +674,7 @@ IMPORTANT INSTRUCTIONS:
                     <div className="space-y-9 w-100">
                       <button
                         onClick={handleNextProjectClick}
-                        className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 font-semibold px-4 py-3 rounded-lg shadow-md transition-colors"
+                        className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 active:scale-[0.98] font-semibold px-4 py-3 rounded-xl shadow-md transition-all ring-1 ring-white/10"
                       >
                         🚀 Next Project
                         <svg
@@ -694,7 +694,7 @@ IMPORTANT INSTRUCTIONS:
                       
                       <button
                         onClick={handleCustomProjectClick}
-                        className="w-full inline-flex items-center justify-center gap-2 text-white cursor-pointer font-semibold px-4 py-3 rounded-lg shadow-md transition-colors border border-white border-opacity-30"
+                        className="w-full inline-flex items-center justify-center gap-2 text-white cursor-pointer font-semibold px-4 py-3 rounded-xl shadow-md transition-all border border-white/30 hover:bg-white/10 active:scale-[0.98]"
                       >
                         ⚙️ Custom Project
                         
@@ -708,7 +708,7 @@ IMPORTANT INSTRUCTIONS:
                     <div className="space-y-9 w-100">
                       <button
                         onClick={handleNextProjectClick}
-                        className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 font-semibold px-4 py-3 rounded-lg shadow-md transition-colors"
+                        className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 font-semibold px-4 py-3 rounded-xl shadow-md transition-colors ring-1 ring-white/10"
                       >
                         🚀 Start New Project
                         <svg
@@ -743,7 +743,7 @@ IMPORTANT INSTRUCTIONS:
                   <div className="space-y-9 w-100">
                     <button
                       onClick={handleNextProjectClick}
-                      className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 font-semibold px-4 py-3 rounded-lg shadow-md transition-colors"
+                      className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 active:scale-[0.98] font-semibold px-4 py-3 rounded-xl shadow-md transition-all ring-1 ring-white/10"
                     >
                       ✨ Start New Project
                       <svg
@@ -763,7 +763,7 @@ IMPORTANT INSTRUCTIONS:
                     
                     <button
                       disabled
-                      className="w-full inline-flex items-center justify-center gap-2 text-white/50 font-semibold px-4 py-3 rounded-lg shadow-md transition-colors border border-white/20 bg-gray-400/20 cursor-not-allowed"
+                      className="w-full inline-flex items-center justify-center gap-2 text-white/50 font-semibold px-4 py-3 rounded-xl shadow-md transition-colors border border-white/20 bg-gray-400/20 cursor-not-allowed"
                     >
                       🔒 Custom Project
                     </button>
@@ -782,7 +782,7 @@ IMPORTANT INSTRUCTIONS:
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md"
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xl"
                   onClick={handleCloseProjectOverlay}
                 >
                   <motion.div
@@ -790,7 +790,7 @@ IMPORTANT INSTRUCTIONS:
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden"
+                    className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden ring-1 ring-slate-200/60"
                     onClick={(e) => e.stopPropagation()}
                   >
                         <button
@@ -892,14 +892,14 @@ IMPORTANT INSTRUCTIONS:
                                 alert('Failed to save project. Please try again.');
                               }
                             }}
-                            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 active:scale-[0.98] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
                           >
                             🚀 Start Project
                           </button>
 
                             <button
                               onClick={handleCloseProjectOverlay}
-                              className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
+                              className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 active:scale-[0.98] hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
                             >
                               Cancel
                             </button>
@@ -1050,10 +1050,10 @@ IMPORTANT INSTRUCTIONS:
         </div>
 
       {/* Project History Section */}
-      <div className="w-full mx-auto lg:px-8 text-left mb-10">
+      <div className="w-full relative px-4 lg:px-8 max-w-7xl mx-auto text-left mb-10">
         
         <h2 className="text-2xl font-bold text-slate-800 mb-6">Project History</h2>
-        <div className="bg-white hover:bg-[#f7f7f7] rounded-lg shadow-md p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 ring-1 ring-slate-200">
           {completedProjects.length === 0 ? (
             <div className="text-slate-500 italic">No completed projects yet.</div>
           ) : (
@@ -1061,19 +1061,19 @@ IMPORTANT INSTRUCTIONS:
               {completedProjects.map((project, idx) => (
                 <li 
                   key={project.key} 
-                  className="flex flex-col md:flex-row gap-2 md:gap-6 py-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="group flex flex-col md:flex-row gap-2 md:gap-6 py-4 cursor-pointer transition-all rounded-lg hover:bg-gray-50 hover:shadow-sm hover:translate-x-[2px]"
                   onClick={() => handleProjectClick(project)}
                 >
                     <div className="flex-1">
-                    <div className="text-2xl font-semibold text-slate-800">{project.projectTitle || project.key}</div>
+                    <div className="text-2xl font-semibold text-slate-800 group-hover:text-purple-700 transition-colors">{project.projectTitle || project.key}</div>
                     <div className="text-slate-500 text-sm mt-2">Completed: {new Date(project.completedAt).toLocaleDateString()}</div>
                     </div>
                     <div className="flex-none flex flex-col items-end gap-2 md:gap-3">
-                    <span className="inline-block text-slate-700 px-3 py-1 text-lg">Click to view details</span>
+                    <span className="inline-block text-slate-700/80 px-3 py-1 text-lg group-hover:text-purple-700 transition-colors">Click to view details</span>
                     {project.publicUrl && (
                       <div className="flex gap-2 mt-2">
                         <button
-                          className="px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 text-xs font-semibold border border-purple-200 transition-colors"
+                          className="px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 active:scale-[0.98] text-xs font-semibold border border-purple-200 transition-all"
                           onClick={e => {
                             e.stopPropagation();
                             const url = project.publicUrl.replace('/public/python-project/', '/python-project/');
@@ -1088,7 +1088,7 @@ IMPORTANT INSTRUCTIONS:
                           href={project.publicUrl.replace('/public/python-project/', '/python-project/')}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 text-xs font-semibold border border-blue-200 transition-colors"
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 active:scale-[0.98] text-xs font-semibold border border-blue-200 transition-all"
                           style={{ fontWeight: 500 }}
                           onClick={e => e.stopPropagation()}
                         >
@@ -1111,7 +1111,7 @@ IMPORTANT INSTRUCTIONS:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xl"
             onClick={handleCloseProjectDetails}
           >
             <motion.div
@@ -1119,7 +1119,7 @@ IMPORTANT INSTRUCTIONS:
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[90vh]"
+              className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden max-h-[90vh] ring-1 ring-slate-200/60"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -1200,7 +1200,7 @@ IMPORTANT INSTRUCTIONS:
                         </svg>
                       </summary>
                       <div className="mt-4">
-                        <div className="bg-gray-900 text-green-400 p-6 rounded-lg overflow-x-auto">
+                        <div className="bg-gray-900/95 text-green-400 p-6 rounded-lg overflow-x-auto ring-1 ring-gray-800">
                           <pre className="text-sm leading-relaxed">{selectedProject.terminalOutput.join('\n')}</pre>
                         </div>
                       </div>
@@ -1252,7 +1252,7 @@ IMPORTANT INSTRUCTIONS:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xl"
             onClick={() => setShowComingSoon(false)}
           >
             <motion.div
@@ -1260,7 +1260,7 @@ IMPORTANT INSTRUCTIONS:
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-white rounded-2xl shadow-2xl px-10 py-8 max-w-sm w-full text-center relative"
+              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl px-10 py-8 max-w-sm w-full text-center relative ring-1 ring-slate-200/60"
               onClick={e => e.stopPropagation()}
             >
               <button
@@ -1290,7 +1290,7 @@ IMPORTANT INSTRUCTIONS:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-xl"
             onClick={() => setShowCustomProjectOverlay(false)}
           >
             <motion.div
@@ -1298,7 +1298,7 @@ IMPORTANT INSTRUCTIONS:
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-white border-2 border-purple-200 rounded-3xl shadow-2xl px-16 py-8 max-w-3xl w-full max-h-[85vh] text-left relative flex flex-col"
+              className="bg-white/90 backdrop-blur-xl border border-purple-200/70 rounded-3xl shadow-2xl px-16 py-8 max-w-3xl w-full max-h-[85vh] text-left relative flex flex-col ring-1 ring-slate-200/60"
               onClick={e => e.stopPropagation()}
             >
               <button
@@ -1315,7 +1315,7 @@ IMPORTANT INSTRUCTIONS:
               <div className="flex-1 overflow-y-auto">
                 <div className="mb-6">
                   <label className="block text-lg font-semibold text-purple-700 mb-3">Concepts Used</label>
-                  <div className="flex flex-wrap gap-3 min-h-[3.5rem] max-h-48 overflow-y-auto bg-purple-50/60 rounded-xl p-3 mb-3 border border-purple-200">
+                  <div className="flex flex-wrap gap-3 min-h-[3.5rem] max-h-48 overflow-y-auto bg-purple-50/60 rounded-xl p-3 mb-3 border border-purple-200/80">
                     {selectedCustomConcepts.length === 0 && (
                       <span className="text-purple-300 text-base">No concepts selected</span>
                     )}
@@ -1337,7 +1337,7 @@ IMPORTANT INSTRUCTIONS:
                     ))}
                   </div>
                   <button
-                    className="px-6 py-2 bg-purple-600 cursor-pointer hover:bg-purple-700 text-white rounded-xl font-bold text-base shadow-lg transition-all"
+                    className="px-6 py-2 bg-purple-600 cursor-pointer hover:bg-purple-700 active:scale-[0.98] text-white rounded-xl font-bold text-base shadow-lg transition-all"
                     onClick={() => setShowConceptPicker(true)}
                     type="button"
                   >
@@ -1362,14 +1362,14 @@ IMPORTANT INSTRUCTIONS:
               <div className="flex-shrink-0 border-t border-purple-200 pt-6">
                 <div className="flex justify-end gap-4">
                   <button
-                    className="px-6 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-base shadow"
+                    className="px-6 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 active:scale-[0.98] text-slate-700 font-semibold text-base shadow"
                     onClick={() => setShowCustomProjectOverlay(false)}
                     disabled={generatingCustomProject}
                   >
                     Cancel
                   </button>
                   <button
-                    className="px-6 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-base shadow-lg flex items-center justify-center gap-2 min-w-[100px]"
+                    className="px-6 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-bold text-base shadow-lg flex items-center justify-center gap-2 min-w-[100px]"
                     onClick={handleCreateCustomProject}
                     disabled={selectedCustomConcepts.length === 0 || !customProjectTheme.trim() || generatingCustomProject}
                   >
@@ -1395,7 +1395,7 @@ IMPORTANT INSTRUCTIONS:
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xl"
             onClick={() => setShowConceptPicker(false)}
           >
             <motion.div
@@ -1403,7 +1403,7 @@ IMPORTANT INSTRUCTIONS:
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-white rounded-2xl shadow-2xl px-10 py-8 max-w-lg w-full text-left relative"
+              className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl px-10 py-8 max-w-lg w-full text-left relative ring-1 ring-slate-200/60"
               onClick={e => e.stopPropagation()}
             >
               <button
@@ -1431,6 +1431,7 @@ IMPORTANT INSTRUCTIONS:
                           <label key={c.concept} className="flex items-center gap-2 cursor-pointer">
                             <input
                               type="checkbox"
+                              className="accent-purple-600"
                               checked={!!conceptPickerChecked[c.concept]}
                               onChange={e => setConceptPickerChecked(prev => ({ ...prev, [c.concept]: e.target.checked }))}
                             />
