@@ -147,14 +147,46 @@ function Project() {
         const completedProjectsRef = ref(db, 'users/' + user.id + '/python/PythonCompletedProjects/' + currentProject);
         await update(completedProjectsRef, completedProjectData);
         
-        // Determine next project
-        let nextProject = null;
-        if (currentProject === 'Project1') nextProject = 'Project2';
-        else if (currentProject === 'Project2') nextProject = 'Project3';
-        // Add more as needed
+        // Get all available projects to determine next one
+        const projectsRef = ref(db, 'PythonProject');
+        const projectsSnap = await get(projectsRef);
+        
+        if (!projectsSnap.exists()) {
+          console.error('No projects found in database');
+          return;
+        }
+        
+        // Get completed projects
+        const completedProjectsListRef = ref(db, `users/${user.id}/python/PythonCompletedProjects`);
+        const completedProjectsSnap = await get(completedProjectsListRef);
+        const completedProjects = completedProjectsSnap.exists() ? completedProjectsSnap.val() : {};
+        
+        // Get all project keys and filter out completed ones
+        const allProjects = Object.keys(projectsSnap.val() || {});
+        const availableProjects = allProjects.filter(project => !completedProjects[project]);
+        
+        // If no more projects, stay on current one
+        let nextProject = availableProjects.length > 0 ? availableProjects[0] : null;
+        
+        // If we have concepts from current project, try to find a project that builds on them
+        const currentProjectData = projectConfig?.Concept ? projectConfig.Concept : [];
+        
+        if (currentProjectData && currentProjectData.length > 0) {
+          // Find a project that uses any of the concepts from current project
+          for (const project of availableProjects) {
+            const projectData = projectsSnap.val()[project];
+            if (projectData.Concept && projectData.Concept.some(concept => 
+              currentProjectData.includes(concept))) {
+              nextProject = project;
+              break;
+            }
+          }
+        }
+        
         const updates = {
           'python/PythonProjectStarted': false
         };
+        
         if (nextProject) {
           updates['python/PythonCurrentProject'] = nextProject;
         }
