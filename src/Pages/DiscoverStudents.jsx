@@ -6,20 +6,6 @@ import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
 import { toast } from 'react-hot-toast';
 
-// Static student (Alex Chen)
-const staticStudents = [
-  {
-    id: 1,
-    name: 'Alex Chen',
-    avatar: '👨‍💻',
-    level: 'Intermediate',
-    skills: ['Python', 'Data Science'],
-    conceptsLearned: 15,
-    projectsCompleted: 3,
-    isOnline: true,
-    lastActive: '2 minutes ago',
-  },
-];
 
 function DiscoverStudents() {
   const [students, setStudents] = useState([]);
@@ -58,9 +44,6 @@ function DiscoverStudents() {
     return () => unsubscribe();
   }, [user]);
 
-  // Combine static and dynamic students, but keep Alex Chen at the top
-  const allStudents = [...staticStudents, ...students];
-
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50/30 p-6">
       <motion.div
@@ -68,7 +51,7 @@ function DiscoverStudents() {
         animate={{ opacity: 1, y: 0 }}
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-8 w-full max-w-[1800px] mx-auto px-4"
       >
-        {allStudents.map((student) => (
+        {students.map((student) => (
           <motion.div
             key={student.id}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -77,9 +60,7 @@ function DiscoverStudents() {
             onClick={(e) => {
               // Only navigate if clicking directly on the card background
               if (e.target === e.currentTarget) {
-                if (student.id !== '1') {
-                  navigate(`/userprofile/${student.id}`);
-                }
+                navigate(`/userprofile/${student.id}`);
               }
             }}
           >
@@ -134,7 +115,6 @@ function DiscoverStudents() {
                   onClick={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (student.id === '1') return; // Skip for static user
                     
                     try {
                       const currentUser = user;
@@ -169,6 +149,18 @@ function DiscoverStudents() {
                       
                       // Update in Firebase
                       await set(ref(db, `users/${student.id}/observers`), updatedObservers);
+                      
+                      // Also update current user's 'observing' list
+                      const observerRef = ref(db, `users/${observerId}`);
+                      const observerSnap = await get(observerRef);
+                      if (observerSnap.exists()) {
+                        const observerData = observerSnap.val();
+                        const currentObserving = Array.isArray(observerData.observing) ? observerData.observing : [];
+                        if (!currentObserving.includes(student.id)) {
+                          const updatedObserving = [...currentObserving, student.id];
+                          await set(ref(db, `users/${observerId}/observing`), updatedObserving);
+                        }
+                      }
                       
                       // Update local state if needed
                       const updatedStudents = students.map(s => 

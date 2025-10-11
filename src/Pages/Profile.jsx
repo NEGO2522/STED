@@ -25,7 +25,7 @@ function Profile() {
         'public-speaking': {},
         powerbi: {},
         projectHistory: [],
-        observers: [3],
+        observers: [],
         observing: []
     });
     const [isLoading, setIsLoading] = useState(true);
@@ -274,12 +274,12 @@ function Profile() {
                                 </div>
                                 <div className="flex items-center mt-10 text-sm space-x-4">
                                     <div className="flex items-center">
-                                        <span className="text-slate-800 font-semibold">{userData.observers?.length || 34}</span>
+                                        <span className="text-slate-800 font-semibold">{userData.observers?.length || 0}</span>
                                         <span className="text-slate-600 ml-2">Observers</span>
                                     </div>
                                     <div className="w-px h-4 bg-slate-200"></div>
                                     <div className="flex items-center">
-                                        <span className="text-slate-800 font-semibold">{userData.observing?.length || 8}</span>
+                                        <span className="text-slate-800 font-semibold">{userData.observing?.length || 0}</span>
                                         <span className="text-slate-600 ml-2">Observing</span>
                                     </div>
                                 </div>
@@ -328,9 +328,9 @@ function Profile() {
                                   applied = pandasStats.applied;
                                   total = pandasStats.total;
                                 } else {
-                                  learned = 8;
-                                  applied = 2;
-                                  total = 50;
+                                  learned = 0;
+                                  applied = 0;
+                                  total = 0;
                                 }
                                 return (
                                   <Link to={skill.route} key={key}>

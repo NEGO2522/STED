@@ -9,9 +9,10 @@ const pandasIcon = <span className="text-2xl mr-2">🐼</span>;
 import learned from "../assets/learned.png";
 import applied from "../assets/applied.png";
 import { db } from '../firebase';
-import { ref, get } from 'firebase/database';
+import { ref, get, set, onValue } from 'firebase/database';
 import { getProjectConfig } from '../PythonProject/projectConfig';
 import { FaChevronDown } from 'react-icons/fa';
+import { useUser } from '@clerk/clerk-react';
 
 export default function UserProfile() {
   const { id } = useParams();
@@ -27,71 +28,44 @@ export default function UserProfile() {
   const [copiedProjectId, setCopiedProjectId] = useState(null);
   const [powerbiStats, setPowerbiStats] = useState({ learned: 0, applied: 0, total: 0 });
   const [pandasStats, setPandasStats] = useState({ learned: 0, applied: 0, total: 0 });
+  const { user } = useUser();
 
   useEffect(() => {
-    async function fetchUser() {
-      if (id === '1') {
-        // Static Alex Chen
+    let unsubscribe;
+    const userRef = ref(db, 'users/' + id);
+    unsubscribe = onValue(userRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.val();
+        const skills = ['python', 'powerbi', 'pandas', 'data-science', 'public-speaking'].filter(k => data[k]);
+        const projectHistory = data.projectHistory || [];
         setUserData({
-          id: 1,
-          name: 'Alex Chen',
-          avatar: '👨‍💻',
-          level: 'Intermediate',
-          email: 'alex.chen@email.com',
-          skills: ['Python', 'Data Science'],
-          conceptsLearned: 15,
-          projectsCompleted: 3,
+          id,
+          name: data.name || data.fullName || data.username || 'Student',
+          avatar: data.avatar || '👤',
+          level: data.level || '',
+          email: data.email || data.emailAddress || '',
+          skills: skills.length > 0 ? skills : ['no skills'],
+          conceptsLearned: (data.python?.learnedConcepts ? Object.keys(data.python.learnedConcepts).length : 0),
+          projectsCompleted: projectHistory.length,
           isOnline: true,
-          lastActive: '2 minutes ago',
-          observers: [2, 3],
-          observing: [3],
-          projectHistory: [
-            { name: 'Personal Finance Tracker', description: 'A finance app', completedDate: '2024-06-01', sp: 10, skill: 'python' },
-            { name: 'Data Dashboard', description: 'BI dashboard', completedDate: '2024-06-05', sp: 10, skill: 'powerbi' }
-          ],
-          python: { PythonSkill: 16 },
-          powerbi: { PowerBiSkill: 40 },
-          'data-science': { dataSkill: 20 },
-          'public-speaking': { speakingSkill: 0 },
+          lastActive: '',
+          observers: data.observers || [],
+          observing: data.observing || [],
+          projectHistory,
+          python: data.python || {},
+          powerbi: data.powerbi || {},
+          pandas: data.pandas || {},
+          'data-science': data['data-science'] || {},
+          'public-speaking': data['public-speaking'] || {},
         });
-        setLoading(false);
       } else {
-        // Fetch from Firebase
-        const userRef = ref(db, 'users/' + id);
-        const snap = await get(userRef);
-        if (snap.exists()) {
-          const data = snap.val();
-          // Map Firebase data to the same structure as Alex Chen
-          const skills = ['python', 'powerbi', 'pandas', 'data-science', 'public-speaking'].filter(k => data[k]);
-          const projectHistory = data.projectHistory || [];
-          setUserData({
-            id,
-            name: data.name || data.fullName || data.username || 'Student',
-            avatar: data.avatar || '👤',
-            level: data.level || '',
-            email: data.email || data.emailAddress || '',
-            skills: skills.length > 0 ? skills : ['no skills'],
-            conceptsLearned: (data.python?.learnedConcepts ? Object.keys(data.python.learnedConcepts).length : 0),
-            projectsCompleted: projectHistory.length,
-            isOnline: true,
-            lastActive: '',
-            observers: data.observers || [],
-            observing: data.observing || [],
-            projectHistory,
-            python: data.python || {},
-            powerbi: data.powerbi || {},
-            pandas: data.pandas || {},
-            'data-science': data['data-science'] || {},
-            'public-speaking': data['public-speaking'] || {},
-          });
-          // (Removed misplaced useEffect from inside fetchUser)
-        } else {
-          setUserData(null);
-        }
-        setLoading(false);
+        setUserData(null);
       }
-    }
-    fetchUser();
+      setLoading(false);
+    }, (error) => {
+      setLoading(false);
+    });
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [id]);
 
   useEffect(() => {
@@ -555,8 +529,34 @@ export default function UserProfile() {
                       <span className="text-slate-600 text-left">Total SP: <span className="font-semibold">{getTotalSP()}</span></span>
                     </div>
                   </div>
-                  <button className="border border-purple-600 text-purple-600 px-12 py-2 rounded-4xl text-sm font-medium hover:bg-purple-700 hover:text-white transition-colors ml-6">
-                    Observe
+                  <button
+                    className="border border-purple-600 text-purple-600 px-12 py-2 rounded-4xl text-sm font-medium hover:bg-purple-700 hover:text-white transition-colors ml-6"
+                    onClick={async () => {
+                      if (!user) return;
+                      const observerId = user.id;
+                      const userRef = ref(db, 'users/' + id);
+                      const snap = await get(userRef);
+                      if (!snap.exists()) return;
+                      const data = snap.val();
+                      const currentObservers = Array.isArray(data.observers) ? data.observers : [];
+                      if (currentObservers.includes(observerId)) return;
+                      const updatedObservers = [...currentObservers, observerId];
+                      await set(ref(db, `users/${id}/observers`), updatedObservers);
+                      // Also update current user's 'observing' list
+                      const observerRef = ref(db, `users/${observerId}`);
+                      const observerSnap = await get(observerRef);
+                      if (observerSnap.exists()) {
+                        const observerData = observerSnap.val();
+                        const currentObserving = Array.isArray(observerData.observing) ? observerData.observing : [];
+                        if (!currentObserving.includes(id)) {
+                          const updatedObserving = [...currentObserving, id];
+                          await set(ref(db, `users/${observerId}/observing`), updatedObserving);
+                        }
+                      }
+                      setUserData(prev => prev ? { ...prev, observers: updatedObservers } : prev);
+                    }}
+                  >
+                    {user && userData?.observers?.includes(user.id) ? 'Observing' : 'Observe'}
                   </button>
                 </div>
               </div>
