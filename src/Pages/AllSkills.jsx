@@ -455,6 +455,7 @@ function AllSkills() {
                         {Object.entries(skillMap).map(([key, skill]) => {
                             // Define the ProjectStarted field name for this skill
                             const projectStartedField = {
+                                'python': 'PythonProjectStarted',
                                 'dataScience': 'DataScienceProjectStarted',
                                 'publicSpeaking': 'PublicSpeakingProjectStarted',
                                 'powerbi': 'PowerBiProjectStarted',

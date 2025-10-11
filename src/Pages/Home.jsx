@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useUser } from '@clerk/clerk-react';
-import { getDatabase, ref, get } from 'firebase/database';
+import { getDatabase, ref, get, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import Navbar from '../components/Navbar';
 import Feed from '../components/Feed';
@@ -58,22 +58,22 @@ function Home() {
     'python': {
       route: '/python',
       node: 'python',
-      currentProjectField: 'PythonCurrentProject',
+      currentProjectField: 'currentPythonProject',
       img: python,
       label: 'Python',
     },
     'data-science': {
       route: '/data-science',
-      node: 'data-science',
-      currentProjectField: 'DataScienceCurrentProject',
+      node: 'dataScience',
+      currentProjectField: 'currentDataScienceProject',
       img: null,
       label: 'Data Science',
       icon: <span className="text-xl mr-2">📊</span>,
     },
     'public-speaking': {
       route: '/public-speaking',
-      node: 'public-speaking',
-      currentProjectField: 'PublicSpeakingCurrentProject',
+      node: 'publicSpeaking',
+      currentProjectField: 'currentPublicSpeakingProject',
       img: null,
       label: 'Public Speaking',
       icon: <span className="text-xl mr-2">🎤</span>,
@@ -81,14 +81,14 @@ function Home() {
     'powerbi': {
       route: '/powerbi',
       node: 'powerbi',
-      currentProjectField: 'PowerBiCurrentProject',
+      currentProjectField: 'currentPowerBIProject',
       img: PowerBi,
       label: 'Power BI',
     },
     'pandas': {
       route: '/pandas',
       node: 'pandas',
-      currentProjectField: 'PandasCurrentProject',
+      currentProjectField: 'currentPandasProject',
       img: null,
       label: 'Pandas',
       icon: <span className="text-2xl mr-2">🐼</span>,
@@ -96,19 +96,30 @@ function Home() {
   };
 
   // Get started skills
-  const startedSkills = Object.entries(skillMap).filter(([key, skill]) =>
-    userData && userData[skill.node] && userData[skill.node][skill.currentProjectField]
-  );
+  const startedSkills = Object.entries(skillMap).filter(([key, skill]) => {
+    const projectStartedField = {
+      'python': 'PythonProjectStarted',
+      'dataScience': 'DataScienceProjectStarted',
+      'publicSpeaking': 'PublicSpeakingProjectStarted',
+      'powerbi': 'PowerBiProjectStarted',
+      'pandas': 'PandasProjectStarted',
+    }[skill.node];
+    return (
+      userData?.[skill.node]?.[skill.currentProjectField] ||
+      (projectStartedField && userData?.[skill.node]?.[projectStartedField] !== undefined)
+    );
+  });
 
   // Fetch user data and skills
   useEffect(() => {
     if (isLoaded && isSignedIn && user?.id) {
       const userRef = ref(db, 'users/' + user.id);
-      
-      // Fetch user data
-      get(userRef).then((snapshot) => {
+      // Live subscribe to user data so the side panel updates immediately
+      const unsubscribe = onValue(userRef, (snapshot) => {
         if (snapshot.exists()) {
           setUserData(snapshot.val());
+        } else {
+          setUserData(null);
         }
         setIsLoadingProfile(false);
       });
@@ -252,6 +263,8 @@ function Home() {
       fetchPythonData();
       fetchPowerBIData();
       fetchPandasData();
+
+      return () => unsubscribe();
     }
   }, [isLoaded, isSignedIn, user]);
 
