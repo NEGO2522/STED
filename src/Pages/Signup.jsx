@@ -1,18 +1,8 @@
-import React, { useEffect } from 'react';
-import { SignUp, useAuth } from '@clerk/clerk-react';
+import React from 'react';
+import { SignUp } from '@clerk/clerk-react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 
 function Signup() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isLoaded && isSignedIn) {
-      navigate('/start');
-    }
-  }, [isLoaded, isSignedIn, navigate]);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-purple-200 via-pink-100 to-yellow-100 p-4">
       <motion.div
@@ -24,11 +14,7 @@ function Signup() {
       >
         <div className="w-full flex items-center justify-center">
           <SignUp 
-            routing="path"
-            path="/signup"
-            signInUrl="/login"
-            afterSignUpUrl="/start"
-            afterSignInUrl="/start"
+            afterSignUpUrl="/home"
             appearance={{
               elements: {
                 formButtonPrimary: 'bg-blue-600 hover:bg-blue-700',

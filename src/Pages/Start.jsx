@@ -24,17 +24,18 @@ function Start() {
   const [hoveredSkill, setHoveredSkill] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  const handleNavigation = (e) => {
+    if (!isSignedIn) {
+      e.preventDefault();
+      navigate('/login');
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      navigate('/login');
-    }
-  }, [isLoaded, isSignedIn, navigate]);
 
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Loading...</div>;
@@ -118,8 +119,18 @@ function Start() {
                 <ProfileIcon />
               ) : (
                 <>
-                  <Link to="/login" className="text-slate-300 hover:text-blue-400 transition-colors">Sign In</Link>
-                  <Link to="/signup" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                  <Link 
+                    to="/login" 
+                    className="text-slate-300 hover:text-blue-400 transition-colors"
+                    onClick={handleNavigation}
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    to="/signup" 
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                    onClick={handleNavigation}
+                  >
                     Get Started
                   </Link>
                 </>
@@ -193,7 +204,11 @@ function Start() {
               transition={{ delay: 0.5, duration: 0.8 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              <Link to="/home" className="w-full sm:w-auto">
+              <Link 
+                to={isSignedIn ? "/home" : "#"} 
+                className="w-full sm:w-auto"
+                onClick={!isSignedIn ? handleNavigation : undefined}
+              >
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
@@ -205,7 +220,11 @@ function Start() {
                   </svg>
                 </motion.button>
               </Link>
-              <Link to="/all-skills" className="w-full sm:w-auto">
+              <Link 
+                to={isSignedIn ? "/all-skills" : "#"} 
+                className="w-full sm:w-auto"
+                onClick={!isSignedIn ? handleNavigation : undefined}
+              >
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}

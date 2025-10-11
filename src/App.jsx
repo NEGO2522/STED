@@ -106,7 +106,7 @@ function AppContent() {
         <Route path="/data-science" element={<SignedIn><DataScience /></SignedIn>} />
         <Route path="/python" element={<SignedIn><Python /></SignedIn>} />
         <Route path="/powerbi" element={<SignedIn><PowerBi /></SignedIn>} />
-        <Route path="/pandas" element={<SignedIn><Pandas /></SignedIn>} />
+        <Route path="/pandas" element={<SignedIn><Pandas /></SignedIn>} />  
         <Route path="/python/project" element={<SignedIn><Project /></SignedIn>} />
         <Route path="/pandas/project" element={<SignedIn><PandasProject /></SignedIn>} />
         <Route path="/All-skills" element={<SignedIn><AllSkills /></SignedIn>} />
