@@ -768,12 +768,6 @@ IMPORTANT INSTRUCTIONS:
                     className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-4xl mx-4 overflow-hidden ring-1 ring-slate-200/60"
                     onClick={(e) => e.stopPropagation()}
                   >
-                        <button
-                          onClick={handleCloseProjectOverlay}
-                      className="absolute top-6 right-8 text-slate-700 hover:text-purple-600 text-4xl font-bold z-10 transition-colors"
-                        >
-                          ×
-                        </button>
 
                     <div className="p-12">
                       {nextProject ? (
@@ -785,18 +779,17 @@ IMPORTANT INSTRUCTIONS:
                                 <div className="group">
                                   <button
                                     onClick={handleNextProjectClick}
-                                    className="text-purple-600 hover:text-purple-700 text-sm font-semibold transition-colors relative"
+                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-white/80 hover:bg-purple-50 text-purple-600 hover:text-purple-700 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                                   >
                                     <img 
-                                      className="w-7" 
+                                      className="w-5 h-5" 
                                       src={SeeAnother} 
-                                      alt="Next project" 
+                                      alt="" 
                                     />
-                                    {/* Hover Overlay */}
-                                    <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20">
-                                      Next Project
-                                      <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-                                    </div>
+                                    <span className="text-sm font-semibold">Next</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 ml-0.5 -mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                    </svg>
                                   </button>
                                 </div>
                               </div>
