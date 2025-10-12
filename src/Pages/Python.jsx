@@ -47,6 +47,7 @@ function Python() {
   const [shownProjects, setShownProjects] = useState([]);
   const [nextProject, setNextProject] = useState(null);
   const [generatingCustomProject, setGeneratingCustomProject] = useState(false);
+  const [isGeneratingProject, setIsGeneratingProject] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -208,55 +209,160 @@ function Python() {
     }
   };
 
+  // Handler for the main "Next Project" button (with 3s delay)
   const handleNextProjectClick = async () => {
+    setIsGeneratingProject(true);
+    
+    // Show loading for 3 seconds for the main button
+    setTimeout(async () => {
+      try {
+      // Fetch all available projects from Firebase
+      const projectsRef = ref(db, 'PythonProject');
+      const snapshot = await get(projectsRef);
+      
+      if (snapshot.exists()) {
+        // Get user's completed projects with their details
+        let userCompletedProjects = [];
+        if (user) {
+          const userRef = ref(db, `users/${user.id}/python/PythonCompletedProjects`);
+          const userSnapshot = await get(userRef);
+          if (userSnapshot.exists()) {
+            userCompletedProjects = Object.entries(userSnapshot.val() || {}).map(([id, data]) => ({
+              id,
+              projectKey: data.projectKey || id,
+              projectTitle: data.projectTitle || ''
+            }));
+          }
+        }
+        
+        // Get all projects and filter out completed ones
+        let allProjects = Object.entries(snapshot.val())
+          .filter(([id]) => id !== 'AllConcepts') // Filter out non-project entries
+          .map(([id, project]) => ({
+            id,
+            title: project.title || project.id,
+            ...project
+          }))
+          // Filter out completed projects by checking both ID and title
+          .filter(project => {
+            return !userCompletedProjects.some(completed => 
+              completed.id === project.id || 
+              completed.projectKey === project.id ||
+              completed.projectTitle === project.title
+            );
+          });
+
+        if (allProjects.length === 0) {
+          console.log('No new projects available. You have completed all projects!');
+          return;
+        }
+
+        // If no projects have been shown yet, start with a random one
+        if (shownProjects.length === 0) {
+          const randomIndex = Math.floor(Math.random() * allProjects.length);
+          const selectedProject = allProjects[randomIndex];
+          setShownProjects([selectedProject.id]);
+          setNextProject(selectedProject);
+          setShowProjectOverlay(true);
+          return;
+        }
+
+        // Find the index of the last shown project in allProjects
+        const lastShownProjectId = shownProjects[shownProjects.length - 1];
+        const lastShownIndex = allProjects.findIndex(p => p.id === lastShownProjectId);
+        
+        // Calculate the next project index (loop back to start if at the end)
+        const nextIndex = (lastShownIndex + 1) % allProjects.length;
+        const selectedProject = allProjects[nextIndex];
+        
+        // Update shown projects
+        setShownProjects(prev => [...prev, selectedProject.id]);
+        
+        // Add to shown projects
+        setShownProjects(prev => [...prev, selectedProject.id]);
+        setNextProject(selectedProject);
+        setShowProjectOverlay(true);
+      }
+      } catch (err) {
+        console.error('Error loading next project:', err);
+        // Fallback to ProjectRecommender on error
+        setNextProject(null);
+        setShowProjectOverlay(true);
+      } finally {
+        setIsGeneratingProject(false);
+      }
+    }, 3000); // 5 second delay
+  };
+
+  // Handler for the overlay's "Next" button (no delay)
+  const handleOverlayNextClick = async () => {
     try {
       // Fetch all available projects from Firebase
       const projectsRef = ref(db, 'PythonProject');
       const snapshot = await get(projectsRef);
       
       if (snapshot.exists()) {
-        const allProjects = Object.entries(snapshot.val())
-          .filter(([id, project]) => id !== 'AllConcepts') // Filter out non-project entries
+        // Get user's completed projects with their details
+        let userCompletedProjects = [];
+        if (user) {
+          const userRef = ref(db, `users/${user.id}/python/PythonCompletedProjects`);
+          const userSnapshot = await get(userRef);
+          if (userSnapshot.exists()) {
+            userCompletedProjects = Object.entries(userSnapshot.val() || {}).map(([id, data]) => ({
+              id,
+              projectKey: data.projectKey || id,
+              projectTitle: data.projectTitle || ''
+            }));
+          }
+        }
+        
+        // Get all projects and filter out completed ones
+        let allProjects = Object.entries(snapshot.val())
+          .filter(([id]) => id !== 'AllConcepts') // Filter out non-project entries
           .map(([id, project]) => ({
             id,
+            title: project.title || project.id,
             ...project
-          }));
-        
-        // Filter out completed projects and already shown projects
-        const availableProjects = allProjects.filter(project => {
-          // Check if this project is in completed projects using multiple possible keys
-          const isCompleted = completedProjects.some(completedProject => {
-            return (
-              completedProject.projectKey === project.id ||
-              completedProject.key === project.id ||
-              completedProject.projectTitle === project.title ||
-              completedProject.id === project.id
+          }))
+          // Filter out completed projects by checking both ID and title
+          .filter(project => {
+            return !userCompletedProjects.some(completed => 
+              completed.id === project.id || 
+              completed.projectKey === project.id ||
+              completed.projectTitle === project.title
             );
           });
-          
-          // Also check if already shown in this session
-          const alreadyShown = shownProjects.includes(project.id);
-          
-          return !isCompleted && !alreadyShown;
-        });
-        
-        if (availableProjects.length > 0) {
-          // Select a random Firebase project from available ones
-          const selectedProject = availableProjects[Math.floor(Math.random() * availableProjects.length)];
-          // Add to shown projects
-          setShownProjects(prev => [...prev, selectedProject.id]);
+
+        if (allProjects.length === 0) {
+          console.log('No new projects available. You have completed all projects!');
+          return;
+        }
+
+        // If no projects have been shown yet, start with a random one
+        if (shownProjects.length === 0) {
+          const randomIndex = Math.floor(Math.random() * allProjects.length);
+          const selectedProject = allProjects[randomIndex];
+          setShownProjects([selectedProject.id]);
           setNextProject(selectedProject);
           setShowProjectOverlay(true);
           return;
         }
+
+        // Find the index of the last shown project in allProjects
+        const lastShownProjectId = shownProjects[shownProjects.length - 1];
+        const lastShownIndex = allProjects.findIndex(p => p.id === lastShownProjectId);
+        
+        // Calculate the next project index (loop back to start if at the end)
+        const nextIndex = (lastShownIndex + 1) % allProjects.length;
+        const selectedProject = allProjects[nextIndex];
+        
+        // Update shown projects
+        setShownProjects(prev => [...prev, selectedProject.id]);
+        setNextProject(selectedProject);
+        setShowProjectOverlay(true);
       }
-      
-      // If no Firebase projects available, fallback to Gemini (ProjectRecommender)
-      setNextProject(null); // This will trigger ProjectRecommender in the overlay
-      setShowProjectOverlay(true);
     } catch (err) {
-      console.error('Error loading next project:', err);
-      // Fallback to ProjectRecommender on error
+      console.error('Error loading next project in overlay:', err);
       setNextProject(null);
       setShowProjectOverlay(true);
     }
@@ -649,22 +755,37 @@ IMPORTANT INSTRUCTIONS:
                     <div className="space-y-9 w-100">
                       <button
                         onClick={handleNextProjectClick}
-                        className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 active:scale-[0.98] font-semibold px-4 py-3 rounded-xl shadow-md transition-all ring-1 ring-white/10"
+                        disabled={isGeneratingProject}
+                        className={`w-full inline-flex items-center justify-center gap-2 ${
+                          isGeneratingProject ? 'bg-purple-700' : 'bg-purple-900 hover:bg-purple-700 active:scale-[0.98]'
+                        } text-white font-semibold px-4 py-3 rounded-xl shadow-md transition-all ring-1 ring-white/10`}
                       >
-                        🚀 Next Project
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
+                        {isGeneratingProject ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            🚀 Next Project
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                          </>
+                        )}
                       </button>
                       
                       <button
@@ -778,7 +899,7 @@ IMPORTANT INSTRUCTIONS:
                               <div className="absolute top-0 right-0 z-10">
                                 <div className="group">
                                   <button
-                                    onClick={handleNextProjectClick}
+                                    onClick={handleOverlayNextClick}
                                     className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-white/80 hover:bg-purple-50 text-purple-600 hover:text-purple-700 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                                   >
                                     <img 
@@ -1277,7 +1398,7 @@ IMPORTANT INSTRUCTIONS:
                 ×
               </button>
               <div className="flex-shrink-0">
-                <h2 className="text-3xl font-extrabold mb-6 text-purple-800 tracking-tight drop-shadow">Create Custom Project</h2>
+                <h2 className="text-3xl font-extrabold mb-6 text-purple-800 tracking-tight drop-shadow">Generate Custom Project using AI</h2>
               </div>
               
               <div className="flex-1 overflow-y-auto">
