@@ -1457,20 +1457,15 @@ IMPORTANT INSTRUCTIONS:
                   >
                     Cancel
                   </button>
-                  <button
-                    className="px-6 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 active:scale-[0.98] text-white font-bold text-base shadow-lg flex items-center justify-center gap-2 min-w-[100px]"
-                    onClick={handleCreateCustomProject}
-                    disabled={selectedCustomConcepts.length === 0 || !customProjectTheme.trim() || generatingCustomProject}
-                  >
-                    {generatingCustomProject ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                        Generating...
-                      </>
-                    ) : (
-                      'Create'
-                    )}
-                  </button>
+                  <div className="flex flex-col items-center gap-1">
+                    <button
+                      className="px-6 py-2 rounded-xl bg-blue-700/50 text-white/80 font-bold text-base shadow-lg flex items-center justify-center gap-2 min-w-[100px] cursor-not-allowed"
+                      disabled={true}
+                    >
+                      Create
+                    </button>
+                    <span className="text-slate-400 text-xs font-medium">Coming Soon</span>
+                  </div>
                 </div>
               </div>
             </motion.div>

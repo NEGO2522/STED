@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ref, get, update } from 'firebase/database';
 import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
@@ -33,6 +34,15 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [pointsHistory, setPointsHistory] = useState([]);
   const [pointsHistoryLoading, setPointsHistoryLoading] = useState(false);
   const { user } = useUser();
+
+  // Modal portal helper to render overlays at document body level
+  const ModalPortal = ({ children }) => {
+    if (typeof document === 'undefined') return null;
+    return createPortal(children, document.body);
+  };
+
+  // Portal helper to render modals at the document body level
+  // (single ModalPortal helper above)
 
   // Skill configuration mapping
   const skillConfig = {
@@ -680,8 +690,9 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
 
       {/* Overlay for adding concepts */}
       {showOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md">
-          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md">
+            <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative mx-4">
             <button
               className="absolute top-2 right-2 text-slate-500 hover:text-slate-800 text-xl"
               onClick={() => setShowOverlay(false)}
@@ -730,8 +741,9 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
                 {adding ? 'Adding...' : 'Add Selected'}
               </button>
             </div>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* Overlay for concept status selection */}
