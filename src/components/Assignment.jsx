@@ -64,7 +64,7 @@ function Assignment({ learnedConcepts = [] }) {
           <button
             onClick={handleNextTaskClick}
             disabled={isGeneratingTask}
-            className={`w-full flex items-center justify-center gap-3 px-6 py-4 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 ${
+            className={`w-full text-white flex items-center justify-center gap-3 px-6 py-4 text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 ${
               isGeneratingTask
                 ? 'bg-white/20 cursor-not-allowed'
                 : 'bg-white/10 hover:bg-white/20 text-white border-2 border-white/20 hover:border-white/30'
@@ -139,7 +139,7 @@ function Assignment({ learnedConcepts = [] }) {
               onClick={(e) => e.stopPropagation()}
             >
               {a.Category && (
-                <span className="absolute top-6 right-6 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
+                <span className="absolute top-6 left-6 bg-red-500 text-white px-4 py-1.5 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
                     {a.Category}
                 </span>
               )}
@@ -198,7 +198,7 @@ function Assignment({ learnedConcepts = [] }) {
                     onClick={() => setShowTaskOverlay(false)}
                     className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 active:scale-[0.98] hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
                   >
-                    Maybe Later
+                    Cancel
                   </button>
                 </div>
               </div>
