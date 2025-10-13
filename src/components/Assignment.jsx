@@ -144,13 +144,6 @@ function Assignment({ learnedConcepts = [] }) {
               <div className="p-8">
                 <div className="mb-8">
                   <div className="text-center mb-6 relative">
-                    {/* Task Type Badge */}
-                    <div className="absolute top-0 right-0 z-10">
-                      <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700 border border-red-200">
-                        {a.title.includes('Fix') ? '🐞 Fix Bug' : '✨ Add Feature'}
-                      </div>
-                    </div>
-                    
                     <h2 className="text-3xl font-bold mb-3 text-purple-700 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                       {a.title}
                     </h2>
@@ -158,17 +151,7 @@ function Assignment({ learnedConcepts = [] }) {
                   </div>
                   
                   <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 mb-8 border border-purple-100">
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-purple-700 mb-2 flex items-center gap-2">
-                        <span className="text-purple-600">📝</span>
-                        Task Description
-                      </h3>
-                      <p className="text-gray-700 leading-relaxed">
-                        {a.description}
-                      </p>
-                    </div>
-                    
-                    <div className="bg-white rounded-xl p-5 border border-purple-200">
+                    <div className="bg-white rounded-xl p-5 border border-purple-200 mb-6">
                       <h3 className="text-lg font-semibold text-purple-700 mb-3 flex items-center gap-2">
                         <span className="text-purple-600">🎯</span>
                         Your Task
@@ -178,18 +161,28 @@ function Assignment({ learnedConcepts = [] }) {
                           ? 'Fix the bug so that the function works as intended. Pay attention to data types and edge cases.'
                           : 'Implement the new feature following the given requirements. Make sure to follow best practices.'}
                       </p>
-                      
-                      <div className="mt-4">
-                        <h4 className="font-medium text-purple-700 mb-2">Concepts Used:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-sm font-medium border border-purple-200">
-                            {a.concept || 'Python Basics'}
-                          </span>
-                          <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200">
-                            {a.category || 'General Programming'}
-                          </span>
-                        </div>
-                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-purple-700 mb-2 flex items-center gap-2">
+                        <span className="text-purple-600">📝</span>
+                        Task Description
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">
+                        {a.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="font-medium text-purple-700 mb-2">Concepts Used:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-sm font-medium border border-purple-200">
+                        {a.concept || 'Python Basics'}
+                      </span>
+                      <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200">
+                        {a.category || 'General Programming'}
+                      </span>
                     </div>
                   </div>
                 </div>

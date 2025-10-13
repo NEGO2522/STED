@@ -46,6 +46,7 @@ const ClerkAuthCallback = () => {
 
 function AppContent() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { isLoaded } = useUser();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -68,6 +69,14 @@ function AppContent() {
         >
           Refresh
         </button>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+        <div className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
