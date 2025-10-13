@@ -24,7 +24,7 @@ function Python() {
     tasksCompleted: 0,
     pythonSkill: 0,
     sqlSkill: 0,
-    mlSkill: 0,
+    mlSkill: 0,   
   });
   const [completedProjects, setCompletedProjects] = useState([]);
   const [showProjectDetailsOverlay, setShowProjectDetailsOverlay] = useState(false);
