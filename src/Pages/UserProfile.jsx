@@ -11,7 +11,7 @@ import applied from "../assets/applied.png";
 import { db } from '../firebase';
 import { ref, get, set, onValue } from 'firebase/database';
 import { getProjectConfig } from '../PythonProject/projectConfig';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaChevronDown, FaUser, FaUserCheck, FaTimes } from 'react-icons/fa';
 import { useUser } from '@clerk/clerk-react';
 
 export default function UserProfile() {
@@ -28,7 +28,64 @@ export default function UserProfile() {
   const [copiedProjectId, setCopiedProjectId] = useState(null);
   const [powerbiStats, setPowerbiStats] = useState({ learned: 0, applied: 0, total: 0 });
   const [pandasStats, setPandasStats] = useState({ learned: 0, applied: 0, total: 0 });
+  const [showUserList, setShowUserList] = useState(false);
+  const [userList, setUserList] = useState([]);
+  const [listTitle, setListTitle] = useState('');
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const { user } = useUser();
+
+  // Function to fetch user data for the list
+  const fetchUserList = async (userIds, title) => {
+    if (!userIds || userIds.length === 0) {
+      setUserList([]);
+      setListTitle(title);
+      setShowUserList(true);
+      return;
+    }
+
+    setLoadingUsers(true);
+    try {
+      const usersData = [];
+      for (const userId of userIds) {
+        const userRef = ref(db, `users/${userId}`);
+        const userSnap = await get(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.val();
+          usersData.push({
+            id: userId,
+            name: userData.name || userData.username || 'User',
+            email: userData.email || userData.emailAddress || '',
+            avatar: userData.avatar || '👤',
+            level: userData.level || 'Beginner'
+          });
+        }
+      }
+      setUserList(usersData);
+      setListTitle(title);
+      setShowUserList(true);
+    } catch (error) {
+      console.error('Error fetching user list:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Function to handle opening the observers list
+  const handleShowObservers = () => {
+    fetchUserList(userData?.observers || [], 'People Who Are Observing You');
+  };
+
+  // Function to handle opening the observing list
+  const handleShowObserving = () => {
+    fetchUserList(userData?.observing || [], 'People You Are Observing');
+  };
+
+  // Close the user list modal
+  const closeUserList = () => {
+    setShowUserList(false);
+    setUserList([]);
+    setListTitle('');
+  };
 
   useEffect(() => {
     let unsubscribe;
@@ -505,6 +562,59 @@ export default function UserProfile() {
     );
   };
 
+  // User List Modal Component
+  const UserListModal = () => (
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white/90 backdrop-blur-lg rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">{listTitle}</h3>
+          <button 
+            onClick={closeUserList}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <FaTimes className="h-5 w-5" />
+          </button>
+        </div>
+        
+        <div className="overflow-y-auto flex-1 p-4">
+          {loadingUsers ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-600"></div>
+            </div>
+          ) : userList.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FaUser className="mx-auto h-12 w-12 text-gray-300" />
+              <p className="mt-2">No users to display</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {userList.map((user) => (
+                <li key={user.id} className="py-3 flex items-center hover:bg-gray-50 px-2 rounded">
+                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-xl">
+                    {user.avatar}
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                    <p className="text-sm text-gray-500">{user.level} • {user.email}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        
+        <div className="p-4 border-t flex justify-end">
+          <button
+            onClick={closeUserList}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 font-medium"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 pt-16">
       <div className="sticky top-0 z-50 bg-white shadow-sm">
@@ -529,37 +639,43 @@ export default function UserProfile() {
                       <span className="text-slate-600 text-left">Total SP: <span className="font-semibold">{getTotalSP()}</span></span>
                     </div>
                   </div>
-                  <button
-                    className="border border-purple-600 text-purple-600 px-12 py-2 rounded-4xl text-sm font-medium hover:bg-purple-700 hover:text-white transition-colors ml-6"
-                    onClick={async () => {
-                      if (!user) return;
-                      const observerId = user.id;
-                      const userRef = ref(db, 'users/' + id);
-                      const snap = await get(userRef);
-                      if (!snap.exists()) return;
-                      const data = snap.val();
-                      const currentObservers = Array.isArray(data.observers) ? data.observers : [];
-                      if (currentObservers.includes(observerId)) return;
-                      const updatedObservers = [...currentObservers, observerId];
-                      await set(ref(db, `users/${id}/observers`), updatedObservers);
-                      // Also update current user's 'observing' list
-                      const observerRef = ref(db, `users/${observerId}`);
-                      const observerSnap = await get(observerRef);
-                      if (observerSnap.exists()) {
-                        const observerData = observerSnap.val();
-                        const currentObserving = Array.isArray(observerData.observing) ? observerData.observing : [];
-                        if (!currentObserving.includes(id)) {
-                          const updatedObserving = [...currentObserving, id];
-                          await set(ref(db, `users/${observerId}/observing`), updatedObserving);
-                        }
-                      }
-                      setUserData(prev => prev ? { ...prev, observers: updatedObservers } : prev);
-                    }}
-                  >
-                    {user && userData?.observers?.includes(user.id) ? 'Observing' : 'Observe'}
-                  </button>
+                  <div className="flex items-center space-x-6">
+                    <div 
+                      className="text-center cursor-pointer hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors"
+                      onClick={handleShowObserving}
+                    >
+                      <div className="text-sm font-medium text-gray-500">Observing</div>
+                      <div className="text-lg font-semibold text-purple-600 hover:text-purple-700">{userData.observing?.length || 0}</div>
+                    </div>
+                    <div className="h-10 w-px bg-gray-200"></div>
+                    <div 
+                      className="text-center cursor-pointer hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors"
+                      onClick={handleShowObservers}
+                    >
+                      <div className="text-sm font-medium text-gray-500">Observers</div>
+                      <div className="text-lg font-semibold text-purple-600 hover:text-purple-700">
+                        {userData.observers?.length || 0}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+              
+              {/* User List Modal */}
+              <AnimatePresence>
+                {showUserList && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 z-50"
+                  >
+                    <UserListModal />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
               <div className="flex items-center mt-10 text-sm space-x-4">
                 <div className="flex items-center">
                   <span className="text-slate-800 font-semibold">{userData.observers?.length || 0}</span>

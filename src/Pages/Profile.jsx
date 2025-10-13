@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { useUser } from '@clerk/clerk-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getDatabase, ref, get, update, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import python from "../assets/python.png";
@@ -11,6 +11,8 @@ import PowerBi from "../assets/PowerBi.png";
 const pandasIcon = <span className="text-2xl mr-2">🐼</span>;
 import { Link } from 'react-router-dom';
 import { useCallback } from 'react';
+import { FaTimes } from 'react-icons/fa';
+import UserListModal from '../components/UserListModal';
 
 function Profile() {
     const navigate = useNavigate();
@@ -38,6 +40,31 @@ function Profile() {
     const [pandasSP, setPandasSP] = useState(0);
     const [dataScienceSP, setDataScienceSP] = useState(0);
     const [publicSpeakingSP, setPublicSpeakingSP] = useState(0);
+    
+    // User list modal state
+    const [showUserList, setShowUserList] = useState(false);
+    const [listType, setListType] = useState(''); // 'observers' or 'observing'
+    const [listTitle, setListTitle] = useState('');
+
+    // Handle showing the user list modal
+    const handleShowUserList = (type) => {
+        setListType(type);
+        setListTitle(type === 'observers' ? 'Your Observers' : 'You Are Observing');
+        setShowUserList(true);
+    };
+
+    // Close the user list modal
+    const closeUserList = () => {
+        setShowUserList(false);
+        setListType('');
+        setListTitle('');
+    };
+
+    // Get user IDs for the current list type
+    const getUserIdsForList = () => {
+        if (!userData) return [];
+        return userData[listType] || [];
+    };
 
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
@@ -273,17 +300,34 @@ function Profile() {
                                     </div>
                                 </div>
                                 <div className="flex items-center mt-10 text-sm space-x-4">
-                                    <div className="flex items-center">
-                                        <span className="text-slate-800 font-semibold">{userData.observers?.length || 0}</span>
+                                    <div 
+                                        className="flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+                                        onClick={() => handleShowUserList('observers')}
+                                    >
+                                        <span className="text-slate-800 font-semibold hover:underline">{userData.observers?.length || 0}</span>
                                         <span className="text-slate-600 ml-2">Observers</span>
                                     </div>
                                     <div className="w-px h-4 bg-slate-200"></div>
-                                    <div className="flex items-center">
-                                        <span className="text-slate-800 font-semibold">{userData.observing?.length || 0}</span>
+                                    <div 
+                                        className="flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+                                        onClick={() => handleShowUserList('observing')}
+                                    >
+                                        <span className="text-slate-800 font-semibold hover:underline">{userData.observing?.length || 0}</span>
                                         <span className="text-slate-600 ml-2">Observing</span>
                                     </div>
                                 </div>
                             </div>
+                            
+                            {/* User List Modal */}
+                            <AnimatePresence>
+                                {showUserList && (
+                                    <UserListModal 
+                                        userIds={getUserIdsForList()}
+                                        title={listTitle}
+                                        onClose={closeUserList}
+                                    />
+                                )}
+                            </AnimatePresence>
                        
 
                         {/* Skills Grid */}
