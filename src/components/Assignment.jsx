@@ -56,7 +56,7 @@ function Assignment({ learnedConcepts = [] }) {
 
   return (
     <motion.div 
-      className="bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full h-76 rounded-2xl shadow-2xl p-6 lg:sticky lg:top-28 ring-1 ring-white/10"
+      className={`bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full h-76 rounded-2xl shadow-2xl p-6 lg:sticky lg:top-28 ring-1 ring-white/10 ${showTaskOverlay ? 'z-[100]' : ''}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
