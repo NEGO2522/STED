@@ -675,18 +675,6 @@ export default function UserProfile() {
                   </motion.div>
                 )}
               </AnimatePresence>
-              
-              <div className="flex items-center mt-10 text-sm space-x-4">
-                <div className="flex items-center">
-                  <span className="text-slate-800 font-semibold">{userData.observers?.length || 0}</span>
-                  <span className="text-slate-600 ml-2">Observers</span>
-                </div>
-                <div className="w-px h-4 bg-slate-200"></div>
-                <div className="flex items-center">
-                  <span className="text-slate-800 font-semibold">{userData.observing?.length || 0}</span>
-                  <span className="text-slate-600 ml-2">Observing</span>
-                </div>
-              </div>
             </div>
             {/* Skills Grid */}
             {selectedSkill ? renderSkillDetails() : (
