@@ -1,6 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { FaForward } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getDatabase, ref, get } from 'firebase/database';
+import { db } from '../firebase';
 
 function Assignment({ learnedConcepts = [] }) {
   const [assignments, setAssignments] = useState([]);
@@ -9,27 +12,21 @@ function Assignment({ learnedConcepts = [] }) {
   const [isGeneratingTask, setIsGeneratingTask] = useState(false);
 
   useEffect(() => {
-    // Generate assignments based on learned concepts
-    let concepts = learnedConcepts;
-    if (typeof concepts === 'object' && !Array.isArray(concepts)) {
-      concepts = Object.values(concepts);
-    }
-    // Simple mock assignment generator
-    const generated = concepts.slice(0, 10).map((c, i) => {
-      const type = i % 2 === 0 ? 'Fix a bug' : 'Add a feature';
-      return {
-        id: `${c.category}-${c.concept}`,
-        title: `Incorrect Total Marks Calculation`,
-        description: type === 'Fix a bug'
-          ? `The function is designed to calculate total marks from a list of subjects, but it adds a string instead of a number, causing incorrect results or a crash.`
-          : `Add a new feature to a codebase using the concept: ${c.concept}.`,
-        concept: c.concept,
-        category: c.category
-      };
-    });
-    setAssignments(generated);
-    setCurrentIdx(0);
-  }, [learnedConcepts]);
+    const fetchAssignments = async () => {
+      const tasksRef = ref(db, 'PythonTask');
+      const snapshot = await get(tasksRef);
+      if (snapshot.exists()) {
+        const tasksData = snapshot.val();
+        const tasksArray = Object.keys(tasksData).map(key => ({
+          id: key,
+          ...tasksData[key]
+        }));
+        setAssignments(tasksArray);
+      }
+    };
+
+    fetchAssignments();
+  }, []);
 
   const handleSkip = (e) => {
     e.stopPropagation();
@@ -131,7 +128,7 @@ function Assignment({ learnedConcepts = [] }) {
                 stiffness: 300,
                 bounce: 0.2
               }}
-              className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl mx-auto my-8 overflow-hidden"
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-3xl mx-auto my-8 overflow-hidden relative"
               style={{
                 maxHeight: '90vh',
                 overflowY: 'auto',
@@ -141,9 +138,14 @@ function Assignment({ learnedConcepts = [] }) {
               }}
               onClick={(e) => e.stopPropagation()}
             >
+              {a.Category && (
+                <span className="absolute top-6 right-6 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
+                    {a.Category}
+                </span>
+              )}
               <div className="p-8">
                 <div className="mb-8">
-                  <div className="text-center mb-6 relative">
+                  <div className="text-center mb-6">
                     <h2 className="text-3xl font-bold mb-3 text-purple-700 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
                       {a.title}
                     </h2>
@@ -157,9 +159,7 @@ function Assignment({ learnedConcepts = [] }) {
                         Your Task
                       </h3>
                       <p className="text-gray-700 mb-4">
-                        {a.title.includes('Fix') 
-                          ? 'Fix the bug so that the function works as intended. Pay attention to data types and edge cases.'
-                          : 'Implement the new feature following the given requirements. Make sure to follow best practices.'}
+                        {a.YourTask}
                       </p>
                     </div>
 
@@ -177,12 +177,11 @@ function Assignment({ learnedConcepts = [] }) {
                   <div className="mt-4">
                     <h4 className="font-medium text-purple-700 mb-2">Concepts Used:</h4>
                     <div className="flex flex-wrap gap-2">
-                      <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-sm font-medium border border-purple-200">
-                        {a.concept || 'Python Basics'}
-                      </span>
-                      <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-200">
-                        {a.category || 'General Programming'}
-                      </span>
+                      {a.Concept && a.Concept.split(',').map((concept, index) => (
+                        <span key={index} className="inline-block bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-sm font-medium border border-purple-200">
+                          {concept.trim()}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
