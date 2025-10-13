@@ -654,12 +654,7 @@ IMPORTANT INSTRUCTIONS:
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-2xl shadow-md p-6 cursor-pointer hover:shadow-lg transition-all ring-1 ring-slate-200"
-                onClick={() => {
-                  if (window.handleAppliedConceptsClick) {
-                    window.handleAppliedConceptsClick();
-                  }
-                }}
+                className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-1 ring-slate-200"
               >
                 <div className="flex items-center justify-between">
                   <div>
