@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaForward } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { getDatabase, ref, get } from 'firebase/database';
 import { db } from '../firebase';
 
@@ -33,12 +34,18 @@ function Assignment({ learnedConcepts = [] }) {
     setCurrentIdx((prev) => (assignments.length === 0 ? 0 : (prev + 1) % assignments.length));
   };
 
+  const navigate = useNavigate();
+
   const handleNextTaskClick = () => {
     setIsGeneratingTask(true);
     setTimeout(() => {
       setShowTaskOverlay(true);
       setIsGeneratingTask(false);
-    }, 3000);
+    }, 1000);
+  };
+
+  const handleStartTask = (taskId) => {
+    navigate(`/task/${taskId}`);
   };
 
   if (!assignments.length) {
@@ -188,7 +195,10 @@ function Assignment({ learnedConcepts = [] }) {
 
                 <div className="flex gap-4 justify-center">
                   <button
-                    onClick={() => setShowTaskOverlay(false)}
+                    onClick={() => {
+                      setShowTaskOverlay(false);
+                      handleStartTask(a.id);
+                    }}
                     className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 active:scale-[0.98] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
                   >
                     🚀 Start Task

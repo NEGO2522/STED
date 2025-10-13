@@ -19,6 +19,7 @@ import PowerBi from './Pages/PowerBi';
 import Pandas from './Pages/Pandas';
 import PandasProject from './PandasProject/Project';
 import Profile from './Pages/Profile';
+import Task from './PythonProject/Task';
 import UserProfile from './Pages/UserProfile';
 import PublicPythonProject from './PythonProject/PublicPythonProject';
 import { SignedIn, SignedOut, useUser, SignIn, SignUp } from '@clerk/clerk-react';
@@ -124,6 +125,7 @@ function AppContent() {
         
         <Route path="/userprofile/:id" element={<UserProfile />} />
         <Route path="/python-project/:userId/:projectId" element={<PublicPythonProject />} />
+        <Route path="/task/:taskId" element={<SignedIn><Task /></SignedIn>} />
       </Routes>
     </>
   );
