@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CodeEditor from './CodeEditor';
 import AI from './AI';
 import { useUser } from '@clerk/clerk-react';
-import { ref, get } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { db } from '../firebase';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -16,21 +16,28 @@ function Task() {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [messages, setMessages] = useState([]);
+  const [completedSubtasks, setCompletedSubtasks] = useState([]);
 
   // Load task data
   useEffect(() => {
     const loadTask = async () => {
-      if (!taskId) return;
+      if (!taskId || !user) return;
 
       try {
         const taskRef = ref(db, `PythonTask/${taskId}`);
         const snapshot = await get(taskRef);
 
         if (snapshot.exists()) {
-          setTask({
-            id: taskId,
-            ...snapshot.val(),
-          });
+          const taskData = snapshot.val();
+          setTask({ id: taskId, ...taskData });
+
+          // Load completed subtasks from Firebase
+          const userTaskRef = ref(db, `users/${user.id}/python/tasks/${taskId}/completedSubtasks`);
+          const completedSnapshot = await get(userTaskRef);
+          if (completedSnapshot.exists()) {
+            setCompletedSubtasks(completedSnapshot.val());
+          }
         } else {
           console.error('Task not found');
           navigate('/python');
@@ -44,7 +51,21 @@ function Task() {
     };
 
     loadTask();
-  }, [taskId, navigate]);
+  }, [taskId, user, navigate]);
+
+  const handleSubtaskToggle = (subtask) => {
+    const newCompletedSubtasks = completedSubtasks.includes(subtask)
+      ? completedSubtasks.filter((s) => s !== subtask)
+      : [...completedSubtasks, subtask];
+    
+    setCompletedSubtasks(newCompletedSubtasks);
+
+    // Save to Firebase
+    if (user) {
+      const userTaskRef = ref(db, `users/${user.id}/python/tasks/${taskId}/completedSubtasks`);
+      set(userTaskRef, newCompletedSubtasks);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -59,9 +80,7 @@ function Task() {
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Task Not Found</h2>
-          <p className="text-gray-600 mb-4">
-            The requested task could not be loaded.
-          </p>
+          <p className="text-gray-600 mb-4">The requested task could not be loaded.</p>
           <button
             onClick={() => navigate('/python')}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
@@ -151,18 +170,71 @@ function Task() {
               <div className="w-full h-full">
                 <AI
                   userCode={userCode}
-                  messages={[]}
-                  setMessages={() => {}}
+                  messages={messages}
+                  setMessages={setMessages}
                   terminalOutput={terminalOutput}
                 />
               </div>
             ) : (
-              <div className="p-6 space-y-6">
-                <div className="bg-[#252526] rounded-lg p-6 border border-[#333]">
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#0e639c] flex items-center justify-center">
+              <div className="p-6 space-y-8">
+                <div className="space-y-4">
+                  <h1 className="text-2xl font-bold text-white mb-2">
+                    {task.title}
+                  </h1>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="px-2.5 py-0.5 bg-[#3a3d41] text-white rounded-full text-xs font-medium">
+                      {task.Category || 'Task'}
+                    </span>
+                    <span className="text-xs text-[#9e9e9e]">
+                      • {task.difficulty || 'Difficulty not specified'}
+                    </span>
+                  </div>
+                </div>
+
+                {task.subtasks && (
+                  <div>
+                    <h3 className="text-[#9cdcfe] font-semibold mb-3 flex items-center">
                       <svg
-                        className="w-4 h-4 text-white"
+                        className="w-4 h-4 mr-2"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812A3.066 3.066 0 003 13.733a3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zM10 12a2 2 0 100-4 2 2 0 000 4z"
+                          clipRule="evenodd"
+                        />
+                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.375 7.625a.375.375 0 11.75 0 .375.375 0 01-.75 0zM10.125 9a.125.125 0 01.25 0v3.5a.125.125 0 01-.25 0V9z" />
+                      </svg>
+                      Sub-tasks
+                    </h3>
+                    <div className="space-y-2">
+                      {task.subtasks.map((subtask, index) => (
+                        <div key={index} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`subtask-${index}`}
+                            checked={completedSubtasks.includes(subtask)}
+                            onChange={() => handleSubtaskToggle(subtask)}
+                            className="h-4 w-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                          />
+                          <label
+                            htmlFor={`subtask-${index}`}
+                            className={`ml-3 text-sm ${completedSubtasks.includes(subtask) ? 'text-gray-500 line-through' : 'text-gray-300'}`}
+                          >
+                            {subtask}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-[#9cdcfe] font-semibold mb-3 flex items-center">
+                      <svg
+                        className="w-4 h-4 mr-2"
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -172,86 +244,55 @@ function Task() {
                           clipRule="evenodd"
                         />
                       </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h1 className="text-xl font-bold text-white mb-2">
-                        {task.title}
-                      </h1>
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="px-2.5 py-0.5 bg-[#3a3d41] text-white rounded-full text-xs font-medium">
-                          {task.Category || 'Task'}
-                        </span>
-                        <span className="text-xs text-[#9e9e9e]">
-                          • {task.difficulty || 'Difficulty not specified'}
-                        </span>
-                      </div>
+                      Your Task
+                    </h3>
+                    <div className="text-[#d4d4d4] whitespace-pre-line">
+                      {task.YourTask}
                     </div>
                   </div>
 
-                  <div className="mt-4 space-y-4">
+                  {task.description && (
                     <div>
-                      <h3 className="text-[#9cdcfe] font-semibold mb-2 flex items-center">
+                      <h3 className="text-[#9cdcfe] font-semibold mb-3 flex items-center">
                         <svg
                           className="w-4 h-4 mr-2"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h2a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                            clipRule="evenodd"
-                          />
+                          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                         </svg>
-                        Your Task
+                        Description
                       </h3>
-                      <div className="text-[#d4d4d4] bg-[#2d2d2d] p-4 rounded border border-[#3a3d41] whitespace-pre-line">
-                        {task.YourTask}
+                      <div className="text-[#d4d4d4] whitespace-pre-line">
+                        {task.description}
                       </div>
                     </div>
+                  )}
 
-                    {task.description && (
-                      <div>
-                        <h3 className="text-[#9cdcfe] font-semibold mb-2 flex items-center">
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
+                  {task.Concept && (
+                    <div>
+                      <h3 className="text-[#9cdcfe] font-semibold mb-3 flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                        </svg>
+                        Concepts Used
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {task.Concept.split(',').map((concept, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#0e639c] text-white hover:bg-[#1177bb] transition-colors"
                           >
-                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                          </svg>
-                          Description
-                        </h3>
-                        <div className="text-[#d4d4d4] bg-[#2d2d2d] p-4 rounded border border-[#3a3d41] whitespace-pre-line">
-                          {task.description}
-                        </div>
+                            {concept.trim()}
+                          </span>
+                        ))}
                       </div>
-                    )}
-
-                    {task.Concept && (
-                      <div>
-                        <h3 className="text-[#9cdcfe] font-semibold mb-2 flex items-center">
-                          <svg
-                            className="w-4 h-4 mr-2"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-                          </svg>
-                          Concepts Used
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          {task.Concept.split(',').map((concept, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#0e639c] text-white hover:bg-[#1177bb] transition-colors"
-                            >
-                              {concept.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

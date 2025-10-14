@@ -7,23 +7,23 @@ import { getProjectConfig, getAIContext } from './projectConfig';
 // Function to format AI response text with proper styling
 const formatAIResponse = (text) => {
   if (!text) return text;
-  
+
   // First, let's process the entire text for inline formatting
   let processedText = text;
-  
+
   // Process the text line by line
   const lines = processedText.split('\n');
   const formattedLines = [];
-  
+
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
-    
+
     // Skip empty lines but preserve spacing
     if (line.trim() === '') {
       formattedLines.push(<br key={i} />);
       continue;
     }
-    
+
     // Headers (lines starting with #)
     if (line.startsWith('###')) {
       formattedLines.push(
@@ -74,80 +74,80 @@ const formatAIResponse = (text) => {
       );
     }
   }
-  
+
   return <div className="space-y-1">{formattedLines}</div>;
 };
 
 // Helper function to process inline formatting (bold, code, etc.)
 const processInlineFormatting = (text) => {
   if (!text) return text;
-  
+
   const parts = [];
   let currentText = text;
   let key = 0;
-  
+
   // Process bold text first (**text**)
   const boldRegex = /\*\*(.*?)\*\*/g;
   let lastIndex = 0;
   let match;
-  
+
   while ((match = boldRegex.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
       const beforeText = text.substring(lastIndex, match.index);
       parts.push(processCodeFormatting(beforeText, key++));
     }
-    
+
     // Add the bold text
     parts.push(
       <strong key={key++} className="font-bold text-white">
         {processCodeFormatting(match[1], key++)}
       </strong>
     );
-    
+
     lastIndex = match.index + match[0].length;
   }
-  
+
   // Add remaining text
   if (lastIndex < text.length) {
     const remainingText = text.substring(lastIndex);
     parts.push(processCodeFormatting(remainingText, key++));
   }
-  
+
   return parts.length > 0 ? parts : processCodeFormatting(text, 0);
 };
 
 // Helper function to process code formatting (`code`)
 const processCodeFormatting = (text, baseKey) => {
   if (!text || typeof text !== 'string') return text;
-  
+
   const codeRegex = /`([^`]+)`/g;
   const parts = [];
   let lastIndex = 0;
   let match;
   let key = baseKey;
-  
+
   while ((match = codeRegex.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
       parts.push(text.substring(lastIndex, match.index));
     }
-    
+
     // Add the code text
     parts.push(
       <code key={key++} className="bg-gray-800 text-green-400 px-2 py-1 rounded text-sm font-mono">
         {match[1]}
       </code>
     );
-    
+
     lastIndex = match.index + match[0].length;
   }
-  
+
   // Add remaining text
   if (lastIndex < text.length) {
     parts.push(text.substring(lastIndex));
   }
-  
+
   return parts.length > 0 ? parts : text;
 };
 
@@ -176,64 +176,64 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         // Get user's current project
         const userRef = ref(db, 'users/' + user.id);
         const userSnap = await get(userRef);
-        
+
         if (!userSnap.exists()) {
           setProjectConfig(null);
           setLoadError('User data not found.');
           return;
         }
-        
+
         const userData = userSnap.val();
         const pythonData = userData.python || {};
         let projectKey = pythonData.PythonCurrentProject;
-        
+
         if (!projectKey) {
           setProjectConfig(null);
           setLoadError('No Python project started.');
           return;
         }
-        
+
         console.log('AI: Fetching project with key:', projectKey);
-        
+
         // Try with the exact key first
         let projectRef = ref(db, 'PythonProject/' + projectKey);
         let projectSnap = await get(projectRef);
-        
+
         // If not found, try with normalized (lowercase) key
         if (!projectSnap.exists()) {
           const normalizedKey = projectKey.toLowerCase();
           console.log('AI: Trying with normalized key:', normalizedKey);
           projectRef = ref(db, 'PythonProject/' + normalizedKey);
           projectSnap = await get(projectRef);
-          
+
           if (projectSnap.exists()) {
             projectKey = normalizedKey; // Update to the key that worked
           }
         }
-        
+
         if (projectSnap.exists()) {
           // Found project in PythonProject node
           console.log('AI: Found project in database');
           const projectData = projectSnap.val();
-          
+
           // Ensure tasks exist and have the correct structure for both regular and Gemini-generated projects
           const normalizedProject = {
             ...projectData,
             tasks: projectData.tasks || projectData.ProjectTasks || {
-              task1: { 
-                title: projectData.title || 'Main Task', 
+              task1: {
+                title: projectData.title || 'Main Task',
                 subtasks: projectData.subtasks || [],
                 description: projectData.description || ''
               }
             }
           };
-          
+
           setProjectConfig(normalizedProject);
         } else {
           // Fall back to predefined config if available
           console.log('AI: Project not found in database, trying predefined config');
           const predefinedConfig = await getProjectConfig(projectKey);
-          
+
           if (predefinedConfig) {
             console.log('AI: Using predefined project config');
             setProjectConfig(predefinedConfig);
@@ -248,7 +248,7 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         setLoadError('Error loading project data. Please try again later.');
       }
     };
-    
+
     fetchProjectData();
   }, [user]);
 
@@ -282,21 +282,21 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
   // Generic: find first incomplete task and subtasks
   const getIncompleteTaskAndSubtasks = () => {
     if (!projectConfig || (!projectConfig.tasks && !projectConfig.ProjectTasks)) return {};
-    
+
     const tasks = projectConfig.tasks || projectConfig.ProjectTasks;
     const userCodeLower = (userCode || '').toLowerCase();
     for (const [taskKey, task] of Object.entries(tasks)) {
       let allSubtasks = task.subtasks || [];
-      
+
       // Handle ProjectTasks structure where subtasks are individual properties
       if (allSubtasks.length === 0 && task.title) {
         allSubtasks = Object.entries(task)
           .filter(([key]) => key !== 'title')
           .map(([key, value]) => value);
       }
-      
+
       // Consider a subtask complete if any keyword from codeChecks is present in user code
-      const completed = (task.codeChecks || []).filter(check => 
+      const completed = (task.codeChecks || []).filter(check =>
         userCodeLower.includes(check.toLowerCase().replace(/[`'"().:]/g, ''))
       );
       if (completed.length < (task.codeChecks ? task.codeChecks.length : allSubtasks.length)) {
@@ -528,45 +528,45 @@ Remember:
     const analysis = [];
     let score = 0;
     const totalChecks = 6;
-    
+
     if (code.includes('def ')) {
       analysis.push("✨ Great job using functions! Breaking code into functions makes it more organized and reusable.");
       score++;
     } else {
       analysis.push("💡 Tip: Consider using functions to organize your code better. They make your code more readable and reusable!");
     }
-    
+
     if (code.includes('input(')) {
       analysis.push("👏 Nice work making your program interactive with user input! This makes your code much more dynamic.");
       score++;
     } else {
       analysis.push("🤔 Have you thought about adding user input? It can make your program more interactive!");
     }
-    
+
     if (code.includes('while ') || code.includes('for ')) {
       analysis.push("🔄 Excellent use of loops! They help automate repetitive tasks efficiently.");
       score++;
     } else if (code.length > 100) {
       analysis.push("💭 I notice some repetition in your code. A loop might help make it cleaner and more efficient!");
     }
-    
+
     if (code.includes('[') && code.includes(']')) {
       analysis.push("📋 Good use of lists! They're perfect for storing collections of items.");
       score++;
     }
-    
+
     if (code.includes('{') && code.includes('}')) {
       analysis.push("📚 Nice work with dictionaries! They're great for storing key-value pairs.");
       score++;
     }
-    
+
     if (code.includes('if ') || code.includes('elif ') || code.includes('else:')) {
       analysis.push("🎯 Great use of conditionals! They help your program make decisions.");
       score++;
     }
 
     const progress = Math.round((score / totalChecks) * 100);
-    
+
     if (score === totalChecks) {
       analysis.unshift(`## 🎉 Amazing Progress! (${progress}% of key concepts used)`);
       analysis.push("\nYou're doing fantastic! Your code shows you understand many important programming concepts. What would you like to learn more about?");
@@ -577,7 +577,7 @@ Remember:
       analysis.unshift(`## 🌱 Getting Started (${progress}% of key concepts used)`);
       analysis.push(`\nYou're on the right track! Programming is a journey, and everyone starts somewhere. What would you like to work on?`);
     }
-    
+
     return analysis.join('\n\n');
   };
 
@@ -629,7 +629,7 @@ Remember:
   }, [inputMessage]);
 
   return (
-    <div className="flex flex-col bg-gray-900 text-white h-155">
+    <div className="flex flex-col bg-gray-900 text-white h-full">
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-xl font-semibold text-purple-400">AI Mentor</h2>
@@ -643,14 +643,14 @@ Remember:
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 text-left space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-4 text-left space-y-4">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-xs sm:max-w-md md:max-w-lg rounded-lg p-3 ${
                 message.type === 'user'
                   ? 'bg-purple-600 text-white'
                   : 'bg-gray-700 text-gray-100'

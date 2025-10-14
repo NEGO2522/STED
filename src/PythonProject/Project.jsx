@@ -359,6 +359,11 @@ function Project() {
     }
   };
 
+  const sortedConcepts = projectConfig?.Concept?.sort((a, b) => {
+    const order = { basic: 1, intermediate: 2, advanced: 3 };
+    return order[a.toLowerCase()] - order[b.toLowerCase()];
+  });
+
   return (
       <>
       {/* End Project Confirmation Overlay */}
@@ -482,7 +487,7 @@ function Project() {
               <h3 className="text-xl font-semibold mb-3">Project Details</h3>
               <div className="text-left space-y-2">
                 <p><strong>Project:</strong> {projectConfig?.title || 'Personal Finance Tracker'}</p>
-                <p><strong>Concepts Used:</strong> {projectConfig?.Concept || 'N/A'}</p>
+                <p><strong>Concepts Used:</strong> {projectConfig?.Concept?.join(', ') || 'N/A'}</p>
                 <p><strong>Completed:</strong> {new Date().toLocaleDateString()}</p>
               </div>
             </div>
