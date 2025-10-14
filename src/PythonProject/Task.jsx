@@ -146,8 +146,17 @@ function Task() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-auto bg-[#1e1e1e] text-[#d4d4d4] p-0">
-            {rightPanel === 'statement' ? (
+          <div className="flex-1 overflow-auto bg-[#1e1e1e] text-[#d4d4d4] p-0 w-full">
+            {rightPanel === 'ai' ? (
+              <div className="w-full h-full">
+                <AI
+                  userCode={userCode}
+                  messages={[]}
+                  setMessages={() => {}}
+                  terminalOutput={terminalOutput}
+                />
+              </div>
+            ) : (
               <div className="p-6 space-y-6">
                 <div className="bg-[#252526] rounded-lg p-6 border border-[#333]">
                   <div className="flex items-start space-x-3">
@@ -245,13 +254,6 @@ function Task() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <AI
-                userCode={userCode}
-                messages={[]}
-                setMessages={() => {}}
-                terminalOutput={terminalOutput}
-              />
             )}
           </div>
         </div>
