@@ -264,7 +264,7 @@ function Start() {
         </main>
 
         {/* Enhanced Footer */}
-        <footer className="py-6 border-t border-slate-100 mt-auto bg-white/50 backdrop-blur-sm">
+        <footer className="py-6 border-t border-slate-100 mt-auto backdrop-blur-sm">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 text-slate-500 text-sm mb-4 md:mb-0">
               <span>&copy; {new Date().getFullYear()} STED. All rights reserved.</span>
