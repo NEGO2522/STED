@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { FaForward } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import CustomTask from '../PythonProject/CustomTask';
 import { getDatabase, ref, get } from 'firebase/database';
 import { db } from '../firebase';
 
@@ -11,6 +12,12 @@ function Assignment({ learnedConcepts = [] }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [showTaskOverlay, setShowTaskOverlay] = useState(false);
   const [isGeneratingTask, setIsGeneratingTask] = useState(false);
+  const [showCustomTaskOverlay, setShowCustomTaskOverlay] = useState(false);
+  const [selectedCustomConcepts, setSelectedCustomConcepts] = useState([]);
+  const [customTaskTheme, setCustomTaskTheme] = useState('');
+  const [conceptPickerChecked, setConceptPickerChecked] = useState({});
+  const [generatingCustomTask, setGeneratingCustomTask] = useState(false);
+  const [showConceptPicker, setShowConceptPicker] = useState(false);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -93,6 +100,7 @@ function Assignment({ learnedConcepts = [] }) {
             )}
           </button>
           <button
+            onClick={() => setShowCustomTaskOverlay(true)}
             className="w-full flex items-center justify-center gap-2 px-6 py-4 text-lg font-semibold text-white/90 hover:text-white rounded-xl border-2 border-white/20 hover:border-white/30 bg-white/5 hover:bg-white/10 transition-all duration-300"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -100,6 +108,22 @@ function Assignment({ learnedConcepts = [] }) {
             </svg>
             Custom Tasks
           </button>
+
+          {/* Custom Task Overlay */}
+          <CustomTask
+            showCustomTaskOverlay={showCustomTaskOverlay}
+            setShowCustomTaskOverlay={setShowCustomTaskOverlay}
+            selectedCustomConcepts={selectedCustomConcepts}
+            setSelectedCustomConcepts={setSelectedCustomConcepts}
+            customTaskTheme={customTaskTheme}
+            setCustomTaskTheme={setCustomTaskTheme}
+            conceptPickerChecked={conceptPickerChecked}
+            setConceptPickerChecked={setConceptPickerChecked}
+            userData={{ python: { learnedConcepts } }}
+            generatingCustomTask={generatingCustomTask}
+            setShowConceptPicker={setShowConceptPicker}
+            showConceptPicker={showConceptPicker}
+          />
         </div>
       </div>
 
