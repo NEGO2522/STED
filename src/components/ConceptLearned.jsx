@@ -89,7 +89,16 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
           const data = allConceptsSnap.val();
           // Dynamically set categories based on what exists in Firebase
           const categories = {};
-          Object.keys(data).forEach(category => {
+          // Sort categories when first loading them
+          const sortedCategories = Object.keys(data).sort((a, b) => {
+            const order = { 'basic': 1, 'intermediate': 2, 'advanced': 3 };
+            const aOrder = order[a.toLowerCase()] || 99;
+            const bOrder = order[b.toLowerCase()] || 99;
+            return aOrder - bOrder || a.localeCompare(b);
+          });
+          
+          // Create the categories object with sorted order
+          sortedCategories.forEach(category => {
             categories[category] = Object.values(data[category] || {});
           });
           setAllConcepts(categories);
@@ -598,7 +607,20 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
       </div>
 
       <div className='pt-3 flex flex-col space-y-2'>
-        {availableCategories.map((category) => {
+        {Object.keys(allConcepts)
+          .sort((a, b) => {
+            // First sort by our custom order
+            const order = { 'basic': 1, 'intermediate': 2, 'advanced': 3 };
+            const aOrder = order[a.toLowerCase()] || 99;
+            const bOrder = order[b.toLowerCase()] || 99;
+            
+            // If same order, sort alphabetically
+            if (aOrder === bOrder) {
+              return a.localeCompare(b);
+            }
+            return aOrder - bOrder;
+          })
+          .map((category) => {
           const counts = getCounts(category);
           const categoryLearnedConcepts = learnedConcepts.filter((c) => c.category === category);
           const isOpen = openCategory === category;
@@ -705,7 +727,12 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
               <div className="text-center py-8">Loading concepts...</div>
             ) : (
               <div className="space-y-6 max-h-[60vh] overflow-y-auto">
-                {availableCategories.map((cat) => (
+                {Object.keys(allConcepts).sort((a, b) => {
+                  const order = { 'basic': 1, 'intermediate': 2, 'advanced': 3 };
+                  const aOrder = order[a.toLowerCase()] || 99;
+                  const bOrder = order[b.toLowerCase()] || 99;
+                  return aOrder - bOrder || a.localeCompare(b);
+                }).map((cat) => (
                   <div key={cat}>
                     <div className="font-semibold text-lg mb-2 capitalize">{cat}</div>
                     <div className="grid grid-cols-2 gap-3">
