@@ -12,6 +12,7 @@ function Task() {
   const [rightPanel, setRightPanel] = useState('statement');
   const [userCode, setUserCode] = useState('');
   const [terminalOutput, setTerminalOutput] = useState([]);
+  const [isRunning, setIsRunning] = useState(false);
   const [task, setTask] = useState(null);
   const { user } = useUser();
   const { taskId } = useParams();
@@ -72,109 +73,87 @@ function Task() {
     );
   }
 
+  const handleCodeChange = (code) => {
+    setUserCode(code);
+  };
+
+  const handleOutputChange = (output) => {
+    setTerminalOutput(output);
+  };
+
+  const handleStuckClick = () => {
+    // Handle stuck button click if needed
+    console.log('Stuck button clicked');
+  };
+
+// ... (previous code remains the same until the return statement)
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
-      {/* Left Panel - Editor */}
-      <div className="w-1/2 h-full flex flex-col border-r border-gray-200">
-        <div className="h-full">
+    <div className="min-h-screen bg-black p-4">
+      <div className="max-w-[95vw] mx-auto h-[calc(100vh-2rem)] flex rounded-lg overflow-hidden border border-[#333]">
+        {/* Left Panel - Editor */}
+        <div className="w-[70%] h-full flex flex-col bg-[#1e1e1e] rounded-l-lg overflow-hidden">
           <CodeEditor 
-            code={userCode}
-            onChange={setUserCode}
-            onRun={(code) => {
-              // Handle code execution
-              setTerminalOutput(prev => [...prev, 'Executing task code...']);
-            }}
-            taskId={taskId}
+            value={userCode}
+            onCodeChange={handleCodeChange}
+            onOutputChange={handleOutputChange}
+            onStuckClick={handleStuckClick}
+            editorId={`task_${taskId}`}
           />
         </div>
-        
-        {/* Terminal */}
-        <div className="h-1/3 bg-black text-white p-4 overflow-auto font-mono text-sm">
-          <div className="mb-2 text-gray-400">Terminal Output:</div>
-          <div className="space-y-1">
-            {terminalOutput.map((output, index) => (
-              <div key={index} className="whitespace-pre-wrap">{output}</div>
-            ))}
+
+        {/* Right Panel - Statement and AI */}
+        <div className="w-[30%] h-full flex flex-col bg-[#1e1e1e] border-l border-[#333] overflow-hidden">
+          {/* Tabs */}
+          <div className="flex border-b border-[#333] bg-[#252526] px-4">
+            <button
+              className={`px-4 py-3 font-medium text-sm flex items-center ${
+                rightPanel === 'statement' 
+                  ? 'text-[#9cdcfe] border-b-2 border-[#9cdcfe]' 
+                  : 'text-[#9e9e9e] hover:text-white hover:bg-[#2d2d2d]'
+              }`}
+              onClick={() => setRightPanel('statement')}
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h2a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              Task
+            </button>
+            <button
+              className={`px-4 py-3 font-medium text-sm flex items-center ${
+                rightPanel === 'ai' 
+                  ? 'text-[#9cdcfe] border-b-2 border-[#9cdcfe]' 
+                  : 'text-[#9e9e9e] hover:text-white hover:bg-[#2d2d2d]'
+              }`}
+              onClick={() => setRightPanel('ai')}
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+              </svg>
+              AI Assistant
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Right Panel - Statement and AI */}
-      <div className="w-1/2 h-full flex flex-col">
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200">
-          <button
-            className={`px-6 py-3 font-medium ${
-              rightPanel === 'statement' 
-                ? 'text-purple-600 border-b-2 border-purple-600' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setRightPanel('statement')}
-          >
-            Task
-          </button>
-          <button
-            className={`px-6 py-3 font-medium ${
-              rightPanel === 'ai' 
-                ? 'text-purple-600 border-b-2 border-purple-600' 
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-            onClick={() => setRightPanel('ai')}
-          >
-            AI Assistant
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {rightPanel === 'statement' ? (
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">{task.title}</h1>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
-                    {task.Category || 'Task'}
-                  </span>
-                  <span className="text-sm text-gray-500">• {task.difficulty || 'Difficulty not specified'}</span>
-                </div>
-                
-                <div className="prose max-w-none">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Your Task</h3>
-                  <p className="text-gray-700 mb-6">{task.YourTask}</p>
-                  
-                  {task.description && (
-                    <>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Description</h3>
-                      <p className="text-gray-700 mb-6 whitespace-pre-line">{task.description}</p>
-                    </>
-                  )}
-                  
-                  {task.Concept && (
-                    <div className="mt-6">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Concepts Used</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {task.Concept.split(',').map((concept, index) => (
-                          <span 
-                            key={index} 
-                            className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium"
-                          >
-                            {concept.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+          {/* Content */}
+          <div className="flex-1 overflow-auto bg-[#1e1e1e] text-[#d4d4d4] p-0">
+            {rightPanel === 'statement' ? (
+              <div className="p-6 space-y-6">
+                {task && (
+                  <div className="space-y-4">
+                    {/* Task content here */}
+                  </div>
+                )}
               </div>
-            </div>
-          ) : (
-            <AI 
-              userCode={userCode}
-              messages={[]}
-              setMessages={() => {}}
-              terminalOutput={terminalOutput}
-            />
-          )}
+            ) : (
+              <AI 
+                userCode={userCode}
+                messages={[]}
+                setMessages={() => {}}
+                terminalOutput={terminalOutput}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
