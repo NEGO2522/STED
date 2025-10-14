@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ref, get, update } from 'firebase/database';
 import { db } from '../firebase';
@@ -20,7 +20,10 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [showConceptDetailsOverlay, setShowConceptDetailsOverlay] = useState(false);
   const [selectedConceptDetails, setSelectedConceptDetails] = useState(null);
   const [showAddSourceOverlay, setShowAddSourceOverlay] = useState(false);
-  const [newSource, setNewSource] = useState({ sourceName: '', sourceLink: '' });
+  const [newSource, setNewSource] = useState(() => ({
+    sourceName: "",
+    sourceLink: ""
+  }));
   const [addingSource, setAddingSource] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
   const [newStatus, setNewStatus] = useState('');
@@ -31,6 +34,23 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [selectedConceptForDetails, setSelectedConceptForDetails] = useState(null);
   const [showAppliedDetailsOverlay, setShowAppliedDetailsOverlay] = useState(false);
   const [showPointsHistoryOverlay, setShowPointsHistoryOverlay] = useState(false);
+
+  // Input change handlers
+  const handleSourceNameChange = (e) => {
+    const value = e.target.value;
+    setNewSource(prev => ({
+      ...prev,
+      sourceName: value
+    }));
+  };
+
+  const handleSourceLinkChange = (e) => {
+    const value = e.target.value;
+    setNewSource(prev => ({
+      ...prev,
+      sourceLink: value
+    }));
+  };
   const [pointsHistory, setPointsHistory] = useState([]);
   const [pointsHistoryLoading, setPointsHistoryLoading] = useState(false);
   const { user } = useUser();
@@ -775,116 +795,144 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
 
       {/* Overlay for concept status selection */}
       {showStatusOverlay && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-xl relative mx-4 my-8">
-            <button
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
-              onClick={() => { setShowStatusOverlay(false); setAdding(false); }}
-              disabled={adding}
-            >
-              ×
-            </button>
-            <h3 className="text-2xl font-bold text-slate-800 mb-6">Set Concept Status</h3>
-            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 -mr-2">
-              {selectedConcepts.map((item) => (
-                <div key={`${item.category}:${item.concept}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-700">{item.concept}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer hover:bg-white px-2 py-1 rounded transition-colors">
-                      <input
-                        type="radio"
-                        name={`status-${item.category}-${item.concept}`}
-                        value="Clear"
-                        checked={conceptStatuses[`${item.category}:${item.concept}`] === 'Clear'}
-                        onChange={(e) => setConceptStatuses(s => ({ ...s, [`${item.category}:${item.concept}`]: e.target.value }))}
-                        disabled={adding}
-                        className="w-3 h-3 text-green-600 bg-slate-100 border-slate-300 focus:ring-0"
-                      />
-                      <span className="text-xs text-slate-700">Clear</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer hover:bg-white px-2 py-1 rounded transition-colors">
-                      <input
-                        type="radio"
-                        name={`status-${item.category}-${item.concept}`}
-                        value="Unclear"
-                        checked={conceptStatuses[`${item.category}:${item.concept}`] === 'Unclear'}
-                        onChange={(e) => setConceptStatuses(s => ({ ...s, [`${item.category}:${item.concept}`]: e.target.value }))}
-                        disabled={adding}
-                        className="w-3 h-3 text-orange-600 bg-slate-100 border-slate-300 focus:ring-0"
-                      />
-                      <span className="text-xs text-slate-700">Unclear</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer hover:bg-white px-2 py-1 rounded transition-colors">
-                      <input
-                        type="radio"
-                        name={`status-${item.category}-${item.concept}`}
-                        value="confused"
-                        checked={conceptStatuses[`${item.category}:${item.concept}`] === 'confused'}
-                        onChange={(e) => setConceptStatuses(s => ({ ...s, [`${item.category}:${item.concept}`]: e.target.value }))}
-                        disabled={adding}
-                        className="w-3 h-3 text-red-600 bg-slate-100 border-slate-300 focus:ring-0"
-                      />
-                      <span className="text-xs text-slate-700">Confused</span>
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop with enhanced blur effect */}
+            <div 
+              className="absolute inset-0 bg-black/30 backdrop-blur-md transition-all duration-300"
+              style={{
+                opacity: showStatusOverlay ? 1 : 0,
+                transition: 'opacity 200ms ease-in-out'
+              }}
+              onClick={() => { if (!adding) { setShowStatusOverlay(false); setAdding(false); } }}
+            />
             
-            {/* Source Information Section */}
-            <div className="mt-6 pt-6 border-t border-slate-200">
-              <h4 className="text-lg font-semibold text-slate-800 mb-4">📚 Add Learning Source (Optional)</h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Source Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newSource.sourceName}
-                    onChange={(e) => setNewSource(prev => ({ ...prev, sourceName: e.target.value }))}
-                    placeholder="e.g., Python Official Documentation"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            {/* Modal Content */}
+            <div 
+              className={`relative bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transition-all duration-200 transform ${showStatusOverlay ? 'translate-y-0 opacity-100' : 'translate-y-5 opacity-0'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 z-10 bg-white border-b border-slate-200 p-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-2xl font-bold text-slate-800">Set Concept Status</h3>
+                  <button
+                    onClick={() => { if (!adding) { setShowStatusOverlay(false); setAdding(false); } }}
+                    className="text-slate-500 hover:text-slate-700 text-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={adding}
-                  />
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="space-y-4">
+                  {selectedConcepts.map((item, index) => (
+                    <div key={index} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="font-medium text-slate-800">{item.concept}</h4>
+                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full capitalize">
+                          {item.category}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 mt-2">
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded transition-colors">
+                          <input
+                            type="radio"
+                            name={`status-${item.category}-${item.concept}`}
+                            value="Clear"
+                            checked={conceptStatuses[`${item.category}:${item.concept}`] === 'Clear'}
+                            onChange={(e) => setConceptStatuses(s => ({ ...s, [`${item.category}:${item.concept}`]: e.target.value }))}
+                            disabled={adding}
+                            className="w-4 h-4 text-green-600 bg-slate-100 border-slate-300 focus:ring-0"
+                          />
+                          <span className="text-sm text-slate-700">Clear</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded transition-colors">
+                          <input
+                            type="radio"
+                            name={`status-${item.category}-${item.concept}`}
+                            value="Unclear"
+                            checked={conceptStatuses[`${item.category}:${item.concept}`] === 'Unclear'}
+                            onChange={(e) => setConceptStatuses(s => ({ ...s, [`${item.category}:${item.concept}`]: e.target.value }))}
+                            disabled={adding}
+                            className="w-4 h-4 text-orange-600 bg-slate-100 border-slate-300 focus:ring-0"
+                          />
+                          <span className="text-sm text-slate-700">Unclear</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-2 py-1 rounded transition-colors">
+                          <input
+                            type="radio"
+                            name={`status-${item.category}-${item.concept}`}
+                            value="confused"
+                            checked={conceptStatuses[`${item.category}:${item.concept}`] === 'confused'}
+                            onChange={(e) => setConceptStatuses(s => ({ ...s, [`${item.category}:${item.concept}`]: e.target.value }))}
+                            disabled={adding}
+                            className="w-4 h-4 text-red-600 bg-slate-100 border-slate-300 focus:ring-0"
+                          />
+                          <span className="text-sm text-slate-700">Confused</span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Source Link
-                  </label>
-                  <input
-                    type="url"
-                    value={newSource.sourceLink}
-                    onChange={(e) => setNewSource(prev => ({ ...prev, sourceLink: e.target.value }))}
-                    placeholder="https://example.com/tutorial"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                {/* Source Information Section */}
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <h4 className="text-lg font-semibold text-slate-800 mb-4">📚 Add Learning Source (Optional)</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Source Name
+                      </label>
+                      <input
+                        type="text"
+                        value={newSource.sourceName}
+                        onChange={handleSourceNameChange}
+                        placeholder="e.g., Python Official Documentation"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={adding}
+                        key="source-name-input"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Source Link
+                      </label>
+                      <input
+                        type="url"
+                        value={newSource.sourceLink}
+                        onChange={handleSourceLinkChange}
+                        placeholder="https://example.com/tutorial"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={adding}
+                        key="source-link-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-8 gap-3">
+                  <button
+                    className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => { setShowStatusOverlay(false); setAdding(false); }}
                     disabled={adding}
-                  />
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="px-6 py-2 rounded-lg bg-purple-700 hover:bg-purple-800 text-white font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSaveConceptStatuses}
+                    disabled={adding || Object.values(conceptStatuses).some(v => !v)}
+                  >
+                    {adding ? 'Saving...' : 'Save Changes'}
+                  </button>
                 </div>
               </div>
             </div>
-            
-            <div className="flex justify-end mt-6 gap-3">
-              <button
-                className="px-4 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-700"
-                onClick={() => { setShowStatusOverlay(false); setAdding(false); }}
-                    disabled={adding}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white font-semibold"
-                onClick={handleSaveConceptStatuses}
-                disabled={adding || Object.values(conceptStatuses).some(v => !v)}
-              >
-                {adding ? 'Saving...' : 'Save'}
-              </button>
-            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
 
       {/* Concept Details Overlay */}
