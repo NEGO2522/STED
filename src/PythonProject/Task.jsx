@@ -16,6 +16,7 @@ function Task() {
   const { taskId } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [messages, setMessages] = useState([]);
 
   // Load task data
   useEffect(() => {
@@ -151,8 +152,8 @@ function Task() {
               <div className="w-full h-full">
                 <AI
                   userCode={userCode}
-                  messages={[]}
-                  setMessages={() => {}}
+                  messages={messages}
+                  setMessages={setMessages}
                   terminalOutput={terminalOutput}
                 />
               </div>
