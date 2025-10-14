@@ -7,24 +7,39 @@ const defaultCode = `# Write your Python code here`;
 // Generate a unique key for localStorage based on the component's props
 const getStorageKey = (id = 'default') => `saved_code_${id}`;
 
-function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnly, hideTerminal, editorId = 'default' }) {
+function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTerminal, editorId = 'default' }) {
   const storageKey = getStorageKey(editorId);
-  // Use a ref to store the current code value to avoid dependency issues
   const codeRef = useRef('');
   
-  const [code, setCode] = useState(() => {
-    // Load saved code from localStorage on initial render
+  // Use the value prop if provided, otherwise use local state
+  const [localCode, setLocalCode] = useState(defaultCode);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Initialize the editor with the value from props or localStorage
+  useEffect(() => {
+    if (isInitialized) return;
+    
     try {
-      const savedCode = localStorage.getItem(storageKey);
-      const initialCode = savedCode !== null ? savedCode : defaultCode;
-      codeRef.current = initialCode;
-      return initialCode;
+      if (value !== undefined && value !== '') {
+        // Use the value from props if provided
+        codeRef.current = value;
+        setLocalCode(value);
+      } else {
+        // Otherwise, try to load from localStorage
+        const savedCode = localStorage.getItem(storageKey);
+        if (savedCode !== null) {
+          codeRef.current = savedCode;
+          setLocalCode(savedCode);
+        }
+      }
+      setIsInitialized(true);
     } catch (error) {
-      console.error('Failed to load code from localStorage:', error);
+      console.error('Failed to initialize code editor:', error);
       codeRef.current = defaultCode;
-      return defaultCode;
+      setLocalCode(defaultCode);
+      setIsInitialized(true);
     }
-  });
+  }, [value, storageKey, isInitialized]);
   const [outputLines, setOutputLines] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -32,18 +47,26 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
   const [promptText, setPromptText] = useState('');
   const inputResolver = useRef(null);
 
-  // Save code to localStorage when it changes
+  // Save local code changes to localStorage
   useEffect(() => {
+    if (!isInitialized) return;
+    
     try {
-      localStorage.setItem(storageKey, code);
-      codeRef.current = code;
+      const currentCode = value !== undefined ? value : localCode;
+      codeRef.current = currentCode;
+      
+      if (value === undefined) {
+        // Only save to localStorage if we're in uncontrolled mode
+        localStorage.setItem(storageKey, localCode);
+      }
+      
       if (onCodeChange) {
-        onCodeChange(code);
+        onCodeChange(currentCode);
       }
     } catch (error) {
-      console.error('Failed to save code to localStorage:', error);
+      console.error('Failed to save code:', error);
     }
-  }, [code, storageKey, onCodeChange]);
+  }, [localCode, value, storageKey, onCodeChange, isInitialized]);
 
   // Clear any saved code when component unmounts if project ended
   useEffect(() => {
@@ -93,7 +116,7 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
     setWaitingInput(false);
 
     try {
-      const codeToRun = value !== undefined ? value : code;
+      const codeToRun = value !== undefined ? value : localCode;
       
       await runPythonCode({
         code: codeToRun,
@@ -115,8 +138,15 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
           height="100%"
           language="python"
           theme="vs-dark"
-          value={value !== undefined ? value : code}
-          onChange={readOnly ? undefined : (val) => setCode(val || defaultCode)}
+          value={value !== undefined ? value : localCode}
+          onChange={readOnly ? undefined : (val) => {
+            const newCode = val || defaultCode;
+            if (value === undefined) {
+              setLocalCode(newCode);
+            } else if (onCodeChange) {
+              onCodeChange(newCode);
+            }
+          }}
           options={{
             readOnly: !!readOnly,
             minimap: { enabled: false },
@@ -148,22 +178,6 @@ function CodeEditor({ onCodeChange, onStuckClick, onOutputChange, value, readOnl
             >
               {isRunning ? 'Running...' : 'Run'}
             </button>
-            {onStuckClick && (
-              <button
-                onClick={onStuckClick}
-                style={{
-                  background: '#222',
-                  color: '#fff',
-                  padding: '8px 16px',
-                  cursor: readOnly ? 'not-allowed' : 'pointer',
-                  borderRadius: '5px',
-                  border: '2px solid #007acc'
-                }}
-                disabled={!!readOnly}
-              >
-                Stuck?
-              </button>
-            )}
           </div>
           <div className='text-left' style={{ background: 'black', color: '#dcdcdc', padding: '10px', height: '250px', overflowY: 'auto', borderTop: '1px solid #555' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>

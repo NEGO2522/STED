@@ -1136,10 +1136,10 @@ IMPORTANT INSTRUCTIONS:
       {/* Project History Section */}
       <div className="w-full relative px-4 lg:px-8 max-w-7xl mx-auto text-left mb-10">
         
-        <h2 className="text-2xl font-bold text-slate-800 mb-6">Project History</h2>
+        <h2 className="text-2xl font-bold text-slate-800 mb-6">Project & Task History</h2>
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 ring-1 ring-slate-200">
           {completedProjects.length === 0 ? (
-            <div className="text-slate-500 italic">No completed projects yet.</div>
+            <div className="text-slate-500 italic">No completed projects or tasks yet.</div>
           ) : (
               <ul className="divide-y divide-slate-200">
               {completedProjects.map((project, idx) => (

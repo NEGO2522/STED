@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import CodeEditor from './CodeEditor';
-import AI from './AI';
+import TaskAI from './TaskAI';
 import { useUser } from '@clerk/clerk-react';
 import { ref, get, set } from 'firebase/database';
 import { db } from '../firebase';
@@ -19,18 +19,26 @@ function Task() {
   const [messages, setMessages] = useState([]);
   const [completedSubtasks, setCompletedSubtasks] = useState([]);
 
-  // Load task data
+  // Load task data and code
   useEffect(() => {
     const loadTask = async () => {
       if (!taskId || !user) return;
 
       try {
+        setIsLoading(true);
         const taskRef = ref(db, `PythonTask/${taskId}`);
         const snapshot = await get(taskRef);
 
         if (snapshot.exists()) {
           const taskData = snapshot.val();
           setTask({ id: taskId, ...taskData });
+          
+          // Set the code from the task's Code field if it exists
+          if (taskData.Code) {
+            // Ensure the code has proper line breaks
+            const formattedCode = taskData.Code.replace(/\\n/g, '\n');
+            setUserCode(formattedCode);
+          }
 
           // Load completed subtasks from Firebase
           const userTaskRef = ref(db, `users/${user.id}/python/tasks/${taskId}/completedSubtasks`);
@@ -168,11 +176,12 @@ function Task() {
           <div className="flex-1 overflow-auto bg-[#1e1e1e] text-[#d4d4d4] p-0 w-full">
             {rightPanel === 'ai' ? (
               <div className="w-full h-full">
-                <AI
+                <TaskAI
                   userCode={userCode}
                   messages={messages}
                   setMessages={setMessages}
                   terminalOutput={terminalOutput}
+                  task={task}
                 />
               </div>
             ) : (
@@ -184,9 +193,6 @@ function Task() {
                   <div className="flex items-center gap-2 mb-4">
                     <span className="px-2.5 py-0.5 bg-[#3a3d41] text-white rounded-full text-xs font-medium">
                       {task.Category || 'Task'}
-                    </span>
-                    <span className="text-xs text-[#9e9e9e]">
-                      • {task.difficulty || 'Difficulty not specified'}
                     </span>
                   </div>
                 </div>

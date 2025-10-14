@@ -137,7 +137,7 @@ function Project() {
           chatHistory: chatMessages,
           completedAt: new Date().toISOString(),
           projectTitle: projectConfig?.title || 'Personal Finance Tracker',
-          conceptUsed: projectConfig?.Concept || '',
+          conceptUsed: Array.isArray(projectConfig?.Concept) ? projectConfig.Concept.join(', ') : '',
           terminalOutput: terminalOutput,
           projectKey: currentProject,
           publicUrl
@@ -169,7 +169,7 @@ function Project() {
         let nextProject = availableProjects.length > 0 ? availableProjects[0] : null;
         
         // If we have concepts from current project, try to find a project that builds on them
-        const currentProjectData = projectConfig?.Concept ? projectConfig.Concept : [];
+        const currentProjectData = Array.isArray(projectConfig?.Concept) ? projectConfig.Concept : [];
         
         if (currentProjectData && currentProjectData.length > 0) {
           // Find a project that uses any of the concepts from current project
@@ -359,9 +359,13 @@ function Project() {
     }
   };
 
-  const sortedConcepts = projectConfig?.Concept?.sort((a, b) => {
+  // Ensure Concept is an array before sorting
+  const concepts = Array.isArray(projectConfig?.Concept) ? [...projectConfig.Concept] : [];
+  const sortedConcepts = concepts.sort((a, b) => {
     const order = { basic: 1, intermediate: 2, advanced: 3 };
-    return order[a.toLowerCase()] - order[b.toLowerCase()];
+    const aLower = (a || '').toLowerCase();
+    const bLower = (b || '').toLowerCase();
+    return (order[aLower] || 0) - (order[bLower] || 0);
   });
 
   return (
@@ -487,7 +491,7 @@ function Project() {
               <h3 className="text-xl font-semibold mb-3">Project Details</h3>
               <div className="text-left space-y-2">
                 <p><strong>Project:</strong> {projectConfig?.title || 'Personal Finance Tracker'}</p>
-                <p><strong>Concepts Used:</strong> {projectConfig?.Concept?.join(', ') || 'N/A'}</p>
+                <p><strong>Concepts Used:</strong> {Array.isArray(projectConfig?.Concept) ? projectConfig.Concept.join(', ') : 'N/A'}</p>
                 <p><strong>Completed:</strong> {new Date().toLocaleDateString()}</p>
               </div>
             </div>
