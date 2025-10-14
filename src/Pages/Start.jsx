@@ -22,54 +22,23 @@ function Start() {
   const { isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
   const [hoveredSkill, setHoveredSkill] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  const handleNavigation = (e) => {
-    if (!isSignedIn) {
-      e.preventDefault();
-      navigate('/login');
-    }
-  };
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (isLoaded && !isSignedIn) {
+      navigate('/login');
+    }
+  }, [isLoaded, isSignedIn, navigate]);
 
   if (!isLoaded) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Loading...</div>;
-  }
-
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-200">
-          <div className="flex justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">
-            Desktop Experience Recommended
-          </h1>
-          <p className="text-gray-600 mb-2">
-            For the best learning experience, please switch to a desktop or tablet.
-          </p>
-           <p className="text-sm text-gray-500">
-            Education is a journey best taken on a larger screen. Avoid phone and bring laptop.
-          </p>
-        </div>
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
       {/* Enhanced Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div 
-          className="absolute top-1/4 -right-20 w-96 h-96 bg-gradient-to-br from-blue-900 to-gray-900 rounded-full opacity-40 blur-3xl"
+          className="absolute top-1/4 -right-20 w-96 h-96 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full opacity-40 blur-3xl"
           animate={{
             y: [0, -15, 0],
             x: [0, 10, 0],
@@ -81,7 +50,7 @@ function Start() {
           }}
         />
         <motion.div 
-          className="absolute bottom-1/3 -left-20 w-80 h-80 bg-gradient-to-br from-indigo-900 to-purple-900 rounded-full opacity-40 blur-3xl"
+          className="absolute bottom-1/3 -left-20 w-80 h-80 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full opacity-40 blur-3xl"
           animate={{
             y: [0, 15, 0],
             x: [0, -10, 0],
@@ -94,7 +63,7 @@ function Start() {
           }}
         />
         <motion.div 
-          className="absolute top-1/3 left-1/4 w-64 h-64 bg-gradient-to-br from-violet-900 to-blue-900 rounded-full opacity-30 blur-3xl"
+          className="absolute top-1/3 left-1/4 w-64 h-64 bg-gradient-to-br from-violet-100 to-blue-100 rounded-full opacity-30 blur-3xl"
           animate={{
             y: [0, 20, 0],
             x: [0, 15, 0],
@@ -113,24 +82,14 @@ function Start() {
         {/* Navigation */}
         <header className="py-6">
           <div className="flex items-center justify-between">
-            <Link to="/home" className="text-2xl font-bold text-blue-400">STED-LS</Link>
+            <div className="text-2xl font-bold text-blue-700">STED-LS</div>
             <div className="flex items-center space-x-4">
               {isSignedIn ? (
                 <ProfileIcon />
               ) : (
                 <>
-                  <Link 
-                    to="/login" 
-                    className="text-slate-300 hover:text-blue-400 transition-colors"
-                    onClick={handleNavigation}
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    to="/signup" 
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
-                    onClick={handleNavigation}
-                  >
+                  <Link to="/login" className="text-slate-700 hover:text-blue-600 transition-colors">Sign In</Link>
+                  <Link to="/signup" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
                     Get Started
                   </Link>
                 </>
@@ -152,7 +111,7 @@ function Start() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="inline-flex items-center bg-gray-800 text-blue-400 text-sm font-medium px-4 py-2 rounded-full mb-6 border border-gray-700 shadow-sm"
+              className="inline-flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-sm font-medium px-4 py-2 rounded-full mb-6 border border-blue-100 shadow-sm"
             >
               <span className="relative flex h-2 w-2 mr-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
@@ -165,10 +124,10 @@ function Start() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.8 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-200 mb-6 leading-tight"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-800 mb-6 leading-tight"
             >
               <span className="block">Apply & Track</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
                 your <span className="italic">Learning</span>
               </span>
             </motion.h1>
@@ -179,10 +138,10 @@ function Start() {
               transition={{ delay: 0.4, duration: 0.8 }}
               className="space-y-4 mb-8 max-w-lg mx-auto lg:mx-0"
             >
-              <p className="text-lg text-slate-400 leading-relaxed">
+              <p className="text-lg text-slate-600 leading-relaxed">
                 Learn a concept → apply it in a task → master it with projects.
               </p>
-              <div className="flex items-center space-x-2 text-sm text-slate-400">
+              <div className="flex items-center space-x-2 text-sm text-slate-500">
                 <span className="flex items-center">
                   <svg className="w-4 h-4 mr-1 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -204,15 +163,11 @@ function Start() {
               transition={{ delay: 0.5, duration: 0.8 }}
               className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
             >
-              <Link 
-                to={isSignedIn ? "/home" : "#"} 
-                className="w-full sm:w-auto"
-                onClick={!isSignedIn ? handleNavigation : undefined}
-              >
+              <Link to="/home" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-300 flex items-center justify-center gap-2"
                 >
                   {isSignedIn ? 'Go to Dashboard' : 'Start Building'}
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -220,15 +175,11 @@ function Start() {
                   </svg>
                 </motion.button>
               </Link>
-              <Link 
-                to={isSignedIn ? "/all-skills" : "#"} 
-                className="w-full sm:w-auto"
-                onClick={!isSignedIn ? handleNavigation : undefined}
-              >
+              <Link to="/all-skills" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gray-800 text-slate-300 hover:bg-gray-700 border-2 border-gray-700 px-8 py-4 rounded-xl font-medium text-lg shadow-sm hover:shadow-md transition-all duration-300"
+                  className="w-full bg-white text-slate-700 hover:bg-slate-50 border-2 border-slate-200 px-8 py-4 rounded-xl font-medium text-lg shadow-sm hover:shadow-md transition-all duration-300"
                 >
                   Explore Skills
                 </motion.button>
@@ -246,7 +197,7 @@ function Start() {
           >
             <div className="relative">
               <motion.div 
-                className="absolute -inset-4 bg-gradient-to-r from-blue-800 to-indigo-800 rounded-2xl opacity-20 blur-xl"
+                className="absolute -inset-4 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-2xl opacity-20 blur-xl"
                 animate={{
                   opacity: [0.15, 0.25, 0.15],
                 }}
@@ -256,7 +207,7 @@ function Start() {
                   ease: 'easeInOut',
                 }}
               />
-              <div className="relative bg-gray-800/90 backdrop-blur-sm p-1.5 rounded-2xl shadow-xl border border-gray-700/50 overflow-hidden">
+              <div className="relative bg-white/90 backdrop-blur-sm p-1.5 rounded-2xl shadow-xl border border-white/50 overflow-hidden">
                 <div className="grid grid-cols-2 gap-3 p-2">
                   {skillItems.map((item) => (
                     <motion.div
@@ -269,7 +220,7 @@ function Start() {
                       }}
                       onHoverStart={() => setHoveredSkill(item.id)}
                       onHoverEnd={() => setHoveredSkill(null)}
-                      className="relative group overflow-hidden rounded-xl aspect-square bg-gray-900 shadow-md hover:shadow-lg transition-all duration-300"
+                      className="relative group overflow-hidden rounded-xl aspect-square bg-white shadow-md hover:shadow-lg transition-all duration-300"
                     >
                       <img
                         src={item.image}
@@ -279,13 +230,13 @@ function Start() {
                     </motion.div>
                   ))}
                 </div>
-                <div className="absolute inset-0 border border-white/10 rounded-2xl pointer-events-none" />
+                <div className="absolute inset-0 border border-white/20 rounded-2xl pointer-events-none" />
               </div>
             </div>
             
             {/* Floating Elements */}
             <motion.div 
-              className="absolute -bottom-6 -right-6 w-12 h-12 bg-blue-900 rounded-full opacity-70"
+              className="absolute -bottom-6 -right-6 w-12 h-12 bg-blue-100 rounded-full opacity-70"
               animate={{
                 y: [0, -10, 0],
                 scale: [1, 1.1, 1],
@@ -297,7 +248,7 @@ function Start() {
               }}
             />
             <motion.div 
-              className="absolute -top-4 -left-4 w-8 h-8 bg-indigo-900 rounded-full opacity-70"
+              className="absolute -top-4 -left-4 w-8 h-8 bg-indigo-100 rounded-full opacity-70"
               animate={{
                 y: [0, 10, 0],
                 scale: [1, 1.2, 1],
@@ -313,9 +264,9 @@ function Start() {
         </main>
 
         {/* Enhanced Footer */}
-        <footer className="py-6 border-t border-gray-800 mt-auto  backdrop-blur-sm">
+        <footer className="py-6 border-t border-slate-100 mt-auto bg-white/50 backdrop-blur-sm">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 text-gray-400 text-sm mb-4 md:mb-0">
+            <div className="flex items-center space-x-2 text-slate-500 text-sm mb-4 md:mb-0">
               <span>&copy; {new Date().getFullYear()} STED. All rights reserved.</span>
               <span className="hidden md:inline-block">•</span>
               <span className="hidden md:inline-block">Made with ❤️ for better learning</span>
@@ -323,19 +274,19 @@ function Start() {
             <div className="flex items-center space-x-6">
               <Link 
                 to="/terms" 
-                className="text-gray-400 hover:text-blue-400 transition-colors text-sm font-medium hover:underline"
+                className="text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium hover:underline"
               >
                 Terms
               </Link>
               <Link 
                 to="/privacy" 
-                className="text-gray-400 hover:text-blue-400 transition-colors text-sm font-medium hover:underline"
+                className="text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium hover:underline"
               >
                 Privacy
               </Link>
               <Link 
                 to="/contact" 
-                className="text-gray-400 hover:text-blue-400 transition-colors text-sm font-medium hover:underline"
+                className="text-slate-500 hover:text-blue-600 transition-colors text-sm font-medium hover:underline"
               >
                 Contact
               </Link>

@@ -9,7 +9,7 @@ function ProfileIcon() {
 
   return (
     <div className="flex items-center space-x-3">
-      <span className="text-slate-700 dark:text-slate-200 font-medium text-sm">
+      <span className="text-black font-medium text-sm">
         {fullName}
       </span>
       <UserButton afterSignOutUrl="/" />
