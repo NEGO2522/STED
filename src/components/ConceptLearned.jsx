@@ -775,17 +775,17 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
 
       {/* Overlay for concept status selection */}
       {showStatusOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-xl relative">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-xl relative mx-4 my-8">
             <button
-              className="absolute top-2 right-2 text-slate-500 hover:text-slate-800 text-xl"
+              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
               onClick={() => { setShowStatusOverlay(false); setAdding(false); }}
               disabled={adding}
             >
               ×
             </button>
-            <h3 className="text-2xl font-bold mb-4">Set Concept Status</h3>
-            <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold text-slate-800 mb-6">Set Concept Status</h3>
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 -mr-2">
               {selectedConcepts.map((item) => (
                 <div key={`${item.category}:${item.concept}`} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <div className="flex items-center gap-2">
