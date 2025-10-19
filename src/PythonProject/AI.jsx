@@ -321,8 +321,6 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
     const greetings = [
       `Hi there! Ready to continue working on ${taskTitle || 'your Python project'}?`,
       `Hello! How can I help you with ${taskTitle || 'your code'} today?`,
-      `Hi! Let's keep going with ${taskTitle || 'your project'}. What would you like to focus on?`,
-      `Hey there! Still working on ${taskTitle || 'your task'}? I'm here to help!`
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   };
@@ -412,20 +410,10 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
 CRITICAL RULES:
 1. NEVER provide direct code solutions or complete implementations
 2. Only provide hints, problem-solving approaches, and relevant concepts
-3. Guide the user to discover solutions on their own
 4. If asked for code, provide conceptual guidance instead
 5. Focus on teaching programming concepts and problem-solving strategies
-2. If asked about general topics (e.g., "what is ML?"), respond by relating it to the current project
 3. NEVER provide general information or explanations outside the project context
 4. If a question is too broad or not project-related, ask the user to rephrase it in the context of their current task
-5. Focus on guiding the user to discover answers rather than providing them directly
-
-MENTORING APPROACH:
-1. Ask guiding questions to help users think through problems
-2. Break down complex problems into smaller, manageable steps
-3. Suggest relevant Python concepts and documentation to explore
-4. Provide analogies and examples that don't include complete solutions
-5. Encourage debugging and problem-solving skills
 
 Project Description: ${context.projectDescription}
 
@@ -450,10 +438,8 @@ User's latest question: ${inputMessage}
 RESPONSE RULES:
 1. NEVER provide complete code solutions
 2. If asked for code, explain the concept and suggest relevant Python documentation
-3. Guide the user with questions that lead them to the solution
 4. Focus on teaching programming concepts and problem-solving strategies
 5. Keep responses concise and focused on the specific question
-6. If the user is stuck, suggest debugging approaches rather than solutions
 
 RESPONSE FORMAT REQUIREMENTS:
 - Use bullet points (-) only when listing multiple related items
@@ -464,24 +450,9 @@ RESPONSE FORMAT REQUIREMENTS:
 - No introductory phrases like "Here's what you need to do" or "The issue is"
 - Start directly with the answer
 
-EXAMPLE RESPONSES:
-User: "How do I sort a list?"
-AI: "Python lists have a built-in sort() method. What happens when you try to use it?"
+-VERY VERY IMPORTANT: read the code of the user first and then read the question asked by the user. according to that provide the answer. the answer should be short
 
-User: "My code isn't working"
-AI: "Let's debug this together. What error message are you seeing?"
-
-User: "Show me how to write a for loop"
-AI: "A for loop in Python iterates over items in a sequence. What sequence are you trying to work with?"
-
-User: "Give me the code for [task]"
-AI: "I can't provide the complete code, but I can help you break down the problem. What part of the task are you finding challenging?"
-
-Remember:
-- Guide, don't give answers
-- Teach concepts, not just solutions
-- Encourage problem-solving
-- Be patient and supportive`;
+`;
       // Timeout and abort for slow responses
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
@@ -629,7 +600,7 @@ Remember:
   }, [inputMessage]);
 
   return (
-    <div className="flex flex-col bg-gray-900 text-white h-full">
+    <div className="flex flex-col bg-gray-900 text-white h-full overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
         <h2 className="text-xl font-semibold text-purple-400">AI Mentor</h2>
@@ -643,7 +614,7 @@ Remember:
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+      <div className="flex-1 overflow-y-auto p-2 sm:p-4 min-h-0">
         <div className="max-w-3xl mx-auto w-full space-y-4">
           {messages.map((message) => (
             <div
@@ -651,14 +622,14 @@ Remember:
               className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[80%] rounded-lg p-3 break-words whitespace-pre-wrap ${
                   message.type === 'user'
                     ? 'bg-purple-600 text-white'
                     : 'bg-gray-700 text-gray-100'
                 }`}
               >
                 <div className="text-left">
-                  {message.type === 'ai' ? formatAIResponse(message.content) : <div className="whitespace-pre-wrap">{message.content}</div>}
+                  {message.type === 'ai' ? formatAIResponse(message.content) : <div className="whitespace-pre-wrap break-words">{message.content}</div>}
                 </div>
                 <div className="text-xs opacity-70 mt-1 text-right">
                   {message.timestamp.toLocaleTimeString()}
@@ -681,8 +652,8 @@ Remember:
         </div>
       </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div className="p-3 border-t text-left border-gray-700 bg-gray-900" style={{ position: 'sticky', bottom: 0, left: 0, right: 0 }}>
+      {/* Input Area */}
+      <div className="p-3 border-t text-left border-gray-700 bg-gray-900 shrink-0">
         <div className="flex space-x-2 items-end">
           <textarea
             ref={inputRef}

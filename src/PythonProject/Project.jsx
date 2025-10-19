@@ -595,16 +595,16 @@ function Project() {
         </button>
       </div>
 
-      <div className="flex h-screen pt-12 p-3 bg-[#0F0F0F] w-screen">
-          <div className="w-280 border border-white h-full text-white border-white">
+      <div className="flex h-screen pt-12 p-3 bg-[#0F0F0F] w-screen overflow-hidden">
+          <div className="flex-[2] min-w-0 border border-white h-full text-white">
         <CodeEditor onCodeChange={setUserCode} onOutputChange={setTerminalOutput} />
         </div>
       {/* Left side - Code Editor */}
      
 
       {/* Right side - Statement / AI Panel */}
-      <div className="w-150 h-full text-white p-5 border border-white border-white"
-      style={{"backgroundColor":"rgb(24, 24, 27)"}}
+      <div className="flex-[1] min-w-0 h-full text-white p-5 border border-white flex flex-col overflow-hidden"
+      style={{ backgroundColor: "rgb(24, 24, 27)" }}
       >
         {/* Toggle Buttons */}
         <div className="flex gap-4 mb-4">
@@ -633,7 +633,7 @@ function Project() {
         </div>
 
         {/* Content Section */}
-        <div className="mt-2">
+        <div className="mt-2 flex-1 overflow-hidden">
           {rightPanel === 'statement' && (
             <Statement
               userCode={userCode}
