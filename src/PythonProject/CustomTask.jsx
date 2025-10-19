@@ -22,7 +22,7 @@ export default function CustomTask({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-xl"
+          className="fixed inset-0 z-[5000] flex items-center justify-center bg-black/50 backdrop-blur-2xl"
           onClick={() => setShowCustomTaskOverlay(false)}
         >
           <motion.div
@@ -103,22 +103,12 @@ export default function CustomTask({
                 </button>
                 <div className="flex flex-col items-center gap-1">
                   <button
-                    className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold text-base shadow-lg flex items-center justify-center gap-2 min-w-[100px]"
-                    disabled={generatingCustomTask || selectedCustomConcepts.length === 0 || !customTaskTheme.trim()}
+                    className="px-6 py-2 rounded-xl bg-blue-700/50 text-white/80 font-bold text-base shadow-lg flex items-center justify-center gap-2 min-w-[100px] cursor-not-allowed"
+                    disabled={true}
                   >
-                    {generatingCustomTask ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Creating...
-                      </>
-                    ) : 'Create Task'}
+                    Create Task
                   </button>
-                  {selectedCustomConcepts.length === 0 && (
-                    <span className="text-red-500 text-xs font-medium">Select at least one concept</span>
-                  )}
-                  {!customTaskTheme.trim() && (
-                    <span className="text-red-500 text-xs font-medium">Enter a task theme</span>
-                  )}
+                  <span className="text-slate-400 text-xs font-medium">Coming Soon</span>
                 </div>
               </div>
             </div>
