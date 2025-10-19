@@ -674,11 +674,11 @@ function Project() {
      
 
       {/* Right side - Statement / AI Panel */}
-      <div className="w-150 border border-[#828282] h-full text-white p-5"
+      <div className="w-150 border border-[#828282] h-full text-white flex flex-col"
       style={{"backgroundColor":"rgb(24, 24, 27)"}}
       >
         {/* Toggle Buttons */}
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-4 p-5 pb-4">
           <button
             onClick={() => setRightPanel('statement')}
             className={`px-4 py-2 rounded-md font-medium transition ${
@@ -704,27 +704,31 @@ function Project() {
         </div>
 
         {/* Content Section */}
-        <div className="mt-2">
+        <div className="flex-1 overflow-hidden flex flex-col">
           {rightPanel === 'statement' && (
-            <Statement
-              userCode={userCode}
-              projectConfig={projectConfig}
-              taskCheckStatus={taskCheckStatus}
-              setTaskCheckStatus={setTaskCheckStatus}
-              subtaskCheckResults={subtaskCheckResults}
-              setSubtaskCheckResults={setSubtaskCheckResults}
-              expandedTask={expandedTask}
-              setExpandedTask={setExpandedTask}
-            />
+            <div className="flex-1 overflow-y-auto p-5 pt-0">
+              <Statement
+                userCode={userCode}
+                projectConfig={projectConfig}
+                taskCheckStatus={taskCheckStatus}
+                setTaskCheckStatus={setTaskCheckStatus}
+                subtaskCheckResults={subtaskCheckResults}
+                setSubtaskCheckResults={setSubtaskCheckResults}
+                expandedTask={expandedTask}
+                setExpandedTask={setExpandedTask}
+              />
+            </div>
           )}
 
           {rightPanel === 'ai' && (
-            <AI
-              userCode={userCode}
-              messages={chatMessages}
-              setMessages={setChatMessages}
-              terminalOutput={terminalOutput}
-            />
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <AI
+                userCode={userCode}
+                messages={chatMessages}
+                setMessages={setChatMessages}
+                terminalOutput={terminalOutput}
+              />
+            </div>
           )}
         </div>
       </div>

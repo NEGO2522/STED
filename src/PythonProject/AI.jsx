@@ -643,7 +643,7 @@ Remember:
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4 text-left space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-4 text-left space-y-4" style={{ maxHeight: 'calc(100vh - 200px)' }}>
         {messages.map((message) => (
           <div
             key={message.id}
@@ -679,8 +679,8 @@ Remember:
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="p-3 border-t text-left border-gray-700">
+      {/* Input Area - Fixed at bottom */}
+      <div className="p-3 border-t text-left border-gray-700 bg-gray-900" style={{ position: 'sticky', bottom: 0, left: 0, right: 0 }}>
         <div className="flex space-x-2 items-end">
           <textarea
             ref={inputRef}
@@ -695,7 +695,7 @@ Remember:
             }}
             onKeyPress={handleKeyPress}
             placeholder="Ask me anything about your project..."
-            className="flex-1 bg-gray-800 text-left text-white"
+            className="flex-1 bg-gray-800 text-left text-white overflow-y-auto"
             style={{
               borderRadius: 6,
               padding: '7px 10px',
