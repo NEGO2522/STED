@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import CodeEditor from './CodeEditor';
+import TaskCodeEditor from './TaskCodeEditor';
 import TaskAI from './TaskAI';
 import { useUser } from '@clerk/clerk-react';
 import { ref, get, set } from 'firebase/database';
@@ -8,7 +8,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 function Task() {
   const [rightPanel, setRightPanel] = useState('statement');
-  const [userCode, setUserCode] = useState('');
+  const defaultCode = `incorrect_concat.py\n def calculate_total(marks):\n     total = ""              # BUG: total is a string\n     for mark in marks:\n         total += mark      # concatenates strings instead of summing numbers\n     return total\n\nmarks = ["85", "90", "78"]\nprint(\"Total Marks:\", calculate_total(marks))`;
+
+  const [userCode, setUserCode] = useState(defaultCode);
   const [terminalOutput, setTerminalOutput] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [task, setTask] = useState(null);
@@ -30,15 +32,8 @@ function Task() {
         const snapshot = await get(taskRef);
 
         if (snapshot.exists()) {
-          const taskData = snapshot.val();
-          setTask({ id: taskId, ...taskData });
-          
-          // Set the code from the task's Code field if it exists
-          if (taskData.Code) {
-            // Ensure the code has proper line breaks
-            const formattedCode = taskData.Code.replace(/\\n/g, '\n');
-            setUserCode(formattedCode);
-          }
+          const { Code, ...taskDataWithoutCode } = snapshot.val();
+          setTask({ id: taskId, ...taskDataWithoutCode });
 
           // Load completed subtasks from Firebase
           const userTaskRef = ref(db, `users/${user.id}/python/tasks/${taskId}/completedSubtasks`);
@@ -117,7 +112,7 @@ function Task() {
       <div className="max-w-[95vw] mx-auto h-[calc(100vh-2rem)] flex rounded-lg overflow-hidden border border-[#333]">
         {/* Left Panel - Editor */}
         <div className="w-[70%] h-full flex flex-col bg-[#1e1e1e] rounded-l-lg overflow-hidden">
-          <CodeEditor
+          <TaskCodeEditor
             value={userCode}
             onCodeChange={handleCodeChange}
             onOutputChange={handleOutputChange}
