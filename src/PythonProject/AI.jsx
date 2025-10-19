@@ -643,40 +643,42 @@ Remember:
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4 text-left space-y-4" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+      <div className="flex-1 overflow-y-auto p-2 sm:p-4" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+        <div className="max-w-3xl mx-auto w-full space-y-4">
+          {messages.map((message) => (
             <div
-              className={`max-w-xs sm:max-w-md md:max-w-lg rounded-lg p-3 ${
-                message.type === 'user'
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-700 text-gray-100'
-              }`}
+              key={message.id}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div>
-                {message.type === 'ai' ? formatAIResponse(message.content) : <div className="whitespace-pre-wrap">{message.content}</div>}
-              </div>
-              <div className="text-xs opacity-70 mt-1">
-                {message.timestamp.toLocaleTimeString()}
-              </div>
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-700 text-gray-100 rounded-lg p-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div
+                className={`max-w-[80%] rounded-lg p-3 ${
+                  message.type === 'user'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-700 text-gray-100'
+                }`}
+              >
+                <div className="text-left">
+                  {message.type === 'ai' ? formatAIResponse(message.content) : <div className="whitespace-pre-wrap">{message.content}</div>}
+                </div>
+                <div className="text-xs opacity-70 mt-1 text-right">
+                  {message.timestamp.toLocaleTimeString()}
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-700 text-gray-100 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input Area - Fixed at bottom */}
