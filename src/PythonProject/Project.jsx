@@ -137,7 +137,7 @@ function Project() {
           chatHistory: chatMessages,
           completedAt: new Date().toISOString(),
           projectTitle: projectConfig?.title || 'Personal Finance Tracker',
-          conceptUsed: Array.isArray(projectConfig?.Concept) ? projectConfig.Concept.join(', ') : '',
+          conceptUsed: projectConfig?.Concept || '',
           terminalOutput: terminalOutput,
           projectKey: currentProject,
           publicUrl
@@ -147,46 +147,14 @@ function Project() {
         const completedProjectsRef = ref(db, 'users/' + user.id + '/python/PythonCompletedProjects/' + currentProject);
         await update(completedProjectsRef, completedProjectData);
         
-        // Get all available projects to determine next one
-        const projectsRef = ref(db, 'PythonProject');
-        const projectsSnap = await get(projectsRef);
-        
-        if (!projectsSnap.exists()) {
-          console.error('No projects found in database');
-          return;
-        }
-        
-        // Get completed projects
-        const completedProjectsListRef = ref(db, `users/${user.id}/python/PythonCompletedProjects`);
-        const completedProjectsSnap = await get(completedProjectsListRef);
-        const completedProjects = completedProjectsSnap.exists() ? completedProjectsSnap.val() : {};
-        
-        // Get all project keys and filter out completed ones
-        const allProjects = Object.keys(projectsSnap.val() || {});
-        const availableProjects = allProjects.filter(project => !completedProjects[project]);
-        
-        // If no more projects, stay on current one
-        let nextProject = availableProjects.length > 0 ? availableProjects[0] : null;
-        
-        // If we have concepts from current project, try to find a project that builds on them
-        const currentProjectData = Array.isArray(projectConfig?.Concept) ? projectConfig.Concept : [];
-        
-        if (currentProjectData && currentProjectData.length > 0) {
-          // Find a project that uses any of the concepts from current project
-          for (const project of availableProjects) {
-            const projectData = projectsSnap.val()[project];
-            if (projectData.Concept && projectData.Concept.some(concept => 
-              currentProjectData.includes(concept))) {
-              nextProject = project;
-              break;
-            }
-          }
-        }
-        
+        // Determine next project
+        let nextProject = null;
+        if (currentProject === 'Project1') nextProject = 'Project2';
+        else if (currentProject === 'Project2') nextProject = 'Project3';
+        // Add more as needed
         const updates = {
           'python/PythonProjectStarted': false
         };
-        
         if (nextProject) {
           updates['python/PythonCurrentProject'] = nextProject;
         }
@@ -213,64 +181,31 @@ function Project() {
     navigate('/python');
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!projectConfig) return;
+    // Open overlay immediately without re-checking tasks
     setShowSubmitOverlay(true);
-    setTaskCheckStatus({});
     setExpandedTask(null);
+
+    // If some tasks don't have a status yet but we have subtask results,
+    // derive task completion locally (no network calls)
     const tasks = Object.entries(projectConfig.tasks || projectConfig.ProjectTasks || {});
-    let results = [];
-    for (let i = 0; i < tasks.length; i++) {
-      const [taskKey, task] = tasks[i];
-      const subtaskResults = [];
-      
-      // Handle both standard 'subtasks' array and ProjectTasks structure
-      let subtasks = task.subtasks || [];
-      
-      // For ProjectTasks structure, convert object entries to array
-      if (subtasks.length === 0 && task.title) {
-        // This might be a ProjectTasks structure where subtasks are separate properties
-        subtasks = Object.entries(task)
-          .filter(([key]) => key !== 'title')
-          .map(([key, value]) => value);
-      }
-      
-      for (let j = 0; j < subtasks.length; j++) {
-        const subtask = subtasks[j];
-        const prompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIs this subtask clearly implemented in the user's code? Respond only with true or false.`;
-        let isSubtaskComplete = false;
-        try {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0,
-              max_tokens: 10
-            })
-          });
-          const data = await response.json();
-          let answer = '';
-          if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-            answer = data.choices[0].message.content.trim().toLowerCase();
-          }
-          const normalized = answer.replace(/[^a-z]/g, '');
-          if (normalized.startsWith('true')) isSubtaskComplete = true;
-          else if (normalized.startsWith('false')) isSubtaskComplete = false;
-        } catch (e) {
-          // On error, treat as not complete
+    setTaskCheckStatus(prev => {
+      const updated = { ...prev };
+      for (const [taskKey, task] of tasks) {
+        if (updated[taskKey] !== undefined) continue;
+
+        // Prefer already checked subtasks in Statement/handleTaskClick
+        const results = subtaskCheckResults[taskKey];
+        if (Array.isArray(results) && results.length > 0) {
+          updated[taskKey] = results.every(r => r.complete === true);
+          continue;
         }
-        subtaskResults.push({ subtask, complete: isSubtaskComplete });
+
+        // If no results exist, keep it undefined so UI shows '?' (no re-check here)
       }
-      // Mark task as complete only if all subtasks are complete
-      const isTaskComplete = subtaskResults.length > 0 && subtaskResults.every(r => r.complete);
-      results.push({ taskTitle: task.title, complete: isTaskComplete });
-      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: isTaskComplete }));
-    }
+      return updated;
+    });
   };
 
   const handleStuckClick = () => {
@@ -290,10 +225,13 @@ function Project() {
 
   const handleTaskClick = async (taskKey, task) => {
     setExpandedTask(taskKey);
-    
+
+    // Do not perform any checks while submit overlay is open
+    if (showSubmitOverlay) return;
+
     // Handle both standard 'subtasks' array and ProjectTasks structure
     let subtasks = task.subtasks || [];
-    
+
     // For ProjectTasks structure, convert object entries to array
     if (subtasks.length === 0 && task.title) {
       // This might be a ProjectTasks structure where subtasks are separate properties
@@ -301,8 +239,8 @@ function Project() {
         .filter(([key]) => key !== 'title')
         .map(([key, value]) => value);
     }
-    
-    // Only check subtasks if not already checked
+
+    // Only check subtasks if not already checked and submit overlay is not open
     if (!subtaskCheckResults[taskKey] && subtasks.length > 0) {
       const results = [];
       for (let i = 0; i < subtasks.length; i++) {
@@ -358,15 +296,6 @@ function Project() {
       setTerminalOutput(prev => [...prev, '❌ Error: ' + err.message]);
     }
   };
-
-  // Ensure Concept is an array before sorting
-  const concepts = Array.isArray(projectConfig?.Concept) ? [...projectConfig.Concept] : [];
-  const sortedConcepts = concepts.sort((a, b) => {
-    const order = { basic: 1, intermediate: 2, advanced: 3 };
-    const aLower = (a || '').toLowerCase();
-    const bLower = (b || '').toLowerCase();
-    return (order[aLower] || 0) - (order[bLower] || 0);
-  });
 
   return (
       <>
@@ -491,7 +420,7 @@ function Project() {
               <h3 className="text-xl font-semibold mb-3">Project Details</h3>
               <div className="text-left space-y-2">
                 <p><strong>Project:</strong> {projectConfig?.title || 'Personal Finance Tracker'}</p>
-                <p><strong>Concepts Used:</strong> {Array.isArray(projectConfig?.Concept) ? projectConfig.Concept.join(', ') : 'N/A'}</p>
+                <p><strong>Concepts Used:</strong> {projectConfig?.Concept || 'N/A'}</p>
                 <p><strong>Completed:</strong> {new Date().toLocaleDateString()}</p>
               </div>
             </div>
@@ -667,18 +596,18 @@ function Project() {
       </div>
 
       <div className="flex h-screen pt-12 p-3 bg-[#0F0F0F] w-screen">
-          <div className="w-280 border border-[#828282] h-full text-white">
+          <div className="w-280 border border-white h-full text-white border-white">
         <CodeEditor onCodeChange={setUserCode} onOutputChange={setTerminalOutput} />
         </div>
       {/* Left side - Code Editor */}
      
 
       {/* Right side - Statement / AI Panel */}
-      <div className="w-150 border border-[#828282] h-full text-white flex flex-col"
+      <div className="w-150 h-full text-white p-5 border border-white border-white"
       style={{"backgroundColor":"rgb(24, 24, 27)"}}
       >
         {/* Toggle Buttons */}
-        <div className="flex gap-4 p-5 pb-4">
+        <div className="flex gap-4 mb-4">
           <button
             onClick={() => setRightPanel('statement')}
             className={`px-4 py-2 rounded-md font-medium transition ${
@@ -704,31 +633,28 @@ function Project() {
         </div>
 
         {/* Content Section */}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="mt-2">
           {rightPanel === 'statement' && (
-            <div className="flex-1 overflow-y-auto p-5 pt-0">
-              <Statement
-                userCode={userCode}
-                projectConfig={projectConfig}
-                taskCheckStatus={taskCheckStatus}
-                setTaskCheckStatus={setTaskCheckStatus}
-                subtaskCheckResults={subtaskCheckResults}
-                setSubtaskCheckResults={setSubtaskCheckResults}
-                expandedTask={expandedTask}
-                setExpandedTask={setExpandedTask}
-              />
-            </div>
+            <Statement
+              userCode={userCode}
+              projectConfig={projectConfig}
+              taskCheckStatus={taskCheckStatus}
+              setTaskCheckStatus={setTaskCheckStatus}
+              subtaskCheckResults={subtaskCheckResults}
+              setSubtaskCheckResults={setSubtaskCheckResults}
+              expandedTask={expandedTask}
+              setExpandedTask={setExpandedTask}
+              showSubmitOverlay={showSubmitOverlay}
+            />
           )}
 
           {rightPanel === 'ai' && (
-            <div className="flex-1 overflow-hidden flex flex-col">
-              <AI
-                userCode={userCode}
-                messages={chatMessages}
-                setMessages={setChatMessages}
-                terminalOutput={terminalOutput}
-              />
-            </div>
+            <AI
+              userCode={userCode}
+              messages={chatMessages}
+              setMessages={setChatMessages}
+              terminalOutput={terminalOutput}
+            />
           )}
         </div>
       </div>

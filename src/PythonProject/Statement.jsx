@@ -9,7 +9,7 @@ import cross from '../assets/cross.png';
 import applied from '../assets/applied.png';
 import tick from '../assets/applied.png';
 
-function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatus, subtaskCheckResults, setSubtaskCheckResults, expandedTask, setExpandedTask }) {
+function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatus, subtaskCheckResults, setSubtaskCheckResults, expandedTask, setExpandedTask, showSubmitOverlay }) {
   const { isLoaded, isSignedIn, user } = useUser();
   const [projectKey, setProjectKey] = useState(null);
   const [project, setProject] = useState(null);
@@ -191,6 +191,8 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
   };
 
   const handleTaskCheck = async (taskKey, task) => {
+    // Do not perform checks while submit overlay is open to avoid differing results
+    if (showSubmitOverlay) return;
     if (!userCode || !projectConfig) return;
     setLoadingTaskKey(taskKey);
     try {
