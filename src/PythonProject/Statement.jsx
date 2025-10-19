@@ -4,7 +4,7 @@ import { ref, get, onValue, off } from 'firebase/database';
 import { db } from '../firebase';
 import { getProjectConfig, checkTasksAndSubtasks } from './projectConfig';
 import { FaChevronDown } from 'react-icons/fa';
-import { FaQuestionCircle } from 'react-icons/fa';
+import { FaQuestionCircle, FaLightbulb } from 'react-icons/fa';
 import cross from '../assets/cross.png';
 import applied from '../assets/applied.png';
 import tick from '../assets/applied.png';
@@ -24,7 +24,26 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
   const hoverTimeout = useRef();
   const [showProjectDesc, setShowProjectDesc] = useState(false);
   const projectDescIconRef = useRef();
-  const [hoveredReason, setHoveredReason] = useState({ taskKey: null, subIdx: null, left: false });
+  const [hoveredReason, setHoveredReason] = useState({ taskKey: null, subIdx: null, left: false, clicked: false, offsetRight: 20 });
+  const tooltipRef = useRef(null);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        // Check if the click is not on a bulb icon
+        const isBulbIcon = event.target.closest('.bulb-icon-container');
+        if (!isBulbIcon) {
+          setHoveredReason(prev => ({ ...prev, clicked: false }));
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchProjectKeyAndData() {
@@ -422,7 +441,7 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                       {task.subtasks && task.subtasks.map((subDesc, subIdx) => (
                         <li
                           key={subIdx}
-                          className="flex text-left items-center justify-between py-1.5 px-3 rounded"
+                          className="group flex text-left items-center justify-between py-1.5 px-3 rounded hover:bg-gray-800/30 transition-colors"
                           style={{ 
                             borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
                             marginBottom: 2,
@@ -434,63 +453,98 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                               {subDesc}
                             </span>
                           </div>
-                          
                           {/* Tick/cross for subtask check and reason - positioned at right border */}
-                          {loadingTaskKey === taskKey && (!subtaskCheckResults[taskKey] || subtaskCheckResults[taskKey][subIdx] === undefined) ? (
-                            <span className="loader" style={{ width: 14, height: 14, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite', marginRight: 0 }} />
-                          ) : subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined ? (
-                            <div style={{ position: 'relative', marginRight: 0 }}>
-                              <img
-                                src={subtaskCheckResults[taskKey][subIdx].complete ? applied : cross}
-                                alt=""
-                                className="w-5 cursor-pointer"
-                                onMouseEnter={e => {
-                                  clearTimeout(hoverTimeout.current);
-                                  const rect = e.target.getBoundingClientRect();
-                                  const rightSpace = window.innerWidth - rect.right;
-                                  hoverTimeout.current = setTimeout(() => {
-                                    setHoveredReason({ taskKey, subIdx, left: rightSpace < 250 });
-                                  }, 200);
-                                }}
-                                onMouseLeave={() => {
-                                  clearTimeout(hoverTimeout.current);
-                                  hoverTimeout.current = setTimeout(() => {
-                                    setHoveredReason({ taskKey: null, subIdx: null });
-                                  }, 200);
-                                }}
-                              />
-                              {(hoveredReason.taskKey === taskKey && hoveredReason.subIdx === subIdx) && (
-                                <div
-                                  style={{
-                                    position: 'absolute',
-                                    top: 24,
-                                    left: hoveredReason.left ? 'auto' : 0,
-                                    right: hoveredReason.left ? 0 : 'auto',
-                                    zIndex: 100,
-                                    background: '#23232a',
-                                    color: '#e5e7eb',
-                                    fontSize: 11,
-                                    border: '1px solid #444',
-                                    borderRadius: 0,
-                                    padding: '6px 10px',
-                                    minWidth: 120,
-                                    maxWidth: 220,
-                                    whiteSpace: 'pre-line',
-                                    boxShadow: '0 2px 8px #0006',
-                                    transition: 'opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1)',
-                                    opacity: 1,
-                                    transform: 'translateY(0px) scale(1)',
+                          <div className="flex items-center gap-2">
+                            {loadingTaskKey === taskKey && (!subtaskCheckResults[taskKey] || subtaskCheckResults[taskKey][subIdx] === undefined) ? (
+                              <span className="loader" style={{ width: 14, height: 14, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+                            ) : subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined ? (
+                              <div style={{ position: 'relative' }}>
+                                <img
+                                  src={subtaskCheckResults[taskKey][subIdx].complete ? applied : cross}
+                                  alt={subtaskCheckResults[taskKey][subIdx].complete ? 'Completed' : 'Not Completed'}
+                                  className="w-5"
+                                />
+                                {false && (
+                                  <div 
+                                    style={{
+                                      position: 'absolute',
+                                      [hoveredReason.left ? 'right' : 'left']: '100%',
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      zIndex: 100,
+                                      background: '#23232a',
+                                      color: '#e5e7eb',
+                                      fontSize: 11,
+                                      border: '1px solid #444',
+                                      borderRadius: 4,
+                                      padding: '6px 10px',
+                                      minWidth: 120,
+                                      maxWidth: 220,
+                                      whiteSpace: 'pre-line',
+                                      boxShadow: '0 2px 8px #0006',
+                                      marginLeft: hoveredReason.left ? 0 : 8,
+                                      marginRight: hoveredReason.left ? 8 : 0
+                                    }}
+                                  >
+                                    {subtaskCheckResults[taskKey][subIdx].reason
+                                      .split(/(?<=[.!?])\s+/)
+                                      .slice(0, 2)
+                                      .join(' ')
+                                      .slice(0, 140)}
+                                  </div>
+                                )}
+                              </div>
+                            ) : null}
+                            {(loadingTaskKey === taskKey || (subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined)) && (
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity relative bulb-icon-container">
+                                <FaLightbulb 
+                                  className="text-yellow-400/60 hover:text-yellow-400 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setHoveredReason(prev => {
+                                      const isSame = prev.taskKey === taskKey && prev.subIdx === subIdx && prev.clicked;
+                                      // shift overlay a bit left from the right edge
+                                      const newOffset = 80; // px from right
+                                      return { taskKey, subIdx, left: false, clicked: !isSame, offsetRight: newOffset };
+                                    });
                                   }}
-                                >
-                                  {subtaskCheckResults[taskKey][subIdx].reason
-                                    .split(/(?<=[.!?])\s+/)
-                                    .slice(0, 2)
-                                    .join(' ')
-                                    .slice(0, 140)}
-                                </div>
-                              )}
-                            </div>
-                          ) : null}
+                                />
+                                {hoveredReason.clicked && hoveredReason.taskKey === taskKey && hoveredReason.subIdx === subIdx && (
+                                  <div 
+                                    ref={tooltipRef}
+                                    className="tooltip-container"
+                    style={{
+                      position: 'fixed',
+                      right: hoveredReason.offsetRight || 20,
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      zIndex: 1000,
+                                      background: '#23232a',
+                                      color: '#e5e7eb',
+                                      fontSize: 12,
+                                      border: '1px solid #444',
+                                      borderRadius: 8,
+                                      padding: '8px 12px',
+                                      width: 260,
+                                      maxWidth: '32vw',
+                                      whiteSpace: 'pre-line',
+                                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    onMouseLeave={() => {
+                                      setHoveredReason({ taskKey: null, subIdx: null, clicked: false });
+                                    }}
+                                  >
+                                    {subtaskCheckResults[taskKey]?.[subIdx]?.reason
+                                      ?.split(/(?<=[.!?])\s+/)
+                                      .slice(0, 2)
+                                      .join(' ')
+                                      .slice(0, 140) || 'No reason available'}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </li>
                       ))}
                     </ul>
