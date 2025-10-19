@@ -418,15 +418,19 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                     </button>
                   </div>
                   {isExpanded && (
-                    <ul className="space-y-1 px-6 py-3 bg-black/10">
+                    <ul className="space-y-0.5 px-4 py-2 bg-black/5">
                       {task.subtasks && task.subtasks.map((subDesc, subIdx) => (
                         <li
                           key={subIdx}
-                          className="flex text-left items-center justify-between"
-                          style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4, paddingRight: 0 }}
+                          className="flex text-left items-center justify-between py-1.5 px-3 rounded"
+                          style={{ 
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)', 
+                            marginBottom: 2,
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)'
+                          }}
                         >
-                          <div className="flex items-center gap-3 flex-1">
-                            <span className="text-base" style={{ color: '#f3f4f6' }}>
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="text-sm" style={{ color: '#d1d5db' }}>
                               {subDesc}
                             </span>
                           </div>
@@ -569,21 +573,21 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                   </div>
                   {isExpanded && (
                     <>
-                      <ul className="space-y-2 ml-2 mt-2">
+                      <ul className="space-y-1 px-2 py-1">
                         {Object.entries(task)
                           .filter(([k]) => k !== 'title')
                           .map(([subKey, subDesc], idx) => (
                             <li
                               key={idx}
-                              className="flex text-left items-center justify-between py-2 px-3 rounded-md transition-colors duration-150 hover:bg-white/5"
+                              className="flex text-left items-center justify-between py-1.5 px-3 rounded transition-colors duration-150 hover:bg-white/5"
                               style={{
-                                borderLeft: '2px solid rgba(139, 92, 246, 0.3)',
-                                margin: '2px 0',
-                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.05)',
+                                borderLeft: '1px solid rgba(139, 92, 246, 0.2)',
+                                margin: '1px 0',
+                                backgroundColor: 'rgba(255, 255, 255, 0.02)'
                               }}
                             >
-                              <div className="flex items-center gap-3 flex-1">
-                                <span className="text-sm text-gray-300 leading-relaxed">
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-xs text-gray-400 leading-relaxed">
                                   {subDesc}
                                 </span>
                               </div>
