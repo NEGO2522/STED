@@ -160,6 +160,16 @@ function Project() {
         }
         await update(userRef, updates);
       }
+      // Clear saved code from localStorage after successful submission
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('saved_code_')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (e) {
+        console.error('Failed to clear code from localStorage after submit:', e);
+      }
       // console.log('Project submitted successfully');
       setShowCongratulationsOverlay(false);
       setShowSubmitOverlay(false);

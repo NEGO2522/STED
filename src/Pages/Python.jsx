@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useUser } from "@clerk/clerk-react";
@@ -14,6 +14,9 @@ import SeeAnother from "../assets/SeeAnother.png";
 import { getProjectConfig } from '../PythonProject/projectConfig';
 import Assignment from '../components/Assignment';
 import AssignmentIcon from '../assets/Assignment.png';
+
+// Memoize ConceptLearned to prevent unnecessary re-renders
+const MemoizedConceptLearned = memo(ConceptLearned);
 
 function Python() {
   const navigate = useNavigate();
@@ -683,7 +686,7 @@ IMPORTANT INSTRUCTIONS:
               transition={{ duration: 0.5 }}
               className="bg-white/90 backdrop-blur-sm w-full lg:w-2/3 rounded-xl shadow-md p-6 ring-1 ring-slate-200"
             >
-              <ConceptLearned completedProjects={completedProjects} />
+              <MemoizedConceptLearned completedProjects={completedProjects} />
             </motion.div>
 
             {/* Concept Status Box */}

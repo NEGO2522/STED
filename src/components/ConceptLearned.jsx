@@ -1,10 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { ref, get, update } from 'firebase/database';
 import { db } from '../firebase';
 import { useUser } from '@clerk/clerk-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaChevronDown } from 'react-icons/fa';
+
+// Modal portal helper to render overlays at document body level
+const ModalPortal = ({ children }) => {
+  if (typeof document === 'undefined') return null;
+  return createPortal(children, document.body);
+};
 
 function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -20,10 +26,10 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [showConceptDetailsOverlay, setShowConceptDetailsOverlay] = useState(false);
   const [selectedConceptDetails, setSelectedConceptDetails] = useState(null);
   const [showAddSourceOverlay, setShowAddSourceOverlay] = useState(false);
-  const [newSource, setNewSource] = useState(() => ({
+  const [newSource, setNewSource] = useState({
     sourceName: "",
     sourceLink: ""
-  }));
+  });
   const [addingSource, setAddingSource] = useState(false);
   const [editingStatus, setEditingStatus] = useState(false);
   const [newStatus, setNewStatus] = useState('');
@@ -35,34 +41,30 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [showAppliedDetailsOverlay, setShowAppliedDetailsOverlay] = useState(false);
   const [showPointsHistoryOverlay, setShowPointsHistoryOverlay] = useState(false);
 
-  // Input change handlers
-  const handleSourceNameChange = (e) => {
+  // Optimized input change handlers using useCallback
+  const handleSourceNameChange = useCallback((e) => {
+    e.persist && e.persist();
     const value = e.target.value;
     setNewSource(prev => ({
       ...prev,
       sourceName: value
     }));
-  };
+  }, []);
 
-  const handleSourceLinkChange = (e) => {
+  const handleSourceLinkChange = useCallback((e) => {
+    e.persist && e.persist();
     const value = e.target.value;
     setNewSource(prev => ({
       ...prev,
       sourceLink: value
     }));
-  };
+  }, []);
   const [pointsHistory, setPointsHistory] = useState([]);
   const [pointsHistoryLoading, setPointsHistoryLoading] = useState(false);
   const { user } = useUser();
-
-  // Modal portal helper to render overlays at document body level
-  const ModalPortal = ({ children }) => {
-    if (typeof document === 'undefined') return null;
-    return createPortal(children, document.body);
-  };
-
-  // Portal helper to render modals at the document body level
-  // (single ModalPortal helper above)
+  
+  // Refs for maintaining scroll position in overlays
+  const addConceptsScrollRef = useRef(null);
 
   // Skill configuration mapping
   const skillConfig = {
@@ -141,6 +143,12 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
     fetchData();
   }, [user]);
 
+  // Preserve scroll position in Add Concepts overlay when checking/unchecking items
+  useEffect(() => {
+    // Don't reset scroll on overlay open/close or when checked state changes
+    // The ref will maintain the scroll position automatically
+  }, [checked]);
+
   // Expose functions globally for other components to use
   useEffect(() => {
     window.handlePointsClick = handlePointsClick;
@@ -157,12 +165,24 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
     setShowOverlay(true);
   };
 
-  // Handle check/uncheck
+  // Handle check/uncheck with scroll position preservation
   const handleCheck = (category, concept) => {
+    // Save current scroll position
+    const scrollPos = addConceptsScrollRef.current?.scrollTop || 0;
+    
     setChecked((prev) => ({
       ...prev,
       [`${category}:${concept}`]: !prev[`${category}:${concept}`],
     }));
+    
+    // Restore scroll position after state update
+    if (addConceptsScrollRef.current) {
+      setTimeout(() => {
+        if (addConceptsScrollRef.current) {
+          addConceptsScrollRef.current.scrollTop = scrollPos;
+        }
+      }, 0);
+    }
   };
 
   // Add selected concepts to user's learned concepts (step 1: show status overlay)
@@ -303,6 +323,38 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
     return formattedUrl;
   };
 
+  // Memoized component for concepts checklist to prevent unnecessary re-renders
+  const ConceptsCheckboxList = useMemo(() => {
+    return (
+      <div className="space-y-6">
+        {Object.keys(allConcepts).sort((a, b) => {
+          const order = { 'basic': 1, 'intermediate': 2, 'advanced': 3 };
+          const aOrder = order[a.toLowerCase()] || 99;
+          const bOrder = order[b.toLowerCase()] || 99;
+          return aOrder - bOrder || a.localeCompare(b);
+        }).map((cat) => (
+          <div key={cat}>
+            <div className="font-semibold text-lg mb-2 capitalize">{cat}</div>
+            <div className="grid grid-cols-2 gap-3">
+              {(allConcepts[cat] || []).map((concept) => (
+                <label key={concept} className={`flex items-center gap-2 ${isLearned(cat, concept) ? 'cursor-not-allowed text-slate-400' : 'cursor-pointer'}`}>
+                  <input
+                    type="checkbox"
+                    checked={!!checked[`${cat}:${concept}`]}
+                    onChange={() => handleCheck(cat, concept)}
+                    disabled={adding || isLearned(cat, concept)}
+                    style={{ flex: 'none' }}
+                  />
+                  <span style={{ flex: '1' }}>{concept}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }, [allConcepts, checked, adding]);
+
   // Handle clicking on applied concepts count
   const handleAppliedConceptsClick = () => {
     // Use the learnedConcepts state that's already fetched
@@ -409,7 +461,9 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
 
   // Handle adding new source
   const handleAddSource = () => {
-    setNewSource({ sourceName: '', sourceLink: '' });
+    if (!showAddSourceOverlay) {
+      setNewSource({ sourceName: '', sourceLink: '' });
+    }
     setShowAddSourceOverlay(true);
   };
 
@@ -520,6 +574,7 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
       }));
       
       setShowAddSourceOverlay(false);
+      // Only reset newSource when the overlay is explicitly closed
       setNewSource({ sourceName: '', sourceLink: '' });
     } catch (err) {
       console.error('Error saving source:', err);
@@ -733,65 +788,51 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
       {/* Overlay for adding concepts */}
       {showOverlay && (
         <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md">
-            <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative mx-4">
-            <button
-              className="absolute top-2 right-2 text-slate-500 hover:text-slate-800 text-xl"
-              onClick={() => setShowOverlay(false)}
-              disabled={adding}
-            >
-              ×
-            </button>
-            <h3 className="text-2xl font-bold mb-4">Add Concepts</h3>
-            {loading ? (
-              <div className="text-center py-8">Loading concepts...</div>
-            ) : (
-              <div className="space-y-6 max-h-[60vh] overflow-y-auto">
-                {Object.keys(allConcepts).sort((a, b) => {
-                  const order = { 'basic': 1, 'intermediate': 2, 'advanced': 3 };
-                  const aOrder = order[a.toLowerCase()] || 99;
-                  const bOrder = order[b.toLowerCase()] || 99;
-                  return aOrder - bOrder || a.localeCompare(b);
-                }).map((cat) => (
-                  <div key={cat}>
-                    <div className="font-semibold text-lg mb-2 capitalize">{cat}</div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {(allConcepts[cat] || []).map((concept) => (
-                        <label key={concept} className={`flex items-center gap-2 ${isLearned(cat, concept) ? 'cursor-not-allowed text-slate-400' : 'cursor-pointer'}`}>
-                          <input
-                            type="checkbox"
-                            checked={!!checked[`${cat}:${concept}`]}
-                            onChange={() => handleCheck(cat, concept)}
-                            disabled={adding || isLearned(cat, concept)}
-                          />
-                          <span>{concept}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-md p-4">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl relative flex flex-col max-h-[90vh]">
+              {/* Header - non-scrollable */}
+              <div className="flex justify-between items-center p-8 border-b border-slate-200">
+                <h3 className="text-2xl font-bold">Add Concepts</h3>
+                <button
+                  className="text-slate-500 hover:text-slate-800 text-xl"
+                  onClick={() => setShowOverlay(false)}
+                  disabled={adding}
+                >
+                  ×
+                </button>
               </div>
-            )}
-            <div className="flex justify-end mt-6 gap-3">
-              <button
-                className="px-4 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-700"
-                onClick={() => setShowOverlay(false)}
-                disabled={adding}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white font-semibold"
-                onClick={handleAddConcepts}
-                disabled={adding || loading}
-              >
-                {adding ? 'Adding...' : 'Add Selected'}
-              </button>
-            </div>
+
+              {/* Content - scrollable with scroll restoration */}
+              <div ref={addConceptsScrollRef} className="flex-1 overflow-y-auto p-8" style={{ scrollBehavior: 'auto' }}>
+                {loading ? (
+                  <div className="text-center py-8">Loading concepts...</div>
+                ) : (
+                  ConceptsCheckboxList
+                )}
+              </div>
+
+              {/* Footer - non-scrollable */}
+              <div className="flex justify-end gap-3 p-8 border-t border-slate-200">
+                <button
+                  className="px-4 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-700"
+                  onClick={() => setShowOverlay(false)}
+                  disabled={adding}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                  onClick={handleAddConcepts}
+                  disabled={adding || loading}
+                >
+                  {adding ? 'Adding...' : 'Add Selected'}
+                </button>
+              </div>
             </div>
           </div>
         </ModalPortal>
       )}
+
 
       {/* Overlay for concept status selection */}
       {showStatusOverlay && (
@@ -892,7 +933,7 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
                         placeholder="e.g., Python Official Documentation"
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={adding}
-                        key="source-name-input"
+                        autoComplete="off"
                       />
                     </div>
                     
@@ -907,7 +948,7 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
                         placeholder="https://example.com/tutorial"
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled={adding}
-                        key="source-link-input"
+                        autoComplete="off"
                       />
                     </div>
                   </div>
@@ -1017,7 +1058,7 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
                             ${selectedConceptDetails.status === 'Clear' ? 'bg-green-100 text-green-700 border-green-300' : ''}
                             ${selectedConceptDetails.status === 'Unclear' ? 'bg-orange-100 text-orange-700 border-orange-300' : ''}
                             ${selectedConceptDetails.status === 'confused' ? 'bg-red-100 text-red-700 border-red-300' : ''}
-                          `}
+                        `}
                         >
                           {selectedConceptDetails.status}
                         </span>
@@ -1144,70 +1185,85 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
       )}
 
       {/* Add Source Overlay */}
-      {showAddSourceOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
-            <button
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
-              onClick={() => setShowAddSourceOverlay(false)}
-              disabled={addingSource}
+      <AnimatePresence>
+        {showAddSourceOverlay && (
+          <motion.div
+            key="add-source-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative"
             >
-              ×
-            </button>
-            
-            <h3 className="text-2xl font-bold mb-6 text-purple-700">
-              Add Learning Source
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Source Name
-                </label>
-                <input
-                  type="text"
-                  value={newSource.sourceName}
-                  onChange={(e) => setNewSource(prev => ({ ...prev, sourceName: e.target.value }))}
-                  placeholder="e.g., Python Official Documentation"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  disabled={addingSource}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Source Link
-                </label>
-                <input
-                  type="url"
-                  value={newSource.sourceLink}
-                  onChange={(e) => setNewSource(prev => ({ ...prev, sourceLink: e.target.value }))}
-                  placeholder="https://example.com/tutorial"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  disabled={addingSource}
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end mt-6 gap-3">
               <button
-                className="px-4 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-700"
+                className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
                 onClick={() => setShowAddSourceOverlay(false)}
                 disabled={addingSource}
               >
-                Cancel
+                ×
               </button>
-              <button
-                className="px-4 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white font-semibold"
-                onClick={handleSaveSource}
-                disabled={addingSource || !newSource.sourceName || !newSource.sourceLink}
-              >
-                {addingSource ? 'Adding...' : 'Add Source'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              
+              <h3 className="text-2xl font-bold mb-6 text-purple-700">
+                Add Learning Source
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Source Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newSource.sourceName}
+                    onChange={handleSourceNameChange}
+                    placeholder="e.g., Python Official Documentation"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={addingSource}
+                    autoComplete="off"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Source Link
+                  </label>
+                  <input
+                    type="url"
+                    value={newSource.sourceLink}
+                    onChange={handleSourceLinkChange}
+                    placeholder="https://example.com/tutorial"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    disabled={addingSource}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6 gap-3">
+                <button
+                  className="px-4 py-2 rounded bg-slate-200 hover:bg-slate-300 text-slate-700"
+                  onClick={() => setShowAddSourceOverlay(false)}
+                  disabled={addingSource}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 rounded bg-purple-700 hover:bg-purple-800 text-white font-semibold"
+                  onClick={handleSaveSource}
+                  disabled={addingSource || !newSource.sourceName || !newSource.sourceLink}
+                >
+                  {addingSource ? 'Adding...' : 'Add Source'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Applied Concepts Overlay */}
       {showAppliedConceptsOverlay && (
