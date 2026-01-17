@@ -92,19 +92,29 @@ function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTermina
   };
 
   const handleInput = (prompt, resolve) => {
-    setPromptText(prompt);
+    // The prompt is now handled by the backend, so we don't need to display it here
+    // Just store the resolve function and show the input field
     setWaitingInput(true);
     inputResolver.current = resolve;
   };
 
-  const handleInputSubmit = () => {
+  const handleInputSubmit = (e) => {
+    e.preventDefault();
     if (inputResolver.current) {
-      appendOutput([`${promptText}${inputValue}`]);
+      // Don't append the prompt again, just the user's input
+      appendInputLine(inputValue);
       inputResolver.current(inputValue);
       inputResolver.current = null;
       setInputValue('');
       setWaitingInput(false);
       setPromptText('');
+    }
+  };
+
+  const appendInputLine = (value) => {
+    // Only append the input line with the prompt if there's actual input
+    if (value.trim() !== '') {
+      appendOutput([`${promptText}${value}`]);
     }
   };
 
@@ -186,43 +196,45 @@ function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTermina
                 <span style={{ marginLeft: '10px', color: '#007acc' }}>● Running</span>
               )}
             </div>
-            <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+            <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', margin: 0, fontSize: '13px', lineHeight: '1.3' }}>
               {outputLines.map((line, idx) => (
-                <div key={idx}>{line}</div>
+                <div key={idx} style={{ padding: '1px 0' }}>{line}</div>
               ))}
-            </pre>
-            {waitingInput && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
-                <span style={{ color: 'white' }}>{promptText}</span>
-                <input
-                  autoFocus
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleInputSubmit()}
-                  placeholder="Enter input..."
-                  style={{
-                    background: '#333',
-                    color: 'white',
-                    border: '1px solid #555',
-                    padding: '5px',
-                    borderRadius: '3px'
-                  }}
-                />
-                <button
-                  onClick={handleInputSubmit}
-                  style={{
-                    background: '#007acc',
-                    color: 'white',
-                    border: 'none',
-                    padding: '5px 10px',
-                    cursor: 'pointer',
-                    borderRadius: '3px'
-                  }}
-                >
-                  Enter
-                </button>
-              </div>
-            )}
+              {waitingInput && (
+                <div style={{ display: 'inline', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {promptText}
+                  <input
+                    autoFocus
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleInputSubmit(e)}
+                    style={{
+                      display: 'inline',
+                      background: 'transparent',
+                      color: 'white',
+                      border: 'none',
+                      outline: 'none',
+                      padding: '0',
+                      margin: '0',
+                      fontFamily: 'monospace',
+                      fontSize: '13px',
+                      caretColor: 'white',
+                      minWidth: '100px',
+                      lineHeight: '1.3',
+                      letterSpacing: '0.5px',
+                      verticalAlign: 'baseline',
+                      width: 'auto',
+                      boxSizing: 'border-box'
+                    }}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
+                  />
+                </div>
+              )}
+            </div>
             {outputLines.length === 0 && !isRunning && (
               <div style={{ color: '#666', fontStyle: 'italic' }}>
                 Click "Run" to execute your Python code

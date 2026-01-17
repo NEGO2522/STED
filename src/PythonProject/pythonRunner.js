@@ -142,13 +142,17 @@ async function runSimpleCode(code, sessionId, onOutput, onComplete) {
 
     // Handle the response
     if (result.success) {
-      if (result.output && result.output.trim()) {
-        // Split output into lines and send to terminal
-        const lines = result.output.split('\n').filter(line => line.trim() !== '');
+      if (result.output) {
+        // Preserve all lines including empty ones, but trim right whitespace
+        const lines = result.output.split('\n').map(line => line.replace(/\s+$/, ''));
+        // Remove the last line if it's empty (common in Python output)
+        if (lines.length > 0 && lines[lines.length - 1] === '') {
+          lines.pop();
+        }
         if (lines.length > 0) {
           onOutput && onOutput(lines);
         } else {
-          onOutput && onOutput(['✅ Code executed successfully']);
+          onOutput && onOutput(['✅ Code executed successfully (no output)']);
         }
       } else {
         onOutput && onOutput(['✅ Code executed successfully (no output)']);
@@ -242,23 +246,43 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete
                 break;
                 
               case 'output':
-                if (data.data && data.data.trim()) {
-                  // Send output as a single string to reduce re-renders
-                  onOutput && onOutput([data.data.trimEnd()]);
+                if (data.data) {
+                  // Split into lines and trim right whitespace from each line
+                  const lines = data.data.split('\n').map(line => line.replace(/\s+$/, ''));
+                  // Remove the last line if it's empty (common in Python output)
+                  if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                  }
+                  if (lines.length > 0) {
+                    onOutput && onOutput(lines);
+                  }
                 }
                 break;
                 
               case 'error':
-                if (data.data && data.data.trim()) {
-                  const errorLines = data.data.split('\n').filter(line => line.trim() !== '');
-                  onOutput && onOutput(errorLines.map(line => `❌ ${line}`));
+                if (data.data) {
+                  // Preserve error formatting but clean up whitespace
+                  const errorLines = data.data.split('\n')
+                    .map(line => line.replace(/\s+$/, ''))
+                    .filter(line => line !== '');
+                  
+                  if (errorLines.length > 0) {
+                    // Add error prefix to each line and keep the original indentation
+                    const formattedErrors = errorLines.map(line => {
+                      // Preserve indentation for traceback
+                      const indent = line.match(/^\s*/)[0];
+                      return `${indent}❌ ${line.trimStart()}`;
+                    });
+                    onOutput && onOutput(formattedErrors);
+                  }
                 }
                 break;
                 
               case 'input_request':
                 console.log('[DEBUG] Input requested:', data.prompt);
                 if (onInput) {
-                  onInput(data.prompt || 'Input: ', async (inputValue) => {
+                  // Pass an empty prompt since we'll handle the display in the frontend
+                  onInput('', async (inputValue) => {
                     console.log('[DEBUG] Sending input:', inputValue);
                     
                     try {
