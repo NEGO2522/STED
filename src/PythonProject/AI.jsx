@@ -8,23 +8,18 @@ import { getProjectConfig, getAIContext } from './projectConfig';
 const formatAIResponse = (text) => {
   if (!text) return text;
 
-  // First, let's process the entire text for inline formatting
-  let processedText = text;
-
-  // Process the text line by line
-  const lines = processedText.split('\n');
+  const lines = text.split('\n');
   const formattedLines = [];
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
 
-    // Skip empty lines but preserve spacing
     if (line.trim() === '') {
       formattedLines.push(<br key={i} />);
       continue;
     }
 
-    // Headers (lines starting with #)
+    // Headers
     if (line.startsWith('###')) {
       formattedLines.push(
         <h3 key={i} className="text-lg font-bold text-purple-300 mt-3 mb-2">
@@ -44,7 +39,7 @@ const formatAIResponse = (text) => {
         </h1>
       );
     }
-    // Bullet points (lines starting with - or *)
+    // Bullet points
     else if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
       formattedLines.push(
         <div key={i} className="flex items-start mb-2 ml-2">
@@ -53,7 +48,7 @@ const formatAIResponse = (text) => {
         </div>
       );
     }
-    // Numbered lists (lines starting with numbers)
+    // Numbered lists
     else if (/^\s*\d+\./.test(line)) {
       const match = line.match(/^(\s*)(\d+\.)(.*)/);
       if (match) {
@@ -65,7 +60,7 @@ const formatAIResponse = (text) => {
         );
       }
     }
-    // Regular text (process for inline formatting)
+    // Regular text
     else {
       formattedLines.push(
         <div key={i} className="mb-2 leading-relaxed">
@@ -78,27 +73,23 @@ const formatAIResponse = (text) => {
   return <div className="space-y-1">{formattedLines}</div>;
 };
 
-// Helper function to process inline formatting (bold, code, etc.)
+// Helper function to process inline formatting
 const processInlineFormatting = (text) => {
   if (!text) return text;
 
   const parts = [];
-  let currentText = text;
   let key = 0;
 
-  // Process bold text first (**text**)
   const boldRegex = /\*\*(.*?)\*\*/g;
   let lastIndex = 0;
   let match;
 
   while ((match = boldRegex.exec(text)) !== null) {
-    // Add text before the match
     if (match.index > lastIndex) {
       const beforeText = text.substring(lastIndex, match.index);
       parts.push(processCodeFormatting(beforeText, key++));
     }
 
-    // Add the bold text
     parts.push(
       <strong key={key++} className="font-bold text-white">
         {processCodeFormatting(match[1], key++)}
@@ -108,7 +99,6 @@ const processInlineFormatting = (text) => {
     lastIndex = match.index + match[0].length;
   }
 
-  // Add remaining text
   if (lastIndex < text.length) {
     const remainingText = text.substring(lastIndex);
     parts.push(processCodeFormatting(remainingText, key++));
@@ -117,7 +107,7 @@ const processInlineFormatting = (text) => {
   return parts.length > 0 ? parts : processCodeFormatting(text, 0);
 };
 
-// Helper function to process code formatting (`code`)
+// Helper function to process code formatting
 const processCodeFormatting = (text, baseKey) => {
   if (!text || typeof text !== 'string') return text;
 
@@ -128,12 +118,10 @@ const processCodeFormatting = (text, baseKey) => {
   let key = baseKey;
 
   while ((match = codeRegex.exec(text)) !== null) {
-    // Add text before the match
     if (match.index > lastIndex) {
       parts.push(text.substring(lastIndex, match.index));
     }
 
-    // Add the code text
     parts.push(
       <code key={key++} className="bg-gray-800 text-green-400 px-2 py-1 rounded text-sm font-mono">
         {match[1]}
@@ -143,7 +131,6 @@ const processCodeFormatting = (text, baseKey) => {
     lastIndex = match.index + match[0].length;
   }
 
-  // Add remaining text
   if (lastIndex < text.length) {
     parts.push(text.substring(lastIndex));
   }
@@ -158,14 +145,9 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
   const [projectConfig, setProjectConfig] = useState(null);
   const [loadError, setLoadError] = useState('');
   const messagesEndRef = useRef(null);
-  const [taskCheckStatus, setTaskCheckStatus] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [modalSubtasks, setModalSubtasks] = useState([]);
   const inputRef = useRef(null);
   const prevMessagesLength = useRef(messages.length);
   const isFirstRender = useRef(true);
-  const [responseCount, setResponseCount] = useState(0);
-
 
   // Fetch project data when component mounts
   useEffect(() => {
@@ -173,7 +155,6 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
       if (!user) return;
       setLoadError('');
       try {
-        // Get user's current project
         const userRef = ref(db, 'users/' + user.id);
         const userSnap = await get(userRef);
 
@@ -193,30 +174,22 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
           return;
         }
 
-        console.log('AI: Fetching project with key:', projectKey);
-
-        // Try with the exact key first
         let projectRef = ref(db, 'PythonProject/' + projectKey);
         let projectSnap = await get(projectRef);
 
-        // If not found, try with normalized (lowercase) key
         if (!projectSnap.exists()) {
           const normalizedKey = projectKey.toLowerCase();
-          console.log('AI: Trying with normalized key:', normalizedKey);
           projectRef = ref(db, 'PythonProject/' + normalizedKey);
           projectSnap = await get(projectRef);
 
           if (projectSnap.exists()) {
-            projectKey = normalizedKey; // Update to the key that worked
+            projectKey = normalizedKey;
           }
         }
 
         if (projectSnap.exists()) {
-          // Found project in PythonProject node
-          console.log('AI: Found project in database');
           const projectData = projectSnap.val();
 
-          // Ensure tasks exist and have the correct structure for both regular and Gemini-generated projects
           const normalizedProject = {
             ...projectData,
             tasks: projectData.tasks || projectData.ProjectTasks || {
@@ -230,12 +203,9 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
 
           setProjectConfig(normalizedProject);
         } else {
-          // Fall back to predefined config if available
-          console.log('AI: Project not found in database, trying predefined config');
           const predefinedConfig = await getProjectConfig(projectKey);
 
           if (predefinedConfig) {
-            console.log('AI: Using predefined project config');
             setProjectConfig(predefinedConfig);
           } else {
             setProjectConfig(null);
@@ -252,14 +222,12 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
     fetchProjectData();
   }, [user]);
 
-    // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (isFirstRender.current) {
-      // On first render (tab switch), scroll instantly
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
       isFirstRender.current = false;
     } else if (messages.length > prevMessagesLength.current) {
-      // On new message, scroll smoothly
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
     prevMessagesLength.current = messages.length;
@@ -272,90 +240,16 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         {
           id: 1,
           type: 'ai',
-          content: 'Welcome to the STED Learning Assistant! \n\nI\'m here to help guide you through your Python learning journey. Instead of giving direct answers, I\'ll help you think through problems and learn how to find solutions on your own. \n\nHere\'s how I can help:\n- Break down complex problems into manageable parts\n- Suggest learning resources and documentation\n- Ask questions to guide your thinking\n- Help you debug by asking about your approach\n- Encourage you to try different solutions\n\nWhat would you like to work on today?',
+          content: 'Hey there! 👋 I\'m Codey, your Python learning buddy!\n\nI\'m here to help you learn by guiding you through problems rather than just giving you answers. Think of me as your coding mentor who asks the right questions to help you think like a programmer.\n\nFeel free to ask me anything - whether it\'s about your code, concepts you\'re learning, or if you just want to chat! What\'s on your mind?',
           timestamp: new Date()
         }
       ]);
     }
   }, [projectConfig, messages.length, setMessages]);
 
-  // Generic: find first incomplete task and subtasks
-  const getIncompleteTaskAndSubtasks = () => {
-    if (!projectConfig || (!projectConfig.tasks && !projectConfig.ProjectTasks)) return {};
-
-    const tasks = projectConfig.tasks || projectConfig.ProjectTasks;
-    const userCodeLower = (userCode || '').toLowerCase();
-    for (const [taskKey, task] of Object.entries(tasks)) {
-      let allSubtasks = task.subtasks || [];
-
-      // Handle ProjectTasks structure where subtasks are individual properties
-      if (allSubtasks.length === 0 && task.title) {
-        allSubtasks = Object.entries(task)
-          .filter(([key]) => key !== 'title')
-          .map(([key, value]) => value);
-      }
-
-      // Consider a subtask complete if any keyword from codeChecks is present in user code
-      const completed = (task.codeChecks || []).filter(check =>
-        userCodeLower.includes(check.toLowerCase().replace(/[`'"().:]/g, ''))
-      );
-      if (completed.length < (task.codeChecks ? task.codeChecks.length : allSubtasks.length)) {
-        return {
-          taskTitle: task.title,
-          subtasks: allSubtasks.filter((_, idx) => !(completed.includes((task.codeChecks||[])[idx])))
-        };
-      }
-    }
-    return {};
-  };
-
-  // Check if the message is a greeting
-  const isGreeting = (message) => {
-    const greetings = ['hi', 'hello', 'hey', 'hi there', 'hello there'];
-    return greetings.includes(message.trim().toLowerCase());
-  };
-
-  // Get a friendly greeting response based on the current task
-  const getGreetingResponse = () => {
-    const { taskTitle } = getIncompleteTaskAndSubtasks();
-    const greetings = [
-      `Hi there! Ready to continue working on ${taskTitle || 'your Python project'}?`,
-      `Hello! How can I help you with ${taskTitle || 'your code'} today?`,
-    ];
-    return greetings[Math.floor(Math.random() * greetings.length)];
-  };
-
   const sendMessage = async () => {
     const userMessageText = inputMessage.trim();
     if (!userMessageText || isLoading) return;
-
-    // Handle greeting messages
-    if (isGreeting(userMessageText)) {
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        type: 'user',
-        content: userMessageText,
-        timestamp: new Date()
-      }, {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: getGreetingResponse(),
-        timestamp: new Date()
-      }]);
-      setInputMessage('');
-      return;
-    }
-
-    if (responseCount >= 5) {
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        type: 'ai',
-        content: "You've asked for help several times now. Try to solve this on your own. You can do it!",
-        timestamp: new Date()
-      }]);
-      setInputMessage('');
-      return;
-    }
 
     const userMessage = {
       id: Date.now(),
@@ -366,23 +260,21 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsLoading(true);
+
     try {
       const context = getAIContext(projectConfig, userCode, inputMessage);
-      const { taskTitle, subtasks } = getIncompleteTaskAndSubtasks();
-      // Build conversation history (last 4 messages, trimmed)
-      const HISTORY_LIMIT = 4;
-      const TRIM = (txt, max = 800) => {
-        if (!txt) return '';
-        return txt.length > max ? txt.slice(0, max) + '…' : txt;
-      };
+      
+      // Build conversation history
+      const HISTORY_LIMIT = 6;
       const history = messages.slice(-HISTORY_LIMIT).map(
-        m => `${m.type === 'user' ? 'User' : 'AI'}: ${m.content}`
-      ).map(t => TRIM(t, 500)).join('\n');
-      // Build a list of tasks and subtasks (cap to 3 tasks x 3 subtasks)
-      let allTasksText = '';
+        m => `${m.type === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+      ).join('\n\n');
+
+      // Get project context
+      let projectContext = '';
       if (projectConfig && (projectConfig.tasks || projectConfig.ProjectTasks)) {
         const tasks = projectConfig.tasks || projectConfig.ProjectTasks;
-        const limited = Object.entries(tasks).slice(0, 3).map(
+        const tasksList = Object.entries(tasks).slice(0, 3).map(
           ([taskKey, task], idx) => {
             let subs = task.subtasks || [];
             if (subs.length === 0 && task.title) {
@@ -390,72 +282,71 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
                 .filter(([key]) => key !== 'title')
                 .map(([key, value]) => value);
             }
-            const subsList = subs.slice(0, 3).map((s, i) => `    ${i + 1}. ${s}`).join('\n');
+            const subsList = subs.slice(0, 3).map((s, i) => `  - ${s}`).join('\n');
             return `${idx + 1}. ${task.title}${subsList ? '\n' + subsList : ''}`;
           }
         );
-        allTasksText = limited.join('\n');
+        projectContext = `Current Project: "${context.projectTitle}"\nDescription: ${context.projectDescription}\n\nTasks:\n${tasksList.join('\n')}`;
       }
-      // Trim code and terminal output
+
+      // Trim code
       const codeLines = (context.userCode || 'No code written yet').split('\n');
-      const MAX_CODE_LINES = 120;
+      const MAX_CODE_LINES = 100;
       const trimmedCode = codeLines.length > MAX_CODE_LINES
-        ? [...codeLines.slice(0, 80), '…', ...codeLines.slice(-40)].join('\n')
+        ? [...codeLines.slice(0, 70), '...', ...codeLines.slice(-30)].join('\n')
         : codeLines.join('\n');
+
+      // Trim terminal output
       const term = Array.isArray(terminalOutput) ? terminalOutput : [];
-      const trimmedTerminal = term.slice(-50).join('\n');
+      const trimmedTerminal = term.slice(-30).join('\n');
 
-      const prompt = `You are Codey, a task-focused Python programming mentor. The user is working on a project called "${context.projectTitle}".
+      const prompt = `You are Codey, a friendly and helpful Python programming mentor. You're chatting with a student who is learning Python.
 
-CRITICAL RULES:
-1. NEVER provide direct code solutions or complete implementations
-2. Only provide hints, problem-solving approaches, and relevant concepts
-4. If asked for code, provide conceptual guidance instead
-5. Focus on teaching programming concepts and problem-solving strategies
-3. NEVER provide general information or explanations outside the project context
-4. If a question is too broad or not project-related, ask the user to rephrase it in the context of their current task
+PERSONALITY:
+- Friendly, encouraging, and conversational like ChatGPT
+- Respond naturally to ALL types of messages (greetings, questions, comments, everything)
+- Use emojis occasionally to be friendly 😊
+- Be enthusiastic about their progress!
+- Keep responses concise and easy to read
 
-Project Description: ${context.projectDescription}
+TEACHING APPROACH:
+- NEVER give complete code solutions or full implementations
+- Guide with hints, questions, and concepts instead
+- If they ask for code, explain the approach and relevant Python concepts
+- Encourage them to try things and learn from mistakes
+- Focus on understanding over just getting it to work
 
-ALL TASKS AND SUBTASKS:
-${allTasksText}
+PROJECT CONTEXT:
+${projectContext}
 
-User's Current Code:
-\u0060\u0060\u0060python
+CURRENT CODE:
+\`\`\`python
 ${trimmedCode}
-\u0060\u0060\u0060
+\`\`\`
 
-Latest Terminal Output (including errors, if any):
-\u0060\u0060\u0060
-${trimmedTerminal || 'No output yet.'}
-\u0060\u0060\u0060
+TERMINAL OUTPUT:
+\`\`\`
+${trimmedTerminal || 'No output yet'}
+\`\`\`
 
-Conversation so far:
+CONVERSATION HISTORY:
 ${history}
 
-User's latest question: ${inputMessage}
+USER'S MESSAGE: ${userMessageText}
 
 RESPONSE RULES:
-1. NEVER provide complete code solutions
-2. If asked for code, explain the concept and suggest relevant Python documentation
-4. Focus on teaching programming concepts and problem-solving strategies
-5. Keep responses concise and focused on the specific question
+1. Respond naturally to their message - if they say "hi", greet them back warmly!
+2. If it's a greeting, respond friendly and ask how you can help with their project
+3. If it's a question, answer it helpfully with guidance (not full solutions)
+4. If they're stuck, ask guiding questions to help them think through it
+5. Keep responses conversational and under 150 words unless explaining a complex concept
+6. Use formatting: **bold** for emphasis, \`code\` for syntax, and bullet points when listing items
+7. If they ask for complete code, politely explain you'll guide them instead and provide conceptual help
 
-RESPONSE FORMAT REQUIREMENTS:
-- Use bullet points (-) only when listing multiple related items
-- Use **bold text** for important keywords and function names
-- Use \`code\` for code snippets and variable names
-- Keep responses to 1-3 bullet points maximum
-- Each bullet point should be one short, direct answer
-- No introductory phrases like "Here's what you need to do" or "The issue is"
-- Start directly with the answer
+Remember: You're a friendly mentor, not a code-writing machine. Help them learn and think!`;
 
--VERY VERY IMPORTANT: read the code of the user first and then read the question asked by the user. according to that provide the answer. the answer should be short
-
-`;
-      // Timeout and abort for slow responses
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -466,90 +357,46 @@ RESPONSE FORMAT REQUIREMENTS:
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.2,
-          max_tokens: 256
+          temperature: 0.7,
+          max_tokens: 400
         }),
         signal: controller.signal
       });
+
       clearTimeout(timeoutId);
       const data = await response.json();
+
       if (!response.ok) {
-        const msg = data?.error?.message || 'OpenAI API request failed';
+        const msg = data?.error?.message || 'API request failed';
         throw new Error(msg);
       }
-      let aiText = 'Sorry, I encountered an error. Please try again.';
+
+      let aiText = 'Sorry, I encountered an error. Please try again! 😅';
       if (data.choices && data.choices[0] && data.choices[0].message && typeof data.choices[0].message.content === 'string') {
         aiText = data.choices[0].message.content;
       }
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: aiText, timestamp: new Date() }]);
-      setResponseCount(prev => prev + 1);
+
+      setMessages(prev => [...prev, { 
+        id: Date.now() + 1, 
+        type: 'ai', 
+        content: aiText, 
+        timestamp: new Date() 
+      }]);
+
     } catch (error) {
-      const errMsg = (error && error.message) ? `Error: ${error.message}` : 'Sorry, I encountered an error. Please try again.';
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: errMsg, timestamp: new Date() }]);
+      const errMsg = error.message === 'The operation was aborted' 
+        ? 'Request timed out. Please try again!' 
+        : `Oops! Something went wrong. ${error.message || 'Please try again!'}`;
+      
+      setMessages(prev => [...prev, { 
+        id: Date.now() + 1, 
+        type: 'ai', 
+        content: errMsg, 
+        timestamp: new Date() 
+      }]);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const analyzeUserCode = (code) => {
-    if (!code || code.trim() === '') {
-      return "I see you're just getting started! 🎯 Every great program begins with a single line of code. What would you like to create first?";
-    }
-
-    const analysis = [];
-    let score = 0;
-    const totalChecks = 6;
-
-    if (code.includes('def ')) {
-      analysis.push("✨ Great job using functions! Breaking code into functions makes it more organized and reusable.");
-      score++;
-    } else {
-      analysis.push("💡 Tip: Consider using functions to organize your code better. They make your code more readable and reusable!");
-    }
-
-    if (code.includes('input(')) {
-      analysis.push("👏 Nice work making your program interactive with user input! This makes your code much more dynamic.");
-      score++;
-    } else {
-      analysis.push("🤔 Have you thought about adding user input? It can make your program more interactive!");
-    }
-
-    if (code.includes('while ') || code.includes('for ')) {
-      analysis.push("🔄 Excellent use of loops! They help automate repetitive tasks efficiently.");
-      score++;
-    } else if (code.length > 100) {
-      analysis.push("💭 I notice some repetition in your code. A loop might help make it cleaner and more efficient!");
-    }
-
-    if (code.includes('[') && code.includes(']')) {
-      analysis.push("📋 Good use of lists! They're perfect for storing collections of items.");
-      score++;
-    }
-
-    if (code.includes('{') && code.includes('}')) {
-      analysis.push("📚 Nice work with dictionaries! They're great for storing key-value pairs.");
-      score++;
-    }
-
-    if (code.includes('if ') || code.includes('elif ') || code.includes('else:')) {
-      analysis.push("🎯 Great use of conditionals! They help your program make decisions.");
-      score++;
-    }
-
-    const progress = Math.round((score / totalChecks) * 100);
-
-    if (score === totalChecks) {
-      analysis.unshift(`## 🎉 Amazing Progress! (${progress}% of key concepts used)`);
-      analysis.push("\nYou're doing fantastic! Your code shows you understand many important programming concepts. What would you like to learn more about?");
-    } else if (score >= totalChecks / 2) {
-      analysis.unshift(`## 👍 Good Work! (${progress}% of key concepts used)`);
-      analysis.push(`\nYou're making great progress! Keep experimenting with different programming concepts. What would you like to try next?`);
-    } else {
-      analysis.unshift(`## 🌱 Getting Started (${progress}% of key concepts used)`);
-      analysis.push(`\nYou're on the right track! Programming is a journey, and everyone starts somewhere. What would you like to work on?`);
-    }
-
-    return analysis.join('\n\n');
   };
 
   const handleKeyPress = (e) => {
@@ -557,39 +404,6 @@ RESPONSE FORMAT REQUIREMENTS:
       e.preventDefault();
       sendMessage();
     }
-  };
-
-  const handleTaskCheck = (taskKey) => {
-    if (!projectConfig || !projectConfig.tasks) return;
-    const task = projectConfig.tasks[taskKey];
-    const userCodeLower = (userCode || '').toLowerCase();
-    const completed = (task.codeChecks || []).filter(check =>
-      userCodeLower.includes(check.toLowerCase().replace(/[`'"().:]/g, ''))
-    );
-    const allComplete = completed.length === (task.codeChecks ? task.codeChecks.length : (task.subtasks ? task.subtasks.length : 0));
-    if (allComplete) {
-      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: true }));
-    } else {
-      // Find incomplete subtasks
-      const incomplete = (task.subtasks || []).filter((_, idx) => !(completed.includes((task.codeChecks||[])[idx])));
-      setModalSubtasks(incomplete);
-      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: false }));
-      setShowModal(true);
-    }
-  };
-
-  // Helper to provide what to do for a subtask
-  const getSubtaskHelp = (subtask) => {
-    // You can customize this mapping for more detailed help per subtask
-    if (subtask.toLowerCase().includes('function')) return 'Write the required function definition in your code.';
-    if (subtask.toLowerCase().includes('input')) return 'Use input() to get user input.';
-    if (subtask.toLowerCase().includes('print')) return 'Use print() to display output.';
-    if (subtask.toLowerCase().includes('loop')) return 'Implement a while or for loop as needed.';
-    if (subtask.toLowerCase().includes('list')) return 'Initialize and use a list as described.';
-    if (subtask.toLowerCase().includes('dictionary')) return 'Use a dictionary to store data as needed.';
-    if (subtask.toLowerCase().includes('return')) return 'Make sure to return the required value from your function.';
-    if (subtask.toLowerCase().includes('summary')) return 'Display the summary as described.';
-    return 'Check the project instructions for this subtask.';
   };
 
   useEffect(() => {
@@ -603,12 +417,12 @@ RESPONSE FORMAT REQUIREMENTS:
     <div className="flex flex-col bg-gray-900 text-white h-full overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
-        <h2 className="text-xl font-semibold text-purple-400">AI Mentor</h2>
+        <h2 className="text-xl font-semibold text-purple-400">💬 Codey - Your AI Mentor</h2>
         <p className="text-sm text-gray-400 mt-1">
           {loadError
             ? <span className="text-red-400">{loadError}</span>
             : projectConfig
-              ? `Helping with: ${projectConfig.title}`
+              ? `Working on: ${projectConfig.title}`
               : 'Loading project...'}
         </p>
       </div>
@@ -622,7 +436,7 @@ RESPONSE FORMAT REQUIREMENTS:
               className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] rounded-lg p-3 break-words whitespace-pre-wrap ${
+                className={`max-w-[85%] rounded-lg p-3 break-words whitespace-pre-wrap ${
                   message.type === 'user'
                     ? 'bg-purple-600 text-white'
                     : 'bg-gray-700 text-gray-100'
@@ -641,9 +455,9 @@ RESPONSE FORMAT REQUIREMENTS:
             <div className="flex justify-start">
               <div className="bg-gray-700 text-gray-100 rounded-lg p-3">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
@@ -660,25 +474,24 @@ RESPONSE FORMAT REQUIREMENTS:
             value={inputMessage}
             onChange={e => {
               setInputMessage(e.target.value);
-              // Auto-resize
               if (inputRef.current) {
                 inputRef.current.style.height = 'auto';
                 inputRef.current.style.height = inputRef.current.scrollHeight + 'px';
               }
             }}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything about your project..."
+            placeholder="Ask me anything... I'm here to help! 😊"
             className="flex-1 bg-gray-800 text-left text-white overflow-y-auto"
             style={{
               borderRadius: 6,
-              padding: '7px 10px',
+              padding: '10px 12px',
               fontSize: 14,
-              minHeight: 40,
+              minHeight: 44,
               maxHeight: 120,
               resize: 'none',
-              lineHeight: 1.3,
+              lineHeight: 1.4,
               outline: 'none',
-              border: '1px solid #444',
+              border: '1px solid #4a5568',
               overflow: 'hidden',
             }}
             rows={1}
@@ -688,27 +501,29 @@ RESPONSE FORMAT REQUIREMENTS:
             onClick={sendMessage}
             disabled={!inputMessage.trim() || isLoading}
             style={{
-              background: '#a78bfa',
+              background: inputMessage.trim() && !isLoading ? '#a78bfa' : '#6b7280',
               color: 'white',
-              padding: '6px 14px',
+              padding: '8px 16px',
               fontSize: 14,
               borderRadius: 6,
               fontWeight: 600,
-              minHeight: 40,
-              minWidth: 0,
+              minHeight: 44,
+              minWidth: 60,
               border: 'none',
-              transition: 'background 0.2s',
+              transition: 'all 0.2s',
               cursor: (!inputMessage.trim() || isLoading) ? 'not-allowed' : 'pointer',
-              opacity: (!inputMessage.trim() || isLoading) ? 0.7 : 1,
             }}
-            className="transition-colors"
+            className="transition-all hover:brightness-110"
           >
             Send
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-2 text-center">
+          💡 Tip: I'll guide you with hints, not give you complete answers!
+        </p>
       </div>
     </div>
   );
 }
 
-export default AI;
+export default AI; 
