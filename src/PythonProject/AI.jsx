@@ -240,7 +240,7 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         {
           id: 1,
           type: 'ai',
-          content: 'Hey there! 👋 I\'m Codey, your Python learning buddy!\n\nI\'m here to help you learn by guiding you through problems rather than just giving you answers. Think of me as your coding mentor who asks the right questions to help you think like a programmer.\n\nFeel free to ask me anything - whether it\'s about your code, concepts you\'re learning, or if you just want to chat! What\'s on your mind?',
+          content: 'Hey! 👋 I\'m Codey, your Python mentor. I\'m here to guide you through problems with hints, not direct answers. Ask me anything about your code!',
           timestamp: new Date()
         }
       ]);
@@ -264,89 +264,59 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
     try {
       const context = getAIContext(projectConfig, userCode, inputMessage);
       
-      // Build conversation history
-      const HISTORY_LIMIT = 6;
+      // Build conversation history (last 4 messages only)
+      const HISTORY_LIMIT = 4;
       const history = messages.slice(-HISTORY_LIMIT).map(
         m => `${m.type === 'user' ? 'User' : 'Assistant'}: ${m.content}`
-      ).join('\n\n');
+      ).join('\n');
 
-      // Get project context
+      // Minimal project context
       let projectContext = '';
-      if (projectConfig && (projectConfig.tasks || projectConfig.ProjectTasks)) {
-        const tasks = projectConfig.tasks || projectConfig.ProjectTasks;
-        const tasksList = Object.entries(tasks).slice(0, 3).map(
-          ([taskKey, task], idx) => {
-            let subs = task.subtasks || [];
-            if (subs.length === 0 && task.title) {
-              subs = Object.entries(task)
-                .filter(([key]) => key !== 'title')
-                .map(([key, value]) => value);
-            }
-            const subsList = subs.slice(0, 3).map((s, i) => `  - ${s}`).join('\n');
-            return `${idx + 1}. ${task.title}${subsList ? '\n' + subsList : ''}`;
-          }
-        );
-        projectContext = `Current Project: "${context.projectTitle}"\nDescription: ${context.projectDescription}\n\nTasks:\n${tasksList.join('\n')}`;
+      if (projectConfig) {
+        projectContext = `Project: "${context.projectTitle}"`;
       }
 
-      // Trim code
-      const codeLines = (context.userCode || 'No code written yet').split('\n');
-      const MAX_CODE_LINES = 100;
-      const trimmedCode = codeLines.length > MAX_CODE_LINES
-        ? [...codeLines.slice(0, 70), '...', ...codeLines.slice(-30)].join('\n')
+      // Trim code heavily
+      const codeLines = (context.userCode || 'No code').split('\n');
+      const trimmedCode = codeLines.length > 50
+        ? [...codeLines.slice(0, 35), '...', ...codeLines.slice(-15)].join('\n')
         : codeLines.join('\n');
 
-      // Trim terminal output
+      // Minimal terminal output
       const term = Array.isArray(terminalOutput) ? terminalOutput : [];
-      const trimmedTerminal = term.slice(-30).join('\n');
+      const trimmedTerminal = term.slice(-10).join('\n');
 
-      const prompt = `You are Codey, a friendly and helpful Python programming mentor. You're chatting with a student who is learning Python.
+      const prompt = `You are Codey, a concise Python mentor.
 
-PERSONALITY:
-- Friendly, encouraging, and conversational like ChatGPT
-- Respond naturally to ALL types of messages (greetings, questions, comments, everything)
-- Use emojis occasionally to be friendly 😊
-- Be enthusiastic about their progress!
-- Keep responses concise and easy to read
+CRITICAL RULES:
+- Answer ONLY what the user asked - nothing extra
+- Keep responses under 50 words unless specifically asked for more
+- For greetings: respond briefly (5-10 words) and ask what they need help with
+- For code questions: give ONE specific hint or concept, not explanations
+- NEVER give complete code solutions
+- If asked for code, give only the concept/approach in 1-2 sentences
 
-TEACHING APPROACH:
-- NEVER give complete code solutions or full implementations
-- Guide with hints, questions, and concepts instead
-- If they ask for code, explain the approach and relevant Python concepts
-- Encourage them to try things and learn from mistakes
-- Focus on understanding over just getting it to work
-
-PROJECT CONTEXT:
 ${projectContext}
 
-CURRENT CODE:
+CODE:
 \`\`\`python
 ${trimmedCode}
 \`\`\`
 
-TERMINAL OUTPUT:
+TERMINAL:
 \`\`\`
-${trimmedTerminal || 'No output yet'}
+${trimmedTerminal || 'None'}
 \`\`\`
 
-CONVERSATION HISTORY:
+RECENT CHAT:
 ${history}
 
-USER'S MESSAGE: ${userMessageText}
+USER: ${userMessageText}
 
-RESPONSE RULES:
-1. Respond naturally to their message - if they say "hi", greet them back warmly!
-2. If it's a greeting, respond friendly and ask how you can help with their project
-3. If it's a question, answer it helpfully with guidance (not full solutions)
-4. If they're stuck, ask guiding questions to help them think through it
-5. Keep responses conversational and under 150 words unless explaining a complex concept
-6. Use formatting: **bold** for emphasis, \`code\` for syntax, and bullet points when listing items
-7. If they ask for complete code, politely explain you'll guide them instead and provide conceptual help
-
-Remember: You're a friendly mentor, not a code-writing machine. Help them learn and think!`;
+Give a SHORT, DIRECT response (under 50 words). Answer ONLY what they asked.`;
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -357,8 +327,8 @@ Remember: You're a friendly mentor, not a code-writing machine. Help them learn 
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-          max_tokens: 400
+          temperature: 0.5,
+          max_tokens: 150
         }),
         signal: controller.signal
       });
@@ -367,12 +337,11 @@ Remember: You're a friendly mentor, not a code-writing machine. Help them learn 
       const data = await response.json();
 
       if (!response.ok) {
-        const msg = data?.error?.message || 'API request failed';
-        throw new Error(msg);
+        throw new Error(data?.error?.message || 'API failed');
       }
 
-      let aiText = 'Sorry, I encountered an error. Please try again! 😅';
-      if (data.choices && data.choices[0] && data.choices[0].message && typeof data.choices[0].message.content === 'string') {
+      let aiText = 'Sorry, error occurred. Try again!';
+      if (data.choices?.[0]?.message?.content) {
         aiText = data.choices[0].message.content;
       }
 
@@ -385,8 +354,8 @@ Remember: You're a friendly mentor, not a code-writing machine. Help them learn 
 
     } catch (error) {
       const errMsg = error.message === 'The operation was aborted' 
-        ? 'Request timed out. Please try again!' 
-        : `Oops! Something went wrong. ${error.message || 'Please try again!'}`;
+        ? 'Timeout. Try again!' 
+        : 'Error! Try again.';
       
       setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
@@ -417,13 +386,13 @@ Remember: You're a friendly mentor, not a code-writing machine. Help them learn 
     <div className="flex flex-col bg-gray-900 text-white h-full overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-700">
-        <h2 className="text-xl font-semibold text-purple-400">💬 Codey - Your AI Mentor</h2>
+        <h2 className="text-xl font-semibold text-purple-400">💬 Codey</h2>
         <p className="text-sm text-gray-400 mt-1">
           {loadError
             ? <span className="text-red-400">{loadError}</span>
             : projectConfig
-              ? `Working on: ${projectConfig.title}`
-              : 'Loading project...'}
+              ? `${projectConfig.title}`
+              : 'Loading...'}
         </p>
       </div>
 
@@ -480,7 +449,7 @@ Remember: You're a friendly mentor, not a code-writing machine. Help them learn 
               }
             }}
             onKeyPress={handleKeyPress}
-            placeholder="Ask me anything... I'm here to help! 😊"
+            placeholder="Ask me anything..."
             className="flex-1 bg-gray-800 text-left text-white overflow-y-auto"
             style={{
               borderRadius: 6,
@@ -518,12 +487,9 @@ Remember: You're a friendly mentor, not a code-writing machine. Help them learn 
             Send
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2 text-center">
-          💡 Tip: I'll guide you with hints, not give you complete answers!
-        </p>
       </div>
     </div>
   );
 }
 
-export default AI; 
+export default AI;
