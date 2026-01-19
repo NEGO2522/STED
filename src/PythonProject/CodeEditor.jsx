@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Editor from '@monaco-editor/react';
 import { runPythonCode } from './pythonRunner';
 
@@ -46,6 +46,7 @@ function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTermina
   const [waitingInput, setWaitingInput] = useState(false);
   const [promptText, setPromptText] = useState('');
   const inputResolver = useRef(null);
+  const executionController = useRef(null);
 
   // Save local code changes to localStorage
   useEffect(() => {
@@ -118,12 +119,45 @@ function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTermina
     }
   };
 
+  const stopExecution = useCallback(() => {
+    if (executionController.current) {
+      executionController.current.abort();
+      appendOutput(['\n⏹️ Execution stopped by user']);
+      setIsRunning(false);
+      executionController.current = null;
+      return true;
+    }
+    return false;
+  }, []);
+
+  const handleKeyDown = useCallback((e) => {
+    // Handle Ctrl+C or Ctrl+X to stop execution
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x') && isRunning) {
+      e.preventDefault();
+      stopExecution();
+    }
+  }, [isRunning, stopExecution]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   const runPython = async () => {
-    if (isRunning) return;
+    if (isRunning) {
+      if (!stopExecution()) {
+        return;
+      }
+    }
     
     setIsRunning(true);
     setOutputLines([]);
     setWaitingInput(false);
+
+    // Create a new AbortController for this execution
+    executionController.current = new AbortController();
 
     try {
       const codeToRun = value !== undefined ? value : localCode;
@@ -132,12 +166,19 @@ function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTermina
         code: codeToRun,
         onOutput: appendOutput,
         onInput: handleInput,
-        isPreview: false
+        isPreview: false,
+        signal: executionController.current.signal
       });
     } catch (err) {
-      appendOutput([`❌ Error: ${err.message}`]);
+      if (err.name === 'AbortError') {
+        // Execution was cancelled by user
+        appendOutput(['\n⏹️ Execution stopped by user']);
+      } else {
+        appendOutput([`❌ Error: ${err.message}`]);
+      }
     } finally {
       setIsRunning(false);
+      executionController.current = null;
     }
   };
 
@@ -186,7 +227,7 @@ function CodeEditor({ onCodeChange, onOutputChange, value, readOnly, hideTermina
                 opacity: isRunning ? 0.6 : 1
               }}
             >
-              {isRunning ? 'Running...' : 'Run'}
+              {isRunning ? 'Stop (Ctrl+C)' : 'Run'}
             </button>
           </div>
           <div className='text-left' style={{ background: 'black', color: '#dcdcdc', padding: '10px', height: '250px', overflowY: 'auto', borderTop: '1px solid #555' }}>

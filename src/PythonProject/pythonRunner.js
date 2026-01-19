@@ -30,7 +30,7 @@ function extractImports(code) {
   return [...new Set(imports)]; // Remove duplicates
 }
  
-export async function runPythonCode({ code, onOutput, onInput, isPreview, onComplete }) {
+export async function runPythonCode({ code, onOutput, onInput, isPreview, onComplete, signal }) {
   if (isPreview) {
     onOutput && onOutput(['⚠️ Preview mode - code execution not available']);
     return;
@@ -39,8 +39,27 @@ export async function runPythonCode({ code, onOutput, onInput, isPreview, onComp
   const sessionId = Date.now().toString();
 
   try {
+    // Create a controller for this execution
+    const controller = new AbortController();
+    
+    // Set up abort handling if signal is provided
+    if (signal) {
+      if (signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+      
+      const onAbort = () => {
+        controller.abort();
+        if (onComplete) onComplete();
+      };
+      
+      signal.addEventListener('abort', onAbort, { once: true });
+    }
+    
     // First check if backend is available
-    const healthResponse = await fetch(`${BACKEND_URL}/api/python-health`);
+    const healthResponse = await fetch(`${BACKEND_URL}/api/python-health`, {
+      signal: controller.signal
+    });
     if (!healthResponse.ok) {
       throw new Error('Backend server not available');
     }
@@ -103,12 +122,24 @@ export async function runPythonCode({ code, onOutput, onInput, isPreview, onComp
     // Check if code contains input() - if so, use interactive mode
     const hasInput = code.includes('input(');
     
-    if (hasInput && onInput) {
-      // Use interactive execution for code with input()
-      await runInteractiveCode(code, sessionId, onOutput, onInput, onComplete);
-    } else {
-      // Use simple execution for code without input()
-      await runSimpleCode(code, sessionId, onOutput, onComplete);
+    try {
+      if (hasInput && onInput) {
+        // Use interactive execution for code with input()
+        await runInteractiveCode(code, sessionId, onOutput, onInput, onComplete, controller.signal);
+      } else {
+        // Use simple execution for code without input()
+        await runSimpleCode(code, sessionId, onOutput, onComplete, controller.signal);
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw error; // Re-throw abort errors to be handled by the caller
+      }
+      throw error;
+    } finally {
+      // Clean up the abort listener
+      if (signal) {
+        signal.removeEventListener('abort', onAbort);
+      }
     }
 
   } catch (error) {
@@ -120,7 +151,7 @@ export async function runPythonCode({ code, onOutput, onInput, isPreview, onComp
 }
 
 // Simple execution for code without input()
-async function runSimpleCode(code, sessionId, onOutput, onComplete) {
+async function runSimpleCode(code, sessionId, onOutput, onComplete, signal) {
   try {
     const response = await fetch(`${BACKEND_URL}/api/execute-python`, {
       method: 'POST',
@@ -130,7 +161,8 @@ async function runSimpleCode(code, sessionId, onOutput, onComplete) {
       body: JSON.stringify({
         code: code,
         sessionId: sessionId
-      })
+      }),
+      signal: signal
     });
 
     if (!response.ok) {
@@ -206,7 +238,7 @@ async function runSimpleCode(code, sessionId, onOutput, onComplete) {
 }
 
 // Interactive execution for code with input()
-async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete) {
+async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete, signal) {
   try {
     // Use Server-Sent Events for interactive execution
     const response = await fetch(`${BACKEND_URL}/api/execute-python-interactive`, {
@@ -217,7 +249,8 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete
       body: JSON.stringify({
         code: code,
         sessionId: sessionId
-      })
+      }),
+      signal: signal
     });
 
     if (!response.ok) {
@@ -226,6 +259,16 @@ async function runInteractiveCode(code, sessionId, onOutput, onInput, onComplete
 
     // Set up EventSource to read the stream
     const reader = response.body.getReader();
+    
+    // Handle abort signal
+    if (signal) {
+      signal.addEventListener('abort', () => {
+        // Cancel the fetch request if it's still in progress
+        if (!response.bodyUsed) {
+          response.body.cancel();
+        }
+      }, { once: true });
+    }
     const decoder = new TextDecoder();
 
     while (true) {
