@@ -211,7 +211,7 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
       const subtaskResults = [];
       for (let i = 0; i < subtasks.length; i++) {
         const subtask = subtasks[i];
-        const prompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIs this subtask clearly implemented in the user's code? Respond only with true or false.\nIMPORTANT: Ignore whether other subtasks are complete or not. Only check if THIS subtask is implemented, regardless of the rest of the code.\nIMPORTANT: Only consider the subtask statement itself. Make your decision strictly according to the subtask statement. Do not overthink or infer extra requirements.`;
+        const prompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nAnalyze if this subtask is fully implemented in the user's code.\n\nRespond in this exact format:\nStatus: [true/false]\nReason: [Your explanation here]\n\nIMPORTANT:\n- Respond with "Status: true" or "Status: false" on the first line\n- Then provide the reason in the next line starting with "Reason:"\n- The reason must match the status\n- Be specific about what's implemented or missing\n- Focus only on the requirements of this subtask`;
         let isSubtaskComplete = false;
         let reason = '';
         try {
@@ -224,8 +224,8 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
             body: JSON.stringify({
               model: 'gpt-4o-mini',
               messages: [{ role: 'user', content: prompt }],
-              temperature: 0,
-              max_tokens: 10
+              temperature: 0.2,
+              max_tokens: 256
             })
           });
           const data = await response.json();
@@ -233,27 +233,26 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
           if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
             answer = data.choices[0].message.content.trim().toLowerCase();
           }
-          const normalized = answer.replace(/[^a-z]/g, '');
-          if (normalized.startsWith('true')) isSubtaskComplete = true;
-          else if (normalized.startsWith('false')) isSubtaskComplete = false;
-          // Now get the reason/explanation
-          const reasonPrompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIf this subtask is not completed, explain why in one sentence. If it is completed, explain why it is considered complete.\nIMPORTANT: Ignore whether other subtasks are complete or not. Only check if THIS subtask is implemented, regardless of the rest of the code.\nIMPORTANT: Only consider the subtask statement itself. Make your decision strictly according to the subtask statement. Do not overthink or infer extra requirements.`;
-          const reasonResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [{ role: 'user', content: reasonPrompt }],
-              temperature: 0.2,
-              max_tokens: 128
-            })
-          });
-          const reasonData = await reasonResponse.json();
-          if (reasonData.choices && reasonData.choices[0] && reasonData.choices[0].message && reasonData.choices[0].message.content) {
-            reason = reasonData.choices[0].message.content.trim();
+          // Parse status and reason from the single response
+          const statusMatch = answer.match(/Status\s*:?\s*(true|false)/i);
+          const reasonMatch = answer.split(/\n/).find(line => line.toLowerCase().startsWith('reason:'));
+          
+          if (statusMatch) {
+            isSubtaskComplete = statusMatch[1].toLowerCase() === 'true';
+          }
+          
+          if (reasonMatch) {
+            reason = reasonMatch.replace(/^reason\s*:?\s*/i, '').trim();
+          } else {
+            // If no reason found, use the rest of the response
+            reason = answer.replace(/Status\s*:?\s*(true|false)[\s\n]*/i, '').trim();
+          }
+          
+          // Ensure we have a reason
+          if (!reason) {
+            reason = isSubtaskComplete 
+              ? 'The task requirements appear to be met.' 
+              : 'The task requirements are not fully implemented.';
           }
         } catch (e) {
           // On error, treat as not complete and no reason
