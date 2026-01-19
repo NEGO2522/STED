@@ -460,6 +460,36 @@ function Project() {
           justifyContent: 'center',
           fontFamily: 'inherit',
         }}>
+          {/* Close Button */}
+          <button 
+            onClick={() => setShowSubmitOverlay(false)}
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '20px',
+              fontWeight: 'bold',
+              padding: 0,
+              lineHeight: '1',
+              outline: 'none',
+              transition: 'background 0.2s',
+              zIndex: 2001,
+            }}
+            onMouseOver={(e) => e.target.style.background = '#dc2626'}
+            onMouseOut={(e) => e.target.style.background = '#ef4444'}
+          >
+            ×
+          </button>
           <div style={{
             background: '#18181b',
             padding: '36px 32px',
@@ -545,16 +575,7 @@ function Project() {
                       </button>
                     </div>
                   );
-                } else {
-                  return (
-                    <button
-                      onClick={() => setShowSubmitOverlay(false)}
-                      className="px-7 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition-colors duration-200 shadow-lg text-lg"
-                    >
-                      Close
-                    </button>
-                  );
-                }
+                } 
               })()}
             </div>
           </div>
