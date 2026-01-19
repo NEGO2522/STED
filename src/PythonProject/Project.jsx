@@ -250,14 +250,19 @@ function Project() {
         .map(([key, value]) => value);
     }
 
-    // Only check subtasks if not already checked and submit overlay is not open
-    if (!subtaskCheckResults[taskKey] && subtasks.length > 0) {
+    // Only check subtasks if not already checked or if we need to recheck
+    if ((!subtaskCheckResults[taskKey] || subtaskCheckResults[taskKey].length === 0) && subtasks.length > 0) {
       const results = [];
+      let allComplete = true;
+      
       for (let i = 0; i < subtasks.length; i++) {
         const subtask = subtasks[i];
         const prompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIs this subtask clearly implemented in the user's code? Respond only with true or false.`;
         let isComplete = false;
+        let reason = '';
+        
         try {
+          // First check if the subtask is complete
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -271,20 +276,52 @@ function Project() {
               max_tokens: 10
             })
           });
+          
           const data = await response.json();
           let answer = '';
           if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
             answer = data.choices[0].message.content.trim().toLowerCase();
           }
+          
           const normalized = answer.replace(/[^a-z]/g, '');
-          if (normalized.startsWith('true')) isComplete = true;
-          else if (normalized.startsWith('false')) isComplete = false;
+          isComplete = normalized.startsWith('true');
+
+          // Get reason/explanation
+          const reasonPrompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIf this subtask is not completed, explain why in one sentence. If it is completed, explain why it is considered complete.`;
+          const reasonResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content: reasonPrompt }],
+              temperature: 0.2,
+              max_tokens: 128
+            })
+          });
+          
+          const reasonData = await reasonResponse.json();
+          if (reasonData.choices && reasonData.choices[0] && reasonData.choices[0].message && reasonData.choices[0].message.content) {
+            reason = reasonData.choices[0].message.content.trim();
+          }
+
+          // If AI says it's complete but we have a negative reason, trust the AI's completion status
+          if (isComplete && reason && /not (yet )?complete|missing|not (fully )?implemented|incomplete|not working/i.test(reason)) {
+            isComplete = false;
+          }
+
         } catch (e) {
-          // On error, treat as not complete
+          console.error('Error checking subtask:', e);
         }
-        results.push({ subtask, complete: isComplete });
+
+        results.push({ subtask, complete: isComplete, reason });
+        if (!isComplete) allComplete = false;
       }
+
       setSubtaskCheckResults(prev => ({ ...prev, [taskKey]: results }));
+      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: allComplete }));
     }
   };
 

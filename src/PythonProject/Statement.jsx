@@ -518,30 +518,31 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
                     style={{
                       position: 'fixed',
                       right: hoveredReason.offsetRight || 20,
-                                      top: '50%',
-                                      transform: 'translateY(-50%)',
-                                      zIndex: 1000,
-                                      background: '#23232a',
-                                      color: '#e5e7eb',
-                                      fontSize: 12,
-                                      border: '1px solid #444',
-                                      borderRadius: 8,
-                                      padding: '8px 12px',
-                                      width: 260,
-                                      maxWidth: '32vw',
-                                      whiteSpace: 'pre-line',
-                                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-                                    }}
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      zIndex: 1000,
+                      background: '#23232a',
+                      color: '#e5e7eb',
+                      fontSize: 14,
+                      border: '1px solid #444',
+                      borderRadius: 8,
+                      padding: '12px 16px',
+                      maxWidth: 'min(500px, 40vw)',
+                      minWidth: '300px',
+                      maxHeight: '80vh',
+                      overflowY: 'auto',
+                      whiteSpace: 'pre-line',
+                      boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
+                      lineHeight: '1.5',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word'
+                    }}
                                     onClick={(e) => e.stopPropagation()}
                                     onMouseLeave={() => {
                                       setHoveredReason({ taskKey: null, subIdx: null, clicked: false });
                                     }}
                                   >
-                                    {subtaskCheckResults[taskKey]?.[subIdx]?.reason
-                                      ?.split(/(?<=[.!?])\s+/)
-                                      .slice(0, 2)
-                                      .join(' ')
-                                      .slice(0, 140) || 'No reason available'}
+                                    {subtaskCheckResults[taskKey]?.[subIdx]?.reason || 'No reason available'}
                                   </div>
                                 )}
                               </div>
