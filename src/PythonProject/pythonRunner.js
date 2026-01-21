@@ -38,23 +38,25 @@ export async function runPythonCode({ code, onOutput, onInput, isPreview, onComp
 
   const sessionId = Date.now().toString();
 
-  try {
-    // Create a controller for this execution
-    const controller = new AbortController();
-    
-    // Set up abort handling if signal is provided
-    if (signal) {
-      if (signal.aborted) {
-        throw new DOMException('Aborted', 'AbortError');
-      }
-      
-      const onAbort = () => {
-        controller.abort();
-        if (onComplete) onComplete();
-      };
-      
-      signal.addEventListener('abort', onAbort, { once: true });
+  // Create a controller for this execution
+  const controller = new AbortController();
+  let onAbort = null;
+  
+  // Set up abort handling if signal is provided
+  if (signal) {
+    if (signal.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
     }
+    
+    onAbort = () => {
+      controller.abort();
+      if (onComplete) onComplete();
+    };
+    
+    signal.addEventListener('abort', onAbort, { once: true });
+  }
+  
+  try {
     
     // First check if backend is available
     const healthResponse = await fetch(`${BACKEND_URL}/api/python-health`, {
@@ -137,7 +139,7 @@ export async function runPythonCode({ code, onOutput, onInput, isPreview, onComp
       throw error;
     } finally {
       // Clean up the abort listener
-      if (signal) {
+      if (signal && onAbort) {
         signal.removeEventListener('abort', onAbort);
       }
     }
