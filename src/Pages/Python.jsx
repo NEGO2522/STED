@@ -731,140 +731,205 @@ IMPORTANT INSTRUCTIONS:
 
           {/* --- Project/Assignment Grid --- */}
           <h2 className="text-2xl text-left font-bold text-slate-800 mb-6 mt-10 tracking-tight">Apply learning</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-
-             {/* Assignment Box */}
-             <div className="w-full">
+          <div className="grid grid-cols-1 gap-6 items-start">
+            {/* Commented out Assignment Box
+            <div className="w-full">
               <Assignment learnedConcepts={userData.python?.learnedConcepts || []} />
             </div>
+            */}
             {/* Project Box */}
-            <motion.div className="bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full h-76 rounded-2xl shadow-2xl p-6 lg:sticky lg:top-28 ring-1 ring-white/10">
-              <h2 className="text-2xl font-bold text-white mb-6">
-                Project
-              </h2>
+            <motion.div className="bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full rounded-2xl shadow-2xl overflow-hidden lg:sticky lg:top-28 ring-1 ring-white/10">
+              {/* Header Section */}
+              <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/20 rounded-full p-2">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white tracking-tight">Projects</h2>
+                    <p className="text-white/80 text-sm">Start building amazing projects</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Section */}
+              <div className="p-6">
               {userData.python && userData.python.PythonCurrentProject ? (
                 projectLoading ? (
-                  <div className="text-white">Loading project...</div>
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-white text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-3"></div>
+                      <p>Loading project...</p>
+                    </div>
+                  </div>
                 ) : projectError ? (
-                  <div className="text-red-300">{projectError}</div>
+                  <div className="bg-red-500/20 border border-red-300/30 rounded-xl p-4 text-red-100">
+                    {projectError}
+                  </div>
                 ) : projectData ? (
-                  <>
-                    <div className="flex justify-center mt-10">
-                    <div className="space-y-9 w-100">
-                      <button
-                        onClick={handleNextProjectClick}
-                        disabled={isGeneratingProject}
-                        className={`w-full inline-flex items-center justify-center gap-2 ${
-                          isGeneratingProject ? 'bg-purple-700' : 'bg-purple-900 hover:bg-purple-700 active:scale-[0.98]'
-                        } text-white font-semibold px-4 py-3 rounded-xl shadow-md transition-all ring-1 ring-white/10`}
-                      >
-                        {isGeneratingProject ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            🚀 Next Project
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={handleCustomProjectClick}
-                        className="w-full inline-flex items-center justify-center gap-2 text-white cursor-pointer font-semibold px-4 py-3 rounded-xl shadow-md transition-all border border-white/30 hover:bg-white/10 active:scale-[0.98]"
-                      >
-                        ⚙️ Custom Project
-                        
-                      </button>
-                    </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex justify-center mt-10">
-                    <div className="space-y-9 w-100">
-                      <button
-                        onClick={handleNextProjectClick}
-                        className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 font-semibold px-4 py-3 rounded-xl shadow-md transition-colors ring-1 ring-white/10"
-                      >
-                        🚀 Start New Project
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 5l7 7-7 7"
-                          />
-                        </svg>
-                      </button>
-                      
-                      <button
-                        onClick={handleCustomProjectClick}
-                        className="w-full inline-flex items-center justify-center gap-2 text-white cursor-pointer font-semibold px-4 py-3 rounded-lg shadow-md transition-colors border border-white border-opacity-30"
-                      >
-                        ⚙️ Custom Project
-                        
-                      </button>
-                    </div>
-                    </div>
-                  </>
-                )
-              ) : (
-                <>
-                  <div className="flex justify-center mt-10">
-                  <div className="space-y-9 w-100">
+                  <div className="space-y-4">
+                    {/* New Project Button */}
                     <button
                       onClick={handleNextProjectClick}
-                      className="w-full inline-flex items-center cursor-pointer justify-center gap-2 bg-purple-900 text-white hover:bg-purple-700 active:scale-[0.98] font-semibold px-4 py-3 rounded-xl shadow-md transition-all ring-1 ring-white/10"
+                      disabled={isGeneratingProject}
+                      className={`group w-full bg-gradient-to-r from-purple-600/90 to-purple-700/90 hover:from-purple-600 hover:to-purple-700 border-2 border-purple-400/30 hover:border-purple-300/50 rounded-xl p-5 transition-all duration-300 ${
+                        isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md'
+                      }`}
                     >
-                      ✨ Start New Project
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
+                            {isGeneratingProject ? (
+                              <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            ) : (
+                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-white font-bold text-lg">
+                              {isGeneratingProject ? 'Generating...' : 'Next Project'}
+                            </h3>
+                            <p className="text-white/70 text-sm">
+                              {isGeneratingProject ? 'Finding the perfect project for you' : 'Discover new challenges'}
+                            </p>
+                          </div>
+                        </div>
+                        {!isGeneratingProject && (
+                          <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </div>
                     </button>
                     
+                    {/* Custom Project Button */}
                     <button
-                      disabled
-                      className="w-full inline-flex items-center justify-center gap-2 text-white/50 font-semibold px-4 py-3 rounded-xl shadow-md transition-colors border border-white/20 bg-gray-400/20 cursor-not-allowed"
+                      onClick={handleCustomProjectClick}
+                      className="group w-full bg-gradient-to-r from-purple-500/90 to-purple-600/90 hover:from-purple-500 hover:to-purple-600 border-2 border-purple-300/40 hover:border-purple-200/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
-                      🔒 Custom Project
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-white font-bold text-lg">Custom Project</h3>
+                            <p className="text-white/70 text-sm">Build your own project idea</p>
+                          </div>
+                        </div>
+                        <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
                     </button>
                   </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* New Project Button */}
+                    <button
+                      onClick={handleNextProjectClick}
+                      className="group w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-white font-bold text-lg">Start New Project</h3>
+                            <p className="text-white/70 text-sm">Begin your coding journey</p>
+                          </div>
+                        </div>
+                        <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
+                    
+                    {/* Custom Project Button */}
+                    <button
+                      onClick={handleCustomProjectClick}
+                      className="group w-full bg-gradient-to-r from-purple-500/90 to-purple-600/90 hover:from-purple-500 hover:to-purple-600 border-2 border-purple-300/40 hover:border-purple-200/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </div>
+                          <div className="text-left">
+                            <h3 className="text-white font-bold text-lg">Custom Project</h3>
+                            <p className="text-white/70 text-sm">Build your own project idea</p>
+                          </div>
+                        </div>
+                        <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
-                </>
+                )
+              ) : (
+                <div className="space-y-4">
+                  {/* Start New Project Button */}
+                  <button
+                    onClick={handleNextProjectClick}
+                    className="group w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-white font-bold text-lg">Start New Project</h3>
+                          <p className="text-white/70 text-sm">Begin your coding journey</p>
+                        </div>
+                      </div>
+                      <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                  
+                  {/* Custom Project Button - Disabled */}
+                  <button
+                    disabled
+                    className="group w-full bg-white/5 border-2 border-white/10 rounded-xl p-5 cursor-not-allowed opacity-60"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-gray-400/30 rounded-lg p-3">
+                          <svg className="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                        <div className="text-left">
+                          <h3 className="text-white/50 font-bold text-lg">Custom Project</h3>
+                          <p className="text-white/40 text-sm">Unlock by starting a project</p>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
               )}
+              </div>
             </motion.div>
            
           </div>
@@ -1396,7 +1461,7 @@ IMPORTANT INSTRUCTIONS:
                 ×
               </button>
               <div className="flex-shrink-0">
-                <h2 className="text-3xl font-extrabold mb-6 text-purple-800 tracking-tight drop-shadow">Generate Custom Project using AI</h2>
+                <h2 className="text-3xl font-extrabold mb-6 text-purple-800 tracking-tight drop-shadow">Find custom projects</h2>
               </div>
               
               <div className="flex-1 overflow-y-auto">
@@ -1432,18 +1497,6 @@ IMPORTANT INSTRUCTIONS:
                   </button>
                 </div>
                 
-                <div className="border-t border-purple-200 my-4"></div>
-                
-                <div className="mb-6">
-                  <label className="block text-lg font-semibold text-purple-700 mb-3">Project Theme</label>
-                  <input
-                    type="text"
-                    value={customProjectTheme}
-                    onChange={e => setCustomProjectTheme(e.target.value)}
-                    placeholder="e.g. Personal Finance Tracker"
-                    className="w-full px-5 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent text-lg bg-white/80 shadow"
-                  />
-                </div>
               </div>
               
               <div className="flex-shrink-0 border-t border-purple-200 pt-6">
