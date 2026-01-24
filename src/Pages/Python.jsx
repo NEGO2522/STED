@@ -48,7 +48,56 @@ function Python() {
   const [showConceptPicker, setShowConceptPicker] = useState(false);
   const [conceptPickerChecked, setConceptPickerChecked] = useState({});
   const [shownProjects, setShownProjects] = useState([]);
+  
+  // State for concept details overlay
+  const [showConceptDetailsOverlay, setShowConceptDetailsOverlay] = useState(false);
+  const [selectedConceptDetails, setSelectedConceptDetails] = useState(null);
   const [nextProject, setNextProject] = useState(null);
+  
+  // State for editing concept status
+  const [isEditingStatus, setIsEditingStatus] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  
+  // Handle saving the new status
+  const handleSaveStatus = async () => {
+    if (!selectedConceptDetails || !newStatus) return;
+    
+    setIsSavingStatus(true);
+    
+    try {
+      // Get a reference to the user's learned concepts
+      const userRef = ref(db, `users/${user.id}/python/learnedConcepts`);
+      const snapshot = await get(userRef);
+      
+      if (snapshot.exists()) {
+        const learnedConcepts = snapshot.val();
+        const conceptKey = `${selectedConceptDetails.category}:${selectedConceptDetails.name}`;
+        
+        if (learnedConcepts[conceptKey]) {
+          // Update the status in Firebase
+          await update(ref(db, `users/${user.id}/python/learnedConcepts/${conceptKey}`), {
+            ...learnedConcepts[conceptKey],
+            status: newStatus
+          });
+          
+          // Update local state
+          setSelectedConceptDetails(prev => ({
+            ...prev,
+            status: newStatus
+          }));
+          
+          // Exit edit mode
+          setIsEditingStatus(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating concept status:', error);
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+  
   const [generatingCustomProject, setGeneratingCustomProject] = useState(false);
   const [isGeneratingProject, setIsGeneratingProject] = useState(false);
 
@@ -686,8 +735,165 @@ IMPORTANT INSTRUCTIONS:
               transition={{ duration: 0.5 }}
               className="bg-white/90 backdrop-blur-sm w-full lg:w-2/3 rounded-xl shadow-md p-6 ring-1 ring-slate-200"
             >
-              <MemoizedConceptLearned completedProjects={completedProjects} />
+              <MemoizedConceptLearned 
+                completedProjects={completedProjects}
+                onConceptClick={(conceptDetails) => {
+                  setSelectedConceptDetails(conceptDetails);
+                  setShowConceptDetailsOverlay(true);
+                  setIsEditingStatus(false);
+                  setNewStatus(conceptDetails.status || '');
+                }}
+              />
             </motion.div>
+
+            {/* Concept Details Overlay */}
+            {showConceptDetailsOverlay && selectedConceptDetails && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative max-h-[90vh] overflow-y-auto">
+                  <button
+                    className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
+                    onClick={() => setShowConceptDetailsOverlay(false)}
+                  >
+                    ×
+                  </button>
+                  
+                  {/* Concept Name */}
+                  <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-2">
+                      <h2 className="text-4xl font-bold text-purple-700">
+                        {selectedConceptDetails.name}
+                      </h2>
+                      <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                        {selectedConceptDetails.category}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      {selectedConceptDetails.addedAt && (
+                        <span className="text-sm text-slate-500">
+                          📅 Added on {new Date(selectedConceptDetails.addedAt).toLocaleDateString()} at {new Date(selectedConceptDetails.addedAt).toLocaleTimeString()}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Concept Status */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-slate-700">Status:</span>
+                        {isEditingStatus ? (
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={newStatus}
+                              onChange={(e) => setNewStatus(e.target.value)}
+                              className="border border-slate-300 rounded px-2 py-1 text-sm"
+                              disabled={isSavingStatus}
+                            >
+                              <option value="">Select status</option>
+                              <option value="Clear">Clear</option>
+                              <option value="Unclear">Unclear</option>
+                              <option value="confused">Confused</option>
+                            </select>
+                            <button
+                              onClick={handleSaveStatus}
+                              disabled={isSavingStatus || !newStatus}
+                              className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                            >
+                              {isSavingStatus ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setIsEditingStatus(false);
+                                setNewStatus(selectedConceptDetails.status || '');
+                              }}
+                              className="text-sm text-slate-500 hover:text-slate-700"
+                              disabled={isSavingStatus}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <span 
+                              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                selectedConceptDetails.status === 'Clear' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : selectedConceptDetails.status === 'Unclear' 
+                                    ? 'bg-yellow-100 text-yellow-800' 
+                                    : selectedConceptDetails.status === 'confused' 
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-slate-100 text-slate-800'
+                              }`}
+                            >
+                              {selectedConceptDetails.status || 'Not Set'}
+                            </span>
+                            <button
+                              onClick={() => setIsEditingStatus(true)}
+                              className="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              Edit
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Sources Section */}
+                  {selectedConceptDetails.sources?.length > 0 && (
+                    <div className="mb-8 text-left">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-4">Learning Sources</h3>
+                      <div className="space-y-2">
+                        {selectedConceptDetails.sources.map((source, index) => (
+                          <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900 truncate">{source.sourceName}</p>
+                              <a
+                                href={source.sourceLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 hover:underline truncate block overflow-hidden"
+                              >
+                                {source.sourceLink}
+                              </a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Applied In Section */}
+                  {selectedConceptDetails.appliedIn?.length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-4">Applied In</h3>
+                      <div className="space-y-3">
+                        {selectedConceptDetails.appliedIn.map((project, index) => (
+                          <div key={index} className="bg-slate-50 p-3 rounded-lg">
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <p className="font-medium text-slate-900">{project.title}</p>
+                                <p className="text-sm text-slate-500">
+                                  {project.date ? new Date(project.date).toLocaleDateString() : 'Date not available'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Close Button */}
+                  <div className="flex justify-end pt-4 border-t border-slate-200">
+                    <button
+                      onClick={() => setShowConceptDetailsOverlay(false)}
+                      className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Concept Status Box */}
             <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-150 h-76 flex flex-col justify-between ring-1 ring-slate-200">

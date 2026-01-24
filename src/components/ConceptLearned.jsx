@@ -12,8 +12,15 @@ const ModalPortal = ({ children }) => {
   return createPortal(children, document.body);
 };
 
-function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
+function ConceptLearned({ 
+  completedProjects = [], 
+  skillName = 'python',
+  onConceptClick = () => {}
+}) {
   const [showOverlay, setShowOverlay] = useState(false);
+  const [showAddSourceOverlay, setShowAddSourceOverlay] = useState(false);
+  const [showAppliedDetailsOverlay, setShowAppliedDetailsOverlay] = useState(false);
+  const [showAppliedDetails, setShowAppliedDetails] = useState(false);
   const [allConcepts, setAllConcepts] = useState({});
   const [learnedConcepts, setLearnedConcepts] = useState([]);
   const [checked, setChecked] = useState({});
@@ -23,42 +30,10 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const [showStatusOverlay, setShowStatusOverlay] = useState(false);
   const [selectedConcepts, setSelectedConcepts] = useState([]);
   const [conceptStatuses, setConceptStatuses] = useState({});
-  const [showConceptDetailsOverlay, setShowConceptDetailsOverlay] = useState(false);
-  const [selectedConceptDetails, setSelectedConceptDetails] = useState(null);
-  const [showAddSourceOverlay, setShowAddSourceOverlay] = useState(false);
-  const [newSource, setNewSource] = useState({
-    sourceName: "",
-    sourceLink: ""
-  });
-  const [addingSource, setAddingSource] = useState(false);
-  const [editingStatus, setEditingStatus] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
-  const [savingStatus, setSavingStatus] = useState(false);
   const [showAppliedConceptsOverlay, setShowAppliedConceptsOverlay] = useState(false);
   const [appliedConceptsData, setAppliedConceptsData] = useState([]);
-  const [showAppliedDetails, setShowAppliedDetails] = useState(false);
-  const [selectedConceptForDetails, setSelectedConceptForDetails] = useState(null);
-  const [showAppliedDetailsOverlay, setShowAppliedDetailsOverlay] = useState(false);
   const [showPointsHistoryOverlay, setShowPointsHistoryOverlay] = useState(false);
-
-  // Optimized input change handlers using useCallback
-  const handleSourceNameChange = useCallback((e) => {
-    e.persist && e.persist();
-    const value = e.target.value;
-    setNewSource(prev => ({
-      ...prev,
-      sourceName: value
-    }));
-  }, []);
-
-  const handleSourceLinkChange = useCallback((e) => {
-    e.persist && e.persist();
-    const value = e.target.value;
-    setNewSource(prev => ({
-      ...prev,
-      sourceLink: value
-    }));
-  }, []);
+  const [newSource, setNewSource] = useState({ sourceName: '', sourceLink: '' });
   const [pointsHistory, setPointsHistory] = useState([]);
   const [pointsHistoryLoading, setPointsHistoryLoading] = useState(false);
   const { user } = useUser();
@@ -389,15 +364,10 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   const handleShowAppliedDetails = (conceptName) => {
     const projectsUsingConcept = completedProjects.filter(project => {
       if (project.conceptUsed) {
-        const projectConcepts = project.conceptUsed.split(', ').map(c => c.trim());
+        const projectConcepts = project.conceptUsed.split(',').map(c => c.trim());
         return projectConcepts.includes(conceptName);
       }
       return false;
-    });
-
-    setSelectedConceptForDetails({
-      concept: conceptName,
-      projects: projectsUsingConcept
     });
     
     // If we're in the applied concepts overlay, show the details overlay
@@ -410,245 +380,30 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
   };
 
   // Handle concept click to show details overlay
-  const handleConceptClick = async (concept, category) => {
-    try {
-      // Fetch the learnedConcepts object to get sources for this concept
-      const learnedConceptsRef = ref(db, `users/${user.id}/${currentSkillConfig.userPath}/learnedConcepts`);
-      const learnedConceptsSnap = await get(learnedConceptsRef);
-      
-      let sources = [];
-      let addedAt = null;
-      let status = null;
-      let isApplied = false;
-      
-      if (learnedConceptsSnap.exists()) {
-        const learnedConceptsData = learnedConceptsSnap.val();
-        const conceptKey = `${category}:${concept}`;
-        const conceptData = learnedConceptsData[conceptKey];
-        
-        if (conceptData) {
-          if (conceptData.sources) {
-            sources = Array.isArray(conceptData.sources) ? conceptData.sources : Object.values(conceptData.sources || {});
-          }
-          addedAt = conceptData.addedAt || null;
-          status = conceptData.status || null;
-          isApplied = isConceptApplied(concept);
-        }
-      }
-      
-      setSelectedConceptDetails({
+  const handleConceptClick = (concept, category) => {
+    const conceptData = learnedConcepts.find(
+      (c) => c.concept === concept && c.category === category
+    );
+
+    if (conceptData) {
+      const conceptDetails = {
         name: concept,
-        category: category,
-        learnedFrom: sources,
-        addedAt: addedAt,
-        status: status,
-        isApplied: isApplied
-      });
-      setShowConceptDetailsOverlay(true);
-    } catch (err) {
-      console.error("Error fetching concept sources:", err);
-      setSelectedConceptDetails({
-        name: concept,
-        category: category,
-        learnedFrom: [],
-        addedAt: null,
-        status: null,
-        isApplied: false
-      });
-      setShowConceptDetailsOverlay(true);
-    }
-  };
-
-  // Handle adding new source
-  const handleAddSource = () => {
-    if (!showAddSourceOverlay) {
-      setNewSource({ sourceName: '', sourceLink: '' });
-    }
-    setShowAddSourceOverlay(true);
-  };
-
-  // Handle editing concept status
-  const handleEditStatus = () => {
-    setNewStatus(selectedConceptDetails.status || '');
-    setEditingStatus(true);
-  };
-
-  // Save updated concept status
-  const handleSaveStatus = async () => {
-    if (!user || !selectedConceptDetails || !newStatus) return;
-    
-    setSavingStatus(true);
-    try {
-      // Get the existing learnedConcepts object
-      const learnedConceptsRef = ref(db, `users/${user.id}/${currentSkillConfig.userPath}/learnedConcepts`);
-      const learnedConceptsSnap = await get(learnedConceptsRef);
-      
-      let learnedConceptsData = {};
-      if (learnedConceptsSnap.exists()) {
-        learnedConceptsData = learnedConceptsSnap.val();
-      }
-      
-      // Create concept key
-      const conceptKey = `${selectedConceptDetails.category}:${selectedConceptDetails.name}`;
-      
-      // Update the concept data with new status
-      const updatedConceptData = {
-        ...learnedConceptsData[conceptKey],
-        status: newStatus
+        category,
+        status: conceptData.status || 'Not Set',
+        addedAt: conceptData.addedAt,
+        sources: conceptData.sources || [],
+        appliedIn: completedProjects
+          .filter(project => 
+            project.conceptsUsed && 
+            project.conceptsUsed.some(c => c.concept === concept && c.category === category)
+          )
+          .map(project => ({
+            title: project.title || 'Untitled Project',
+            date: project.completedAt || new Date().toISOString()
+          }))
       };
-      
-      // Update the learnedConcepts object
-      await update(ref(db, `users/${user.id}/${currentSkillConfig.userPath}/learnedConcepts`), {
-        [conceptKey]: updatedConceptData
-      });
-      
-      // Update local state
-      setSelectedConceptDetails(prev => ({
-        ...prev,
-        status: newStatus
-      }));
-      
-      setEditingStatus(false);
-      setNewStatus('');
-    } catch (err) {
-      console.error('Error saving status:', err);
+      onConceptClick(conceptDetails);
     }
-    setSavingStatus(false);
-  };
-
-  // Save new source to Firebase
-  const handleSaveSource = async () => {
-    if (!user || !selectedConceptDetails || !newSource.sourceName || !newSource.sourceLink) return;
-    
-    setAddingSource(true);
-    try {
-      // Validate and format the URL
-      let formattedLink = newSource.sourceLink.trim();
-      if (!formattedLink.startsWith('http://') && !formattedLink.startsWith('https://')) {
-        formattedLink = 'https://' + formattedLink;
-      }
-      
-      const sourceWithFormattedLink = {
-        ...newSource,
-        sourceLink: formattedLink
-      };
-      
-      // Get the existing learnedConcepts object
-      const learnedConceptsRef = ref(db, `users/${user.id}/${currentSkillConfig.userPath}/learnedConcepts`);
-      const learnedConceptsSnap = await get(learnedConceptsRef);
-      
-      let learnedConceptsData = {};
-      if (learnedConceptsSnap.exists()) {
-        learnedConceptsData = learnedConceptsSnap.val();
-      }
-      
-      // Create concept key
-      const conceptKey = `${selectedConceptDetails.category}:${selectedConceptDetails.name}`;
-      
-      // Get existing sources for this concept
-      let existingSources = [];
-      if (learnedConceptsData[conceptKey] && learnedConceptsData[conceptKey].sources) {
-        existingSources = Array.isArray(learnedConceptsData[conceptKey].sources) 
-          ? learnedConceptsData[conceptKey].sources 
-          : Object.values(learnedConceptsData[conceptKey].sources || {});
-      }
-      
-      // Add new source
-      const updatedSources = [...existingSources, sourceWithFormattedLink];
-      
-      // Update the concept data with new sources
-      const updatedConceptData = {
-        ...learnedConceptsData[conceptKey],
-        sources: updatedSources
-      };
-      
-      // Update the learnedConcepts object
-      await update(ref(db, `users/${user.id}/${currentSkillConfig.userPath}/learnedConcepts`), {
-        [conceptKey]: updatedConceptData
-      });
-      
-      // Update local state
-      setSelectedConceptDetails(prev => ({
-        ...prev,
-        learnedFrom: updatedSources
-      }));
-      
-      setShowAddSourceOverlay(false);
-      // Only reset newSource when the overlay is explicitly closed
-      setNewSource({ sourceName: '', sourceLink: '' });
-    } catch (err) {
-      console.error('Error saving source:', err);
-    }
-    setAddingSource(false);
-  };
-
-  // Calculate total STED points
-  const calculateTotalPoints = () => {
-    const projectPoints = completedProjects.length * 10; // 10 points per project
-    const learnedPoints = learnedConcepts.length * 2; // 2 points per learned concept
-    const appliedPoints = learnedConcepts.filter(concept => 
-      isConceptApplied(concept.concept)
-    ).length * 5; // 5 points per applied concept
-    
-    return projectPoints + learnedPoints + appliedPoints;
-  };
-
-  // Fetch points history data
-  const fetchPointsHistory = async () => {
-    if (!user) return;
-    
-    setPointsHistoryLoading(true);
-    try {
-      const history = [];
-      
-      // Add project completions
-      completedProjects.forEach((project, index) => {
-        history.push({
-          id: `project-${index}`,
-          type: 'project',
-          title: project.projectTitle || `Project ${index + 1}`,
-          points: 10,
-          date: project.completedAt || new Date().toISOString(),
-          description: 'Project completion'
-        });
-      });
-      
-      // Add concept learning
-      learnedConcepts.forEach((concept, index) => {
-        history.push({
-          id: `concept-${index}`,
-          type: 'concept',
-          title: concept.concept,
-          points: 2,
-          date: concept.addedAt || new Date().toISOString(),
-          description: `Learned ${concept.category} concept`,
-          category: concept.category
-        });
-      });
-      
-      // Add concept applications
-      learnedConcepts.forEach((concept, index) => {
-        if (isConceptApplied(concept.concept)) {
-          history.push({
-            id: `applied-${index}`,
-            type: 'applied',
-            title: concept.concept,
-            points: 5,
-            date: new Date().toISOString(), // Use current date as approximation
-            description: `Applied ${concept.category} concept in project`,
-            category: concept.category
-          });
-        }
-      });
-      
-      // Sort by date (newest first)
-      history.sort((a, b) => new Date(b.date) - new Date(a.date));
-      
-      setPointsHistory(history);
-    } catch (err) {
-      console.error('Error fetching points history:', err);
-    }
-    setPointsHistoryLoading(false);
   };
 
   // Handle STED points click
@@ -674,11 +429,11 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
       <div className='w-full flex items-center gap-2'>
         <div className="w-full bg-slate-200 rounded-full h-2">
           <div
-            className="bg-purple-600 h-2 rounded-full"
-            style={{ width: `${progressPercentage}%` }}
+            className="h-2 rounded-full"
+            style={{ width: `${progressPercentage}%`, backgroundColor: '#6366F1' }}
           ></div>
         </div>
-        <span className='text-sm font-medium text-slate-600'>{totalLearned}/{totalConcepts}</span>
+        <span className='text-sm font-medium text-slate-600'>{Math.round(progressPercentage)}%</span>
       </div>
 
       <div className='pt-3 flex flex-col space-y-2'>
@@ -974,214 +729,6 @@ function ConceptLearned({ completedProjects = [], skillName = 'python' }) {
             </div>
           </div>
         </ModalPortal>
-      )}
-
-      {/* Concept Details Overlay */}
-      {showConceptDetailsOverlay && selectedConceptDetails && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative max-h-[90vh] overflow-y-auto">
-            <button
-              className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
-              onClick={() => setShowConceptDetailsOverlay(false)}
-            >
-              ×
-            </button>
-            
-            {/* Concept Name */}
-            <div className="mb-8">
-              <div className="flex items-center gap-4 mb-2">
-                <h2 className="text-4xl font-bold text-purple-700">
-                  {selectedConceptDetails.name}
-                </h2>
-                <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium capitalize">
-                  {selectedConceptDetails.category}
-                </span>
-              </div>
-              <div className="flex items-center gap-3 mb-3">
-                {selectedConceptDetails.addedAt && (
-                  <span className="text-sm text-slate-500">
-                    📅 Added on {new Date(selectedConceptDetails.addedAt).toLocaleDateString()} at {new Date(selectedConceptDetails.addedAt).toLocaleTimeString()}
-                  </span>
-                )}
-              </div>
-              
-              {/* Concept Status and Application Status */}
-              <div className="flex items-center justify-between">
-                {/* Application Status */}
-                <div className="flex items-center gap-2">
-                  {selectedConceptDetails.isApplied ? (
-                    <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold border border-green-300">
-                      Applied
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold border border-yellow-300">
-                      Not Applied
-                    </span>
-                  )}
-                </div>
-                
-                {/* Concept Status - Right Side */}
-                <div className="flex items-center gap-2">
-                  {editingStatus ? (
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={newStatus}
-                        onChange={(e) => setNewStatus(e.target.value)}
-                        className="border border-slate-300 rounded px-2 py-1 text-xs"
-                        disabled={savingStatus}
-                  >
-                    <option value="">Select status</option>
-                    <option value="Clear">Clear</option>
-                    <option value="Unclear">Unclear</option>
-                    <option value="confused">Confused</option>
-                  </select>
-                      <button
-                        onClick={handleSaveStatus}
-                        disabled={savingStatus || !newStatus}
-                        className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
-                      >
-                        {savingStatus ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => { setEditingStatus(false); setNewStatus(''); }}
-                        disabled={savingStatus}
-                        className="bg-slate-500 hover:bg-slate-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {selectedConceptDetails.status ? (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold border
-                            ${selectedConceptDetails.status === 'Clear' ? 'bg-green-100 text-green-700 border-green-300' : ''}
-                            ${selectedConceptDetails.status === 'Unclear' ? 'bg-orange-100 text-orange-700 border-orange-300' : ''}
-                            ${selectedConceptDetails.status === 'confused' ? 'bg-red-100 text-red-700 border-red-300' : ''}
-                        `}
-                        >
-                          {selectedConceptDetails.status}
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 text-xs">No status set</span>
-                      )}
-                      <button
-                        onClick={handleEditStatus}
-                        className="text-purple-600 hover:text-purple-800 text-xs underline"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Learned From Section */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <h3 className="text-2xl font-semibold text-slate-800">
-                  📚 Learned From
-                </h3>
-                <button
-                  onClick={handleAddSource}
-                  className="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full transition-colors"
-                  title="Add new source"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {selectedConceptDetails.learnedFrom.map((source, index) => (
-                  <div key={index} className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-lg font-medium text-slate-800 mb-1">
-                          {source.sourceName}
-                        </h4>
-                        <a 
-                          href={formatUrl(source.sourceLink)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-purple-600 hover:text-purple-800 text-sm underline"
-                        >
-                          {source.sourceLink}
-                        </a>
-                      </div>
-                      <div className="ml-4">
-                        <a 
-                          href={formatUrl(source.sourceLink)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          Visit
-                        </a>
-                      </div>
-                    </div>
-                </div>
-              ))}
-            </div>
-              
-              {/* See Applied Details Link - Only for applied concepts */}
-              {selectedConceptDetails.isApplied && (
-                <div className="flex justify-center pt-6 border-t border-slate-200">
-                  {showAppliedDetails ? (
-                    <div className="w-full bg-slate-50 rounded-lg p-4 border border-slate-200">
-                      <div className="text-left mb-5">
-                        <h4 className="text-lg text-slate-800">
-                          <span className='font-semibold'>Applied into:</span> <span className='text-purple-600'>{selectedConceptForDetails?.projects?.length || 0} project</span>
-                        </h4>
-                      </div>
-                      <div className="space-y-2">
-                        {selectedConceptForDetails?.projects?.map((project, index) => (
-                          <div key={index} className="bg-white rounded-lg p-3 border border-slate-200">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h5 className="text-sm font-medium text-slate-800">
-                                  {project.projectTitle}
-                                </h5>
-                                <p className="text-xs text-slate-600">
-                                  {project.completedAt ? (
-                                    new Date(project.completedAt).toString() !== 'Invalid Date' ? (
-                                      `${new Date(project.completedAt).toLocaleDateString()} at ${new Date(project.completedAt).toLocaleTimeString()}`
-                                    ) : (
-                                      'Date not available'
-                                    )
-                                  ) : (
-                                    'Date not available'
-                                  )}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="text-center mt-3">
-                        <button
-                          onClick={() => setShowAppliedDetails(false)}
-                          className="text-purple-600 hover:text-purple-800 text-sm underline cursor-pointer"
-                        >
-                          Hide Details
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleShowAppliedDetails(selectedConceptDetails.name)}
-                      className="text-purple-600 hover:text-purple-800 text-sm underline cursor-pointer"
-                    >
-                      See Applied Details
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Add Source Overlay */}
