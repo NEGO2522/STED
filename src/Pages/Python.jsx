@@ -3,6 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useUser } from "@clerk/clerk-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Doughnut } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(ArcElement, Tooltip, Legend);
 import { getDatabase, ref, get, update, onValue, remove, set } from "firebase/database";
 import { db } from "../firebase";
 import ConceptLearned from "../components/ConceptLearned";
@@ -666,7 +671,7 @@ IMPORTANT INSTRUCTIONS:
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="bg-white rounded-xl shadow-md p-6 ring-1 ring-slate-200 hover:shadow-lg transition-all"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm text-slate-600">Projects Completed</p>
                     <h3 className="text-2xl font-bold text-slate-800 mt-1">
@@ -688,7 +693,7 @@ IMPORTANT INSTRUCTIONS:
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="bg-white rounded-xl shadow-md p-6 ring-1 ring-slate-200 hover:shadow-lg transition-all"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm text-slate-600">Concepts Learned</p>
                     <h3 className="text-2xl font-bold text-slate-800 mt-1">
@@ -708,7 +713,7 @@ IMPORTANT INSTRUCTIONS:
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-1 ring-slate-200"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm text-slate-600">Concepts Applied</p>
                     <h3 className="text-2xl font-bold text-slate-800 mt-1">
@@ -896,10 +901,10 @@ IMPORTANT INSTRUCTIONS:
             )}
 
             {/* Concept Status Box */}
-            <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-150 h-76 flex flex-col justify-between ring-1 ring-slate-200">
+            <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-full max-w-md h-auto min-h-[22rem] flex flex-col justify-between ring-1 ring-slate-200">
               <div>
-              <p className="text-sm text-slate-600">Concepts Status</p>
-              {(() => {
+                <p className="text-sm text-slate-600 font-medium mb-4">Concepts Status</p>
+                {(() => {
                   let learnedConcepts = userData.python?.learnedConcepts || [];
                   if (typeof learnedConcepts === 'object' && !Array.isArray(learnedConcepts)) {
                     learnedConcepts = Object.values(learnedConcepts);
@@ -911,22 +916,77 @@ IMPORTANT INSTRUCTIONS:
                     else if (c.status === 'confused') acc.confused++;
                     return acc;
                   }, { Clear: 0, Unclear: 0, confused: 0 });
+
+                  // Chart data
+                  const chartData = {
+                    labels: ['Clear', 'Unclear', 'Confused'],
+                    datasets: [
+                      {
+                        data: [statusCounts.Clear, statusCounts.Unclear, statusCounts.confused],
+                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
+                        borderWidth: 0,
+                      },
+                    ],
+                  };
+
+                  const chartOptions = {
+                    cutout: '70%',
+                    plugins: {
+                      legend: {
+                        display: false,
+                      },
+                      tooltip: {
+                        callbacks: {
+                          label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100) || 0;
+                            return `${label}: ${value} (${percentage}%)`;
+                          }
+                        }
+                      }
+                    },
+                  };
+
                   return (
-                    <div className="flex flex-col gap-2 mt-2">
-                      <div className="flex items-center gap-2 mt-3 border-b border-slate-200 pb-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                        <span className="text-slate-800 font-normal">Clear</span>
-                        <span className="ml-auto text-slate-800 px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.Clear} / {totalLearned}</span>
+                    <div className="flex flex-col items-center px-2">
+                      {/* Pie Chart - Centered and smaller */}
+                      <div className="relative w-32 h-32 mb-4">
+                        <Doughnut data={chartData} options={chartOptions} />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-xl font-bold text-slate-800">{totalLearned}</div>
+                            <div className="text-xs text-slate-500">Total</div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-2"></span>
-                        <span className="text-slate-800 font-normal">Unclear</span>
-                        <span className="ml-auto text-slate-800 px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.Unclear} / {totalLearned}</span>
-                      </div>
-                      <div className="flex items-center gap-2 pt-2">
-                        <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                        <span className="text-slate-800 font-normal">Confused</span>
-                        <span className="ml-auto text-slate-800 px-2 py-0.5 rounded-full text-lg font-semibold">{statusCounts.confused} / {totalLearned}</span>
+                      
+                      {/* Status List - Centered below the chart */}
+                      <div className="w-full px-2">
+                        <div className="space-y-3 py-1">
+                            <div className="flex items-center justify-between w-full bg-green-50 px-4 py-2 rounded-lg">
+                              <div className="flex items-center">
+                                <span className="w-2 h-2 rounded-full bg-green-500 mr-2 flex-shrink-0"></span>
+                                <span className="text-sm text-slate-800">Clear</span>
+                              </div>
+                              <span className="text-sm font-medium text-slate-900">{statusCounts.Clear}</span>
+                          </div>
+                            <div className="flex items-center justify-between w-full bg-amber-50 px-4 py-2 rounded-lg">
+                              <div className="flex items-center">
+                                <span className="w-2 h-2 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
+                                <span className="text-sm text-slate-800">Unclear</span>
+                              </div>
+                              <span className="text-sm font-medium text-slate-900">{statusCounts.Unclear}</span>
+                          </div>
+                            <div className="flex items-center justify-between w-full bg-red-50 px-4 py-2 rounded-lg">
+                              <div className="flex items-center">
+                                <span className="w-2 h-2 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
+                                <span className="text-sm text-slate-800">Confused</span>
+                              </div>
+                              <span className="text-sm font-medium text-slate-900">{statusCounts.confused}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );

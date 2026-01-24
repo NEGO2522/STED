@@ -34,6 +34,20 @@ function ConceptLearned({
   const [appliedConceptsData, setAppliedConceptsData] = useState([]);
   const [showPointsHistoryOverlay, setShowPointsHistoryOverlay] = useState(false);
   const [newSource, setNewSource] = useState({ sourceName: '', sourceLink: '' });
+  
+  const handleSourceNameChange = (e) => {
+    setNewSource(prev => ({
+      ...prev,
+      sourceName: e.target.value
+    }));
+  };
+  
+  const handleSourceLinkChange = (e) => {
+    setNewSource(prev => ({
+      ...prev,
+      sourceLink: e.target.value
+    }));
+  };
   const [pointsHistory, setPointsHistory] = useState([]);
   const [pointsHistoryLoading, setPointsHistoryLoading] = useState(false);
   const { user } = useUser();
