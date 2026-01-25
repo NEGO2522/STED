@@ -1004,18 +1004,18 @@ IMPORTANT INSTRUCTIONS:
             </div>
             */}
             {/* Project Box */}
-            <motion.div className="bg-gradient-to-br from-[#C642F5] via-[#A633D9] to-[#8C1EB6] w-full rounded-2xl shadow-2xl overflow-hidden lg:sticky lg:top-28 ring-1 ring-white/10">
+            <motion.div className="w-full bg-white rounded-2xl shadow-md overflow-hidden lg:sticky lg:top-28 ring-1 ring-slate-200">
               {/* Header Section */}
-              <div className="bg-white/10 backdrop-blur-sm border-b border-white/20 px-6 py-4">
+              <div className="backdrop-blur-sm border-b border-white/20 px-6 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="bg-white/20 rounded-full p-2">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white ring-1 ring-slate-200 rounded p-2">
+                    <svg className="w-6 h-6 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-white tracking-tight">Projects</h2>
-                    <p className="text-white/80 text-sm">Start building amazing projects</p>
+                    <h2 className="text-2xl text-left font-bold tracking-tight">Projects</h2>
+                    <p className="text-[#6D7D92] text-sm">Start building amazing projects</p>
                   </div>
                 </div>
               </div>
@@ -1040,13 +1040,13 @@ IMPORTANT INSTRUCTIONS:
                     <button
                       onClick={handleNextProjectClick}
                       disabled={isGeneratingProject}
-                      className={`group w-full bg-gradient-to-r from-purple-600/90 to-purple-700/90 hover:from-purple-600 hover:to-purple-700 border-2 border-purple-400/30 hover:border-purple-300/50 rounded-xl p-5 transition-all duration-300 ${
-                        isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md'
+                      className={`group w-full ring-1 ring-slate-200 rounded-xl p-5 transition-all duration-300 ${
+                        isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]'
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
+                          <div className="bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform">
                             {isGeneratingProject ? (
                               <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -1059,16 +1059,16 @@ IMPORTANT INSTRUCTIONS:
                             )}
                           </div>
                           <div className="text-left">
-                            <h3 className="text-white font-bold text-lg">
+                            <h3 className="text-black font-bold text-lg">
                               {isGeneratingProject ? 'Generating...' : 'Next Project'}
                             </h3>
-                            <p className="text-white/70 text-sm">
+                            <p className="text-slate-500 text-sm">
                               {isGeneratingProject ? 'Finding the perfect project for you' : 'Discover new challenges'}
                             </p>
                           </div>
                         </div>
                         {!isGeneratingProject && (
-                          <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-6 h-6 text-slate-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                           </svg>
                         )}
@@ -1078,22 +1078,22 @@ IMPORTANT INSTRUCTIONS:
                     {/* Custom Project Button */}
                     <button
                       onClick={handleCustomProjectClick}
-                      className="group w-full bg-gradient-to-r from-purple-500/90 to-purple-600/90 hover:from-purple-500 hover:to-purple-600 border-2 border-purple-300/40 hover:border-purple-200/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="group w-full ring-1 ring-slate-200 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
+                          <div className="bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </div>
                           <div className="text-left">
-                            <h3 className="text-white font-bold text-lg">Custom Project</h3>
-                            <p className="text-white/70 text-sm">Build your own project idea</p>
+                            <h3 className="text-black font-bold text-lg">Custom Project</h3>
+                            <p className="text-slate-500 text-sm">Build your own project idea</p>
                           </div>
                         </div>
-                        <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 text-slate-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
