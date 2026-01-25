@@ -606,7 +606,7 @@ IMPORTANT INSTRUCTIONS:
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#6366F1] border-t-transparent rounded-full animate-spin"></div>
           <div className="text-slate-600 text-base">
             Loading your dashboard...
           </div>
@@ -618,7 +618,7 @@ IMPORTANT INSTRUCTIONS:
   return (
     <div className="min-h-screen bg-slate-50 relative pt-20">
       {/* Professional top accent line */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-purple-600" />
+      <div className="absolute top-0 left-0 w-full h-1 bg-[#6366F1]" />
 
       {/* Navbar */}
       <div className="sticky top-1 z-50 bg-white shadow-sm">
@@ -638,7 +638,7 @@ IMPORTANT INSTRUCTIONS:
           </div>
           <div className="flex gap-4 mt-4 md:mt-0">
             <button
-              className="bg-purple-600 hover:bg-purple-700 active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
+              className="bg-[#6366F1] hover:bg-[#4f46e5] active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
               onClick={() => navigate('/python/project')}
             >
               Continue Project
@@ -658,7 +658,7 @@ IMPORTANT INSTRUCTIONS:
           {/* Header Section */}
            
               <div className="text-left mt-6">
-                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-slate-800 via-purple-800 to-indigo-700 bg-clip-text text-transparent tracking-tight">Python</h1>
+                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-slate-800 via-[#6366F1] to-indigo-700 bg-clip-text text-transparent tracking-tight">Python</h1>
             </div>
           
 
@@ -678,7 +678,7 @@ IMPORTANT INSTRUCTIONS:
                     {completedProjects.length}
                     </h3>
                   </div>
-                  <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-3 rounded-full ring-1 ring-purple-100">
+                  <div className="bg-gradient-to-br from-[#f0f1ff] to-[#e0e1ff] p-3 rounded-full ring-1 ring-[#e0e1ff]">
                     <span className=""><img className="w-7" src={Project} alt="" /></span>
                   </div>
                 </div>
@@ -765,10 +765,10 @@ IMPORTANT INSTRUCTIONS:
                   {/* Concept Name */}
                   <div className="mb-8">
                     <div className="flex items-center gap-4 mb-2">
-                      <h2 className="text-4xl font-bold text-purple-700">
+                      <h2 className="text-4xl font-bold text-[#4f46e5]">
                         {selectedConceptDetails.name}
                       </h2>
-                      <span className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                      <span className="inline-block bg-[#e0e1ff] text-[#4f46e5] px-3 py-1 rounded-full text-sm font-medium capitalize">
                         {selectedConceptDetails.category}
                       </span>
                     </div>
@@ -1108,7 +1108,7 @@ IMPORTANT INSTRUCTIONS:
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                          <div className="bg-gradient-to-br bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
@@ -1127,11 +1127,11 @@ IMPORTANT INSTRUCTIONS:
                     {/* Custom Project Button */}
                     <button
                       onClick={handleCustomProjectClick}
-                      className="group w-full bg-gradient-to-r from-purple-500/90 to-purple-600/90 hover:from-purple-500 hover:to-purple-600 border-2 border-purple-300/40 hover:border-purple-200/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="group w-full bg-gradient-to-r bg-[#6366F1] hover:bg-[#6366F1]/90 border-2 border-[#c0c1ff]/40 hover:border-[#d0d1ff]/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
+                          <div className="bg-gradient-to-br bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -1158,7 +1158,7 @@ IMPORTANT INSTRUCTIONS:
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg p-3 group-hover:scale-110 transition-transform">
+                        <div className="bg-gradient-to-br bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform">
                           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
@@ -1229,7 +1229,7 @@ IMPORTANT INSTRUCTIONS:
                                 <div className="group">
                                   <button
                                     onClick={handleOverlayNextClick}
-                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-purple-200 bg-white/80 hover:bg-purple-50 text-purple-600 hover:text-purple-700 text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#d0d1ff] bg-white/80 hover:bg-[#f0f1ff] text-[#6366F1] hover:text-[#4f46e5] text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                                   >
                                     <img 
                                       className="w-5 h-5" 
@@ -1244,25 +1244,25 @@ IMPORTANT INSTRUCTIONS:
                                 </div>
                               </div>
                               
-                              <h2 className="text-4xl font-bold mb-4 text-purple-700 bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                              <h2 className="text-4xl font-bold mb-4 text-[#4f46e5] bg-gradient-to-r from-[#4f46e5] to-[#6366F1] bg-clip-text text-transparent">
                                 {nextProject.title}
                               </h2>
-                              <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-purple-700 mx-auto rounded-full"></div>
+                              <div className="w-24 h-1 bg-[#6366F1] mx-auto rounded-full"></div>
                             </div>
                             
-                            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 mb-8 border border-purple-100">
+                            <div className="bg-gradient-to-br from-white to-[#f0f1ff] rounded-2xl p-8 mb-8 border border-[#e0e1ff]">
                               <p className="text-gray-700 text-lg leading-relaxed mb-6">{nextProject.description}</p>
                               
-                              <div className="bg-white rounded-xl p-6 border border-purple-200">
-                                <h3 className="text-lg font-semibold text-purple-700 mb-3 flex items-center gap-2">
-                                  <span className="text-purple-600">📚</span>
+                              <div className="bg-white rounded-xl p-6 border border-[#d0d1ff]">
+                                <h3 className="text-lg font-semibold text-[#4f46e5] mb-3 flex items-center gap-2">
+                                  <span className="text-[#6366F1]">📚</span>
                                   Required Concepts
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
                                   {(nextProject.Concept || nextProject.conceptsUsed || 'Python Basics').split(', ').map((concept, index) => (
                                     <span
                                       key={index}
-                                      className="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium border border-purple-200"
+                                      className="inline-block bg-[#e0e1ff] text-[#4f46e5] px-4 py-2 rounded-full text-sm font-medium border border-[#d0d1ff]"
                                     >
                                       {concept.trim()}
                                     </span>
@@ -1310,7 +1310,7 @@ IMPORTANT INSTRUCTIONS:
                                 alert('Failed to save project. Please try again.');
                               }
                             }}
-                            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 active:scale-[0.98] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
+                            className="flex-1 bg-gradient-to-r from-[#4f46e5] to-[#4338ca] hover:from-[#4338ca] hover:to-[#3730a3] active:scale-[0.98] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
                           >
                             🚀 Start Project
                           </button>
@@ -1329,7 +1329,7 @@ IMPORTANT INSTRUCTIONS:
                           if (loading) return (
                             <div className="flex items-center justify-center py-16">
                               <div className="text-center">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6366F1] mx-auto mb-4"></div>
                                 <div className="text-xl text-gray-600">Loading project recommendation...</div>
                       </div>
                     </div>
@@ -1356,7 +1356,7 @@ IMPORTANT INSTRUCTIONS:
                                       <div className="group">
                                         <button
                                           onClick={getNextProject}
-                                          className="text-purple-600 hover:text-purple-700 text-sm font-semibold transition-colors relative"
+                                          className="text-[#6366F1] hover:text-[#4f46e5] text-sm font-semibold transition-colors relative"
                                           disabled={generatingProject}
                                         >
                                           <img 
@@ -1374,25 +1374,25 @@ IMPORTANT INSTRUCTIONS:
                                     </div>
                                   )}
                                   
-                                  <h2 className="text-4xl font-bold mb-4 text-purple-700 bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
+                                  <h2 className="text-4xl font-bold mb-4 text-[#4f46e5] bg-gradient-to-r from-[#4f46e5] to-[#6366F1] bg-clip-text text-transparent">
                                     {recommendedProject.title}
                                   </h2>
-                                  <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-purple-700 mx-auto rounded-full"></div>
+                                  <div className="w-24 h-1 bg-[#6366F1] mx-auto rounded-full"></div>
                                 </div>
                                 
-                                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-8 mb-8 border border-purple-100">
+                                <div className="bg-gradient-to-br from-white to-[#f0f1ff] rounded-2xl p-8 mb-8 border border-[#e0e1ff]">
                                   <p className="text-gray-700 text-lg leading-relaxed mb-6">{recommendedProject.description}</p>
                                   
-                                  <div className="bg-white rounded-xl p-6 border border-purple-200">
-                                    <h3 className="text-lg font-semibold text-purple-700 mb-3 flex items-center gap-2">
-                                      <span className="text-purple-600">📚</span>
+                                  <div className="bg-white rounded-xl p-6 border border-[#d0d1ff]">
+                                    <h3 className="text-lg font-semibold text-[#4f46e5] mb-3 flex items-center gap-2">
+                                      <span className="text-[#6366F1]">📚</span>
                                       Required Concepts
                         </h3>
                                     <div className="flex flex-wrap gap-2">
                                       {recommendedProject.Concept.split(', ').map((concept, index) => (
                                         <span
                               key={index}
-                                          className="inline-block bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium border border-purple-200"
+                                          className="inline-block bg-[#e0e1ff] text-[#4f46e5] px-4 py-2 rounded-full text-sm font-medium border border-[#d0d1ff]"
                             >
                                           {concept.trim()}
                                         </span>
@@ -1435,7 +1435,7 @@ IMPORTANT INSTRUCTIONS:
                                     setShowProjectOverlay(false);
                                     navigate('/python/project');
                                   }}
-                                  className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                                  className="flex-1 bg-gradient-to-r from-[#4f46e5] to-[#4338ca] hover:from-[#4338ca] hover:to-[#3730a3] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
                                   disabled={generatingProject}
                         >
                           {generatingProject ? (
@@ -1483,15 +1483,15 @@ IMPORTANT INSTRUCTIONS:
                   onClick={() => handleProjectClick(project)}
                 >
                     <div className="flex-1">
-                    <div className="text-2xl font-semibold text-slate-800 group-hover:text-purple-700 transition-colors">{project.projectTitle || project.key}</div>
+                    <div className="text-2xl font-semibold text-slate-800 group-hover:text-[#4f46e5] transition-colors">{project.projectTitle || project.key}</div>
                     <div className="text-slate-500 text-sm mt-2">Completed: {new Date(project.completedAt).toLocaleDateString()}</div>
                     </div>
                     <div className="flex-none flex flex-col items-end gap-2 md:gap-3">
-                    <span className="inline-block text-slate-700/80 px-3 py-1 text-lg group-hover:text-purple-700 transition-colors">Click to view details</span>
+                    <span className="inline-block text-slate-700/80 px-3 py-1 text-lg group-hover:text-[#4f46e5] transition-colors">Click to view details</span>
                     {project.publicUrl && (
                       <div className="flex gap-2 mt-2">
                         <button
-                          className="px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 active:scale-[0.98] text-xs font-semibold border border-purple-200 transition-all"
+                          className="px-3 py-1 bg-[#e0e1ff] text-[#4f46e5] rounded hover:bg-purple-200 active:scale-[0.98] text-xs font-semibold border border-[#d0d1ff] transition-all"
                           onClick={e => {
                             e.stopPropagation();
                             const url = project.publicUrl.replace('/public/python-project/', '/python-project/');
@@ -1542,7 +1542,7 @@ IMPORTANT INSTRUCTIONS:
             >
               <button
                 onClick={handleCloseProjectDetails}
-                className="absolute top-6 right-8 text-slate-700 hover:text-purple-600 text-4xl font-bold z-10 transition-colors"
+                className="absolute top-6 right-8 text-slate-700 hover:text-[#6366F1] text-4xl font-bold z-10 transition-colors"
               >
                 ×
               </button>
@@ -1550,12 +1550,12 @@ IMPORTANT INSTRUCTIONS:
               <div className="p-8 overflow-y-auto max-h-[90vh]">
                 {/* Project Header */}
                 <div className="mb-8 border-b border-gray-200 pb-6">
-                  <h2 className="text-3xl font-bold mb-6 text-purple-700">{selectedProject.projectTitle}</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-[#4f46e5]">{selectedProject.projectTitle}</h2>
                   
                   {/* Concepts Used Section */}
-                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
-                    <h3 className="text-lg font-semibold text-purple-700 mb-4 flex items-center gap-2">
-                      <span className="text-purple-600">📚</span>
+                  <div className="bg-gradient-to-r from-white to-[#f0f1ff] rounded-xl p-6 border border-[#d0d1ff]">
+                    <h3 className="text-lg font-semibold text-[#4f46e5] mb-4 flex items-center gap-2">
+                      <span className="text-[#6366F1]">📚</span>
                       Concepts Used
                     </h3>
                     <div className="flex flex-wrap gap-3">
@@ -1563,7 +1563,7 @@ IMPORTANT INSTRUCTIONS:
                         selectedProject.conceptUsed.split(', ').map((concept, index) => (
                           <span
                             key={index}
-                            className="inline-block bg-white text-purple-700 px-4 py-2 rounded-full text-sm font-medium border border-purple-300 shadow-sm hover:shadow-md transition-shadow"
+                            className="inline-block bg-white text-[#4f46e5] px-4 py-2 rounded-full text-sm font-medium border border-[#c0c1ff] shadow-sm hover:shadow-md transition-shadow"
                           >
                             {concept.trim()}
                           </span>
@@ -1579,7 +1579,7 @@ IMPORTANT INSTRUCTIONS:
                   <details className="group">
                     <summary className="flex items-center justify-between cursor-pointer p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                       <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                        <span className="text-purple-600">💻</span>
+                        <span className="text-[#6366F1]">💻</span>
                         Project Code
                       </h3>
                       <svg 
@@ -1605,7 +1605,7 @@ IMPORTANT INSTRUCTIONS:
                     <details className="group">
                       <summary className="flex items-center justify-between cursor-pointer p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                          <span className="text-purple-600">🖥️</span>
+                          <span className="text-[#6366F1]">🖥️</span>
                           Terminal Output
                         </h3>
                         <svg 
@@ -1627,21 +1627,21 @@ IMPORTANT INSTRUCTIONS:
                 )}
 
                 {/* Project Statistics */}
-                <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-100">
-                  <h3 className="text-xl font-semibold mb-4 text-purple-700 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-white to-[#f0f1ff] rounded-xl p-6 border border-[#e0e1ff]">
+                  <h3 className="text-xl font-semibold mb-4 text-[#4f46e5] flex items-center gap-2">
                     <span>📊</span>
                     Project Statistics
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                    <div className="bg-white rounded-lg p-4 border border-[#d0d1ff]">
                       <div className="text-sm text-gray-600 mb-1">Code Length</div>
-                      <div className="text-lg font-semibold text-purple-700">
+                      <div className="text-lg font-semibold text-[#4f46e5]">
                         {selectedProject.code ? selectedProject.code.split('\n').length : 0} lines
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                    <div className="bg-white rounded-lg p-4 border border-[#d0d1ff]">
                       <div className="text-sm text-gray-600 mb-1">Completion Date</div>
-                      <div className="text-lg font-semibold text-purple-700">
+                      <div className="text-lg font-semibold text-[#4f46e5]">
                         {new Date(selectedProject.completedAt).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'long',
@@ -1692,7 +1692,7 @@ IMPORTANT INSTRUCTIONS:
               <h2 className="text-2xl font-bold mb-2 text-slate-800">Coming soon...</h2>
               <p className="text-slate-600 mb-4">Custom projects are on the way! Stay tuned for updates.</p>
               <button
-                className="mt-2 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold shadow"
+                className="mt-2 px-6 py-2 bg-[#6366F1] hover:bg-[#4f46e5] text-white rounded-lg font-semibold shadow"
                 onClick={() => setShowComingSoon(false)}
               >
                 OK
@@ -1716,29 +1716,29 @@ IMPORTANT INSTRUCTIONS:
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-white/90 backdrop-blur-xl border border-purple-200/70 rounded-3xl shadow-2xl px-16 py-8 max-w-3xl w-full max-h-[85vh] text-left relative flex flex-col ring-1 ring-slate-200/60"
+              className="bg-white/90 backdrop-blur-xl border border-[#d0d1ff]/70 rounded-3xl shadow-2xl px-16 py-8 max-w-3xl w-full max-h-[85vh] text-left relative flex flex-col ring-1 ring-slate-200/60"
               onClick={e => e.stopPropagation()}
             >
               <button
-                className="absolute top-5 right-7 text-purple-400 hover:text-purple-700 text-3xl font-extrabold bg-white/70 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border border-purple-100 transition-colors"
+                className="absolute top-5 right-7 text-[#818cf8] hover:text-[#4f46e5] text-3xl font-extrabold bg-white/70 rounded-full w-12 h-12 flex items-center justify-center shadow-lg border border-[#e0e1ff] transition-colors"
                 onClick={() => setShowCustomProjectOverlay(false)}
                 aria-label="Close"
               >
                 ×
               </button>
               <div className="flex-shrink-0">
-                <h2 className="text-3xl font-extrabold mb-6 text-purple-800 tracking-tight drop-shadow">Find custom projects</h2>
+                <h2 className="text-3xl font-extrabold mb-6 text-[#4f46e5] tracking-tight drop-shadow">Find custom projects</h2>
               </div>
               
               <div className="flex-1 overflow-y-auto">
                 <div className="mb-6">
-                  <label className="block text-lg font-semibold text-purple-700 mb-3">Concepts Used</label>
-                  <div className="flex flex-wrap gap-3 min-h-[3.5rem] max-h-48 overflow-y-auto bg-purple-50/60 rounded-xl p-3 mb-3 border border-purple-200/80">
+                  <label className="block text-lg font-semibold text-[#4f46e5] mb-3">Concepts Used</label>
+                  <div className="flex flex-wrap gap-3 min-h-[3.5rem] max-h-48 overflow-y-auto bg-[#f0f1ff] rounded-xl p-3 mb-3 border border-[#d0d1ff]/80">
                     {selectedCustomConcepts.length === 0 && (
-                      <span className="text-purple-300 text-base">No concepts selected</span>
+                      <span className="text-[#a5b4fc] text-base">No concepts selected</span>
                     )}
                     {selectedCustomConcepts.map((concept, i) => (
-                      <div key={i} className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-400 to-blue-400 text-white border-2 border-purple-300 text-base font-semibold shadow-md group hover:from-purple-500 hover:to-blue-500 transition-all">
+                      <div key={i} className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-[#6366F1] to-[#4f46e5] text-white border-2 border-[#c0c1ff] text-base font-semibold shadow-md group hover:from-[#4f46e5] hover:to-[#4338ca] transition-all">
                         <span className="mr-2">{concept}</span>
                         <button
                           onClick={() => {
@@ -1765,7 +1765,7 @@ IMPORTANT INSTRUCTIONS:
                 
               </div>
               
-              <div className="flex-shrink-0 border-t border-purple-200 pt-6">
+              <div className="flex-shrink-0 border-t border-[#d0d1ff] pt-6">
                 <div className="flex justify-end gap-4">
                   <button
                     className="px-6 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 active:scale-[0.98] text-slate-700 font-semibold text-base shadow"
