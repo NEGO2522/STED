@@ -13,11 +13,7 @@ function Navbar() {
     setActivePath(location.pathname);
   }, [location]);
 
-  const navItems = [
-    { path: '/all-skills', label: 'All Skills' },
-    { path: isSignedIn ? '/profile' : '/login', label: 'My Learning' },
-    { path: '/home', label: 'Dashboard' },
-  ];
+  const navItems = [];
 
   const isActive = (path) => {
     if (path === '/start') return activePath === '/' || activePath === '/start';
@@ -56,10 +52,10 @@ function Navbar() {
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <div className="text-sm font-medium text-gray-700 leading-tight">{user?.fullName || user?.username || 'User'}</div>
-              <div className="text-xs text-gray-500">View Profile</div>
+              <Link to="/profile" className="text-xs text-gray-500 hover:text-indigo-600 transition-colors">View Profile</Link>
             </div>
             <div className="ml-1">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton afterSignOutUrl="/start" signInUrl="/login" />
             </div>
           </div>
         ) : (

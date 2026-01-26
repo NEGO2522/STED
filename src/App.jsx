@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate, Outlet } from 'react-router-dom';
 import './App.css';
 import Start from './Pages/Start';
 import Login from './Pages/Login';
@@ -22,7 +22,7 @@ import Profile from './Pages/Profile';
 import Task from './PythonProject/Task';
 import UserProfile from './Pages/UserProfile';
 import PublicPythonProject from './PythonProject/PublicPythonProject';
-import { SignedIn, SignedOut, useUser, SignIn, SignUp } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, useUser, SignIn, SignUp, UserButton } from '@clerk/clerk-react';
 import Progress from './Pages/Progress';
 
 // Component to handle authentication callbacks
@@ -33,8 +33,8 @@ const ClerkAuthCallback = () => {
   useEffect(() => {
     if (isLoaded) {
       if (isSignedIn) {
-        // Redirect to home after successful sign-in
-        navigate('/home');
+        // Redirect to python page after successful sign-in
+        navigate('/python');
       } else {
         // If not signed in, redirect to sign-in page
         navigate('/login');
@@ -111,25 +111,44 @@ function AppContent() {
         <Route path="/login" element={<SignedOut><Login /></SignedOut>} />
         <Route path="/signup" element={<SignedOut><Signup /></SignedOut>} />
 
-        <Route path="/home" element={<SignedIn><Home /></SignedIn>} />
-        <Route path="/public-speaking" element={<SignedIn><PublicSpeaking /></SignedIn>} />
-        <Route path="/data-science" element={<SignedIn><DataScience /></SignedIn>} />
-        <Route path="/python" element={<SignedIn><Python /></SignedIn>} />
-        <Route path="/powerbi" element={<SignedIn><PowerBi /></SignedIn>} />
-        <Route path="/pandas" element={<SignedIn><Pandas /></SignedIn>} />  
-        <Route path="/python/project" element={<SignedIn><Project /></SignedIn>} />
-        <Route path="/pandas/project" element={<SignedIn><PandasProject /></SignedIn>} />
-        <Route path="/All-skills" element={<SignedIn><AllSkills /></SignedIn>} />
-        <Route path="/profile" element={<SignedIn><Profile /></SignedIn>} />
-        <Route path="/progress" element={<SignedIn><Progress /></SignedIn>} />
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/home" element={<Python />} />
+          <Route path="/public-speaking" element={<PublicSpeaking />} />
+          <Route path="/data-science" element={<DataScience />} />
+          <Route path="/python" element={<Python />} />
+          <Route path="/powerbi" element={<PowerBi />} />
+          <Route path="/pandas" element={<Pandas />} />
+          <Route path="/python/project" element={<Project />} />
+          <Route path="/pandas/project" element={<PandasProject />} />
+          <Route path="/All-skills" element={<AllSkills />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/task/:taskId" element={<Task />} />
+        </Route>
         
+        {/* Public profile routes */}
         <Route path="/userprofile/:id" element={<UserProfile />} />
         <Route path="/python-project/:userId/:projectId" element={<PublicPythonProject />} />
-        <Route path="/task/:taskId" element={<SignedIn><Task /></SignedIn>} />
+        
       </Routes>
     </>
   );
 }
+
+// Protected Route Wrapper
+const ProtectedRoute = () => {
+  return (
+    <>
+      <SignedIn>
+        <Outlet />
+      </SignedIn>
+      <SignedOut>
+        <Navigate to="/login" replace />
+      </SignedOut>
+    </>
+  );
+};
 
 // Main App component
 const App = () => {

@@ -23,11 +23,6 @@ function Start() {
   const navigate = useNavigate();
   const [hoveredSkill, setHoveredSkill] = useState(null);
 
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      navigate('/login');
-    }
-  }, [isLoaded, isSignedIn, navigate]);
 
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
