@@ -211,7 +211,52 @@ function Statement({ userCode, projectConfig, taskCheckStatus, setTaskCheckStatu
       const subtaskResults = [];
       for (let i = 0; i < subtasks.length; i++) {
         const subtask = subtasks[i];
-        const prompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nAnalyze if this subtask is fully implemented in the user's code.\n\nRespond in this exact format:\nStatus: [true/false]\nReason: [Your explanation here]\n\nIMPORTANT:\n- Respond with "Status: true" or "Status: false" on the first line\n- Then provide the reason in the next line starting with "Reason:"\n- The reason must match the status\n- Be specific about what's implemented or missing\n- Focus only on the requirements of this subtask`;
+        const prompt = `User's Code:
+
+${userCode}
+
+Subtask to evaluate: "${subtask}"
+
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+You are evaluating ONLY this specific subtask. Do NOT consider any future subtasks or functionality that comes after this one in the sequence.
+
+EVALUATION PRINCIPLES:
+1. Parse the subtask statement carefully and identify ALL requirements it contains
+2. Check if ALL parts of THIS subtask are implemented (not just some parts)
+3. Do NOT check for functionality from future subtasks
+4. Do NOT mark incomplete because future subtasks are missing
+5. Each subtask is INDEPENDENT - evaluate it on its own merits
+
+HOW TO EVALUATE:
+- If subtask says "Create X to do Y", you need BOTH X created AND Y functionality
+- If subtask says "Do X", you only need X done
+- If subtask says "Handle X", you need X handling logic
+- Evaluate what THIS subtask explicitly asks for, nothing more, nothing less
+
+WHAT NOT TO DO:
+- DO NOT penalize for missing future subtasks
+- DO NOT add extra requirements not mentioned in THIS subtask
+- DO NOT consider code quality, optimization, or completeness of other features
+
+EXAMPLE LOGIC (generic, applies to any subtask):
+- Subtask: "Create a loop to display options"
+  ✓ Complete if: loop exists AND options are displayed
+  ✗ Incomplete if: only loop exists (without display) OR only display exists (without loop)
+  ✓ Still complete even if: input handling missing (different subtask)
+
+- Subtask: "Get user input"
+  ✓ Complete if: input is captured
+  ✗ Incomplete if: no input captured
+  ✓ Still complete even if: validation missing (different subtask)
+
+Respond in this exact format:
+Status: [true/false]
+Reason: [Your explanation - mention ONLY what THIS subtask requires]
+
+The reason must:
+- Only address THIS specific subtask's requirements
+- NOT mention future subtasks or unrelated functionality
+- Be specific about what's implemented or missing for THIS subtask ONLY`;
         let isSubtaskComplete = false;
         let reason = '';
         try {

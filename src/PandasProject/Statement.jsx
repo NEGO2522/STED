@@ -83,7 +83,29 @@ function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheck
       const subtaskResults = [];
       for (let i = 0; i < subtasks.length; i++) {
         const subtask = subtasks[i];
-        const prompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIs this subtask clearly implemented in the user's code? Respond only with true or false.\nIMPORTANT: Ignore whether other subtasks are complete or not. Only check if THIS subtask is implemented, regardless of the rest of the code.\nIMPORTANT: Only consider the subtask statement itself. Make your decision strictly according to the subtask statement. Do not overthink or infer extra requirements.`;
+        const prompt = `User's Code:
+
+${userCode}
+
+Subtask to evaluate: "${subtask}"
+
+CRITICAL INSTRUCTIONS - READ CAREFULLY:
+You are evaluating ONLY this specific subtask. Do NOT consider any future subtasks or functionality that comes after this one in the sequence.
+
+EVALUATION RULES:
+1. Evaluate ONLY what THIS specific subtask requires - nothing more, nothing less
+2. DO NOT check if future subtasks are implemented
+3. DO NOT mark this subtask as incomplete because future functionality is missing
+4. Each subtask is INDEPENDENT and should be evaluated on its own merits
+5. If a subtask asks to "create a DataFrame", ONLY check if a DataFrame is created
+6. If a subtask asks to "filter data", ONLY check if filtering is done
+7. If a subtask asks to "handle missing values", ONLY then check for missing value handling
+
+Respond only with true or false.
+- true: if THIS subtask's specific requirement is implemented
+- false: if THIS subtask's specific requirement is NOT implemented
+
+DO NOT consider future subtasks when evaluating this one.`;
         let isSubtaskComplete = false;
         let reason = '';
         try {
@@ -103,7 +125,20 @@ function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheck
           if (normalized.startsWith('true')) isSubtaskComplete = true;
           else if (normalized.startsWith('false')) isSubtaskComplete = false;
           // Now get the reason/explanation
-          const reasonPrompt = `User's Code:\n\n${userCode}\n\nSubtask: ${subtask}\n\nIf this subtask is not completed, explain why in one sentence. If it is completed, explain why it is considered complete.\nIMPORTANT: Ignore whether other subtasks are complete or not. Only check if THIS subtask is implemented, regardless of the rest of the code.\nIMPORTANT: Only consider the subtask statement itself. Make your decision strictly according to the subtask statement. Do not overthink or infer extra requirements.`;
+          const reasonPrompt = `User's Code:
+
+${userCode}
+
+Subtask: "${subtask}"
+
+Provide a brief explanation (1-2 sentences) about whether this subtask is implemented.
+
+CRITICAL: 
+- Only mention what THIS specific subtask requires
+- DO NOT mention future subtasks or missing functionality from later steps
+- Focus ONLY on this subtask's requirements
+- If complete, explain what makes it complete for THIS subtask only
+- If incomplete, explain what's missing for THIS subtask only (not future subtasks)`;
           const reasonResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

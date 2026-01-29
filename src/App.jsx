@@ -118,9 +118,9 @@ function AppContent() {
           <Route path="/data-science" element={<DataScience />} />
           <Route path="/python" element={<Python />} />
           <Route path="/powerbi" element={<PowerBi />} />
-          <Route path="/pandas" element={<Pandas />} />
+          <Route path="/datascience" element={<Pandas />} />
           <Route path="/python/project" element={<Project />} />
-          <Route path="/pandas/project" element={<PandasProject />} />
+          <Route path="/datascience/project" element={<PandasProject />} />
           <Route path="/All-skills" element={<AllSkills />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/progress" element={<Progress />} />
