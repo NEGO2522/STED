@@ -736,8 +736,8 @@ IMPORTANT INSTRUCTIONS:
 
           {/* Main Content Grid */}
           <div className="flex flex-col lg:flex-row gap-6 mt-13 items-start">
-            {/* Learning Resources */}
-            <motion.div
+            {/* Learning Resources - Commented out */}
+            {/* <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
@@ -753,7 +753,7 @@ IMPORTANT INSTRUCTIONS:
                   setNewStatus(conceptDetails.status || '');
                 }}
               />
-            </motion.div>
+            </motion.div> */}
 
             {/* Concept Details Overlay */}
             {showConceptDetailsOverlay && selectedConceptDetails && (
@@ -904,8 +904,8 @@ IMPORTANT INSTRUCTIONS:
               </div>
             )}
 
-            {/* Concept Status Box */}
-            <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-full max-w-md h-auto min-h-[22rem] flex flex-col justify-between ring-1 ring-slate-200">
+            {/* Concept Status Box - Commented out */}
+            {/* <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-full max-w-md h-auto min-h-[22rem] flex flex-col justify-between ring-1 ring-slate-200">
               <div>
                 <p className="text-sm text-slate-600 font-medium mb-4">Concepts Status</p>
                 {(() => {
@@ -955,7 +955,6 @@ IMPORTANT INSTRUCTIONS:
 
                   return (
                     <div className="flex flex-col items-center px-2">
-                      {/* Pie Chart - Centered and smaller */}
                       <div className="relative w-32 h-32 mb-4">
                         <Doughnut data={chartData} options={chartOptions} />
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -966,7 +965,6 @@ IMPORTANT INSTRUCTIONS:
                         </div>
                       </div>
                       
-                      {/* Status List - Centered below the chart */}
                       <div className="w-full px-2">
                         <div className="space-y-3 py-1">
                             <div className="flex items-center justify-between w-full bg-green-50 px-4 py-2 rounded-lg">
@@ -996,7 +994,7 @@ IMPORTANT INSTRUCTIONS:
                   );
                 })()}
               </div>
-            </motion.div>
+            </motion.div> */}
           </div>
 
           {/* --- Project/Assignment Grid --- */}

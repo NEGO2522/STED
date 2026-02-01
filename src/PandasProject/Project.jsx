@@ -14,13 +14,13 @@ function Project() {
   return (
     <div className="flex h-screen pt-12 p-3 bg-[#0F0F0F] w-screen">
       {/* Left side - Colab Panel */}
-      <div className="w-280 border border-white h-full text-white border-white">
+      <div className="w-350 border border-white h-full text-white border-white">
         <Colab setUserCode={setUserCode}/>
         </div>
       {/* Right side - Statement / AI Panel */}
       <div
         className="flex-1 h-full text-white p-5 border border-white"
-        style={{ backgroundColor: "rgb(24, 24, 27)", minWidth: 0, borderRadius: 0 }}
+        style={{ backgroundColor: "rgb(24, 24, 27)", minWidth: 500, borderRadius: 0 }}
       >
         {/* Toggle Buttons */}
         <div className="flex gap-4 mb-4">

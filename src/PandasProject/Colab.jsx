@@ -312,68 +312,6 @@ function Colab({ setUserCode }) {
           <div>
             <h3 className="text-lg font-semibold mb-2 text-purple-200">Notebook Preview</h3>
             {renderNotebookCells(notebookCells)}
-            {/* Subtask check UI */}
-            {projectConfig && projectConfig.tasks && (
-              <div className="mt-8">
-                <h4 className="text-base font-bold mb-2 text-purple-300">Subtask Checker</h4>
-                {Object.entries(projectConfig.tasks).map(([taskKey, task]) => {
-                  const isChecking = checking[taskKey];
-                  const taskResult = checkResults[taskKey];
-                  const errorMsg = checkError[taskKey];
-                  // Determine if all subtasks are done
-                  const allDone = taskResult && task.subtasks && task.subtasks.every(sub => taskResult.completed?.includes(sub));
-                  return (
-                    <div key={taskKey} className="mb-4 p-4 rounded bg-[#23232a] border border-gray-700">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-semibold text-white text-lg">{task.title || taskKey}</div>
-                        <button
-                          className={`px-4 py-1 rounded text-sm font-semibold ${taskResult ? (allDone ? 'bg-green-700 text-white' : 'bg-red-700 text-white') : 'bg-purple-700 text-white'} ${isChecking ? 'opacity-60' : ''}`}
-                          style={{ minWidth: 80 }}
-                          disabled={isChecking}
-                          onClick={async () => {
-                            if (!notebookCells) return;
-                            setChecking(prev => ({ ...prev, [taskKey]: true }));
-                            setCheckError(prev => ({ ...prev, [taskKey]: '' }));
-                            try {
-                              const userCode = getAllCodeFromCells(notebookCells);
-                              const result = await checkTasksAndSubtasksGemini(userCode, projectConfig);
-                              setCheckResults(prev => ({ ...prev, [taskKey]: result[taskKey] }));
-                            } catch (e) {
-                              setCheckError(prev => ({ ...prev, [taskKey]: 'Check failed. Try again.' }));
-                            } finally {
-                              setChecking(prev => ({ ...prev, [taskKey]: false }));
-                            }
-                          }}
-                        >
-                          {isChecking ? 'Checking...' : taskResult ? (allDone ? '✓ All Done' : '✗ Not Done') : 'Check'}
-                        </button>
-                        {taskResult && (
-                          <img src={allDone ? tick : cross} alt={allDone ? 'Done' : 'Not Done'} style={{ width: 24, height: 24, marginLeft: 12 }} />
-                        )}
-                      </div>
-                      <ul className="space-y-2 mt-2">
-                        {task.subtasks && task.subtasks.map((subDesc, subIdx) => {
-                          const isComplete = taskResult?.completed?.includes(subDesc);
-                          const reason = taskResult?.reasons?.[subDesc] || '';
-                          return (
-                            <li key={subIdx} className="flex items-center gap-3">
-                              <span className={`text-sm ${isComplete ? 'text-green-400' : 'text-red-400'}`}>{isComplete ? '✓' : '✗'}</span>
-                              <span className="text-white text-sm">{subDesc}</span>
-                              {reason && (
-                                <span className="ml-2 text-xs text-gray-300 max-w-xs" style={{ whiteSpace: 'pre-line' }}>{reason}</span>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                      {errorMsg && (
-                        <div className="mt-2 text-xs text-red-400">{errorMsg}</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         ) : (
           <div className="text-gray-400 text-base">This is your Colab area. Add notes, links, or anything you want here!</div>
