@@ -285,7 +285,7 @@ CRITICAL:
                   />
                   <span
                     className="px-3 py-1"
-                    style={{ background: '#23232a', color: '#e5e7eb', borderRadius: 0, fontWeight: 400, fontSize: 20, lineHeight: '2.2rem' }}
+                    style={{ background: '#23232a',textAlign: 'left', color: '#e5e7eb', borderRadius: 0, fontWeight: 400, fontSize: 16, lineHeight: '2.2rem' }}
                   >
                     {task.title}
                   </span>
@@ -311,8 +311,17 @@ CRITICAL:
                 </button>
               </div>
               {isExpanded && (
-                <ul className="space-y-2 ml-2 mt-2">
-                  {task.subtasks && task.subtasks.map((subDesc, subIdx) => {
+                <div className="ml-2 mt-2">
+                  {/* Display Goal if exists */}
+                  {task.Goal && (
+                    <div className="mb-4 p-3" style={{ background: '#1a1a1d', border: '1px solid #444', borderRadius: 0 }}>
+                      <h4 className="text-sm text-left font-semibold mb-2" style={{ color: '#a78bfa', fontSize: 14 }}>Goal</h4>
+                      <p className="text-xs text-left" style={{ color: '#e5e7eb', lineHeight: '1.4' }}>{task.Goal}</p>
+                    </div>
+                  )}
+                  
+                  <ul className="space-y-2">
+                    {task.subtasks && task.subtasks.map((subDesc, subIdx) => {
                     const checkKey = `${taskKey}_${subIdx}`;
                     const result = checkResults[checkKey];
                     const isChecking = checking[checkKey];
@@ -323,16 +332,9 @@ return (
                         className="flex text-left items-center justify-between"
                         style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4, paddingRight: 0 }}
                       >
-                        <div className="flex items-center gap-3 flex-1">
-                          <input
-                            type="checkbox"
-                            checked={!!checked[taskKey]?.[subIdx]}
-                            onChange={() => handleCheck(taskKey, subIdx)}
-                            className="border-gray-600 focus:ring-2 bg-[#18181b]"
-                            style={{ background: '#18181b', width: 20, height: 20, minWidth: 20, minHeight: 20, flexShrink: 0, borderRadius: 0 }}
-                          />
+                        <div className="flex items-center gap-3 flex-1" style={{ minWidth: 'calc(100% - 40px)', maxWidth: 'calc(100% - 40px)' }}>
                           <span
-                            className={`text-base ${checked[taskKey]?.[subIdx] ? 'line-through text-gray-500' : ''}`}
+                            className={`text-xs ${checked[taskKey]?.[subIdx] ? 'line-through text-gray-500' : ''}`}
                             style={{ color: checked[taskKey]?.[subIdx] ? '#6b7280' : '#f3f4f6' }}
                           >
                             {subDesc}
@@ -399,6 +401,28 @@ return (
                     );
                   })}
                 </ul>
+                
+                {/* Display Output if exists - show after subtasks */}
+                {task.Output && (
+                  <div className="mt-4 p-3" style={{ background: '#1a1a1d', border: '1px solid #444', borderRadius: 0 }}>
+                    <h4 className="text-sm font-semibold mb-2" style={{ color: '#a78bfa', fontSize: 14 }}>Expected Output</h4>
+                    {task.Output && task.Output.startsWith('http') ? (
+                      <img 
+                        src={task.Output} 
+                        alt="Expected Output" 
+                        style={{ 
+                          maxWidth: '100%', 
+                          height: 'auto', 
+                          borderRadius: 0,
+                          border: '1px solid #444'
+                        }} 
+                      />
+                    ) : (
+                      <p className="text-xs" style={{ color: '#e5e7eb', lineHeight: '1.4' }}>{task.Output}</p>
+                    )}
+                  </div>
+                )}
+                </div>
               )}
             </div>
           );
