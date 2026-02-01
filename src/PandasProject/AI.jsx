@@ -105,19 +105,47 @@ function AI({ userCode, messages, setMessages, terminalOutput = [] }) {
         ).join('\n');
       }
       const prompt = `You are a helpful Pandas programming tutor. The user is working on a project called "${context.title || ''}".\n\nProject Description: ${context.description || ''}\n\nALL TASKS AND SUBTASKS:\n${allTasksText}\n\nUser's Current Code:\n\u0060\u0060\u0060python\n${userCode || 'No code written yet'}\n\u0060\u0060\u0060\n\nConversation so far:\n${history}\n\nUser's latest question: ${inputMessage}\n\nIMPORTANT INSTRUCTIONS:\n- Respond ONLY to the user's latest question, and help them with their current task/subtask.\n- Do not provide extra information or answer unasked questions.\n- Give small, chat-like responses (2-3 sentences max)\n- Focus on actionable, specific feedback for the user's code and question\n- Avoid generic encouragements like "Great start" or "Good job" unless the user has completed all tasks\n- DO NOT provide complete code solutions\n- Give hints for the current task/subtask only\n- ONLY give hints about the tasks and subtasks defined in the project\n- If all tasks are complete, congratulate the user and offer to review or answer questions.\n- Only answer what the user has asked. Do NOT suggest next steps, future tasks, or what to do next unless the user specifically asks.`;
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.5,
+          max_tokens: 150
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
       const data = await response.json();
-      let aiText = 'Sorry, I encountered an error. Please try again.';
-      if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-        aiText = data.candidates[0].content.parts[0].text;
+
+      if (!response.ok) {
+        throw new Error(data?.error?.message || 'API failed');
+      }
+
+      let aiText = 'Sorry, error occurred. Try again!';
+      if (data.choices?.[0]?.message?.content) {
+        aiText = data.choices[0].message.content;
       }
       setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: aiText, timestamp: new Date() }]);
     } catch (error) {
-      setMessages(prev => [...prev, { id: Date.now() + 1, type: 'ai', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date() }]);
+      const errMsg = error.message === 'The operation was aborted' 
+        ? 'Timeout. Try again!' 
+        : 'Error! Try again.';
+      
+      setMessages(prev => [...prev, { 
+        id: Date.now() + 1, 
+        type: 'ai', 
+        content: errMsg, 
+        timestamp: new Date() 
+      }]);
     } finally {
       setIsLoading(false);
     }

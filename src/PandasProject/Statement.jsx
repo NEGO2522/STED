@@ -3,7 +3,7 @@ import { useUser } from '@clerk/clerk-react';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
 import { getPandasProjectConfig, checkTasksAndSubtasksGemini } from './projectConfig';
-import { FaChevronDown, FaQuestionCircle } from 'react-icons/fa';
+import { FaChevronDown, FaQuestionCircle, FaLightbulb } from 'react-icons/fa';
 import cross from '../assets/cross.png';
 import applied from '../assets/applied.png';
 import tick from '../assets/applied.png';
@@ -19,7 +19,23 @@ function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheck
   const hoverTimeout = useRef();
   const [showProjectDesc, setShowProjectDesc] = useState(false);
   const projectDescIconRef = useRef();
-  const [hoveredReason, setHoveredReason] = useState({ taskKey: null, subIdx: null, left: false });
+  const [hoveredReason, setHoveredReason] = useState({ taskKey: null, subIdx: null, left: false, clicked: false, offsetRight: 20 });
+  const tooltipRef = useRef(null);
+
+  // Close tooltip when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        // Check if the click is not on a bulb icon
+        const isBulbIcon = event.target.closest('.bulb-icon-container');
+        if (!isBulbIcon) {
+          setHoveredReason(prev => ({ ...prev, clicked: false }));
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     async function fetchProjectData() {
@@ -68,12 +84,12 @@ function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheck
   };
 
 
-  // Gemini check state
+  // OpenAI check state
   const [checkResults, setCheckResults] = useState({});
   const [checking, setChecking] = useState({});
   const [checkError, setCheckError] = useState({});
 
-  // Handler for checking a task using Gemini
+  // Handler for checking a task using OpenAI
   const handleTaskCheck = async (taskKey, task) => {
     if (!userCode) return;
     setLoadingTaskKey(taskKey);
@@ -101,52 +117,55 @@ EVALUATION RULES:
 6. If a subtask asks to "filter data", ONLY check if filtering is done
 7. If a subtask asks to "handle missing values", ONLY then check for missing value handling
 
-Respond only with true or false.
-- true: if THIS subtask's specific requirement is implemented
-- false: if THIS subtask's specific requirement is NOT implemented
+Respond in this exact format:
+Status: [true/false]
+Reason: [Your explanation - mention ONLY what THIS subtask requires]
 
-DO NOT consider future subtasks when evaluating this one.`;
+The reason must:
+- Only address THIS specific subtask's requirements
+- NOT mention future subtasks or unrelated functionality
+- Be specific about what's implemented or missing for THIS subtask ONLY`;
         let isSubtaskComplete = false;
         let reason = '';
         try {
-          const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-          const model = 'gemini-1.5-flash';
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [{ role: 'user', content: prompt }],
+              temperature: 0.2,
+              max_tokens: 256
+            })
           });
           const data = await response.json();
           let answer = '';
-          if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-            answer = data.candidates[0].content.parts[0].text.trim().toLowerCase();
+          if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+            answer = data.choices[0].message.content.trim().toLowerCase();
           }
-          const normalized = answer.replace(/[^a-z]/g, '');
-          if (normalized.startsWith('true')) isSubtaskComplete = true;
-          else if (normalized.startsWith('false')) isSubtaskComplete = false;
-          // Now get the reason/explanation
-          const reasonPrompt = `User's Code:
-
-${userCode}
-
-Subtask: "${subtask}"
-
-Provide a brief explanation (1-2 sentences) about whether this subtask is implemented.
-
-CRITICAL: 
-- Only mention what THIS specific subtask requires
-- DO NOT mention future subtasks or missing functionality from later steps
-- Focus ONLY on this subtask's requirements
-- If complete, explain what makes it complete for THIS subtask only
-- If incomplete, explain what's missing for THIS subtask only (not future subtasks)`;
-          const reasonResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: reasonPrompt }] }] })
-          });
-          const reasonData = await reasonResponse.json();
-          if (reasonData.candidates && reasonData.candidates[0] && reasonData.candidates[0].content && reasonData.candidates[0].content.parts) {
-            reason = reasonData.candidates[0].content.parts[0].text.trim();
+          // Parse status and reason from the single response
+          const statusMatch = answer.match(/Status\s*:?\s*(true|false)/i);
+          const reasonMatch = answer.split(/\n/).find(line => line.toLowerCase().startsWith('reason:'));
+          
+          if (statusMatch) {
+            isSubtaskComplete = statusMatch[1].toLowerCase() === 'true';
+          }
+          
+          if (reasonMatch) {
+            reason = reasonMatch.replace(/^reason\s*:?\s*/i, '').trim();
+          } else {
+            // If no reason found, use the rest of the response
+            reason = answer.replace(/Status\s*:?\s*(true|false)[\s\n]*/i, '').trim();
+          }
+          
+          // Ensure we have a reason
+          if (!reason) {
+            reason = isSubtaskComplete 
+              ? 'The task requirements appear to be met.' 
+              : 'The task requirements are not fully implemented.';
           }
         } catch (e) {
           // On error, treat as not complete and no reason
@@ -169,8 +188,8 @@ CRITICAL:
     setLoadingTaskKey(null);
   };
 
-  // Handler for checking a subtask using Gemini
-  const handleGeminiCheck = async (taskKey, subIdx, subDesc) => {
+  // Handler for checking a subtask using OpenAI
+  const handleOpenAICheck = async (taskKey, subIdx, subDesc) => {
     setChecking(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: true }));
     setCheckError(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: '' }));
     try {
@@ -181,7 +200,7 @@ CRITICAL:
       // result: { [taskKey]: { completed: [], reasons: {} } }
       const isComplete = result[taskKey]?.completed?.includes(subDesc);
       const reason = result[taskKey]?.reasons?.[subDesc] || '';
-      setCheckResults(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: { isComplete, reason } }));
+      setCheckResults(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: { complete: isComplete, reason } }));
     } catch (e) {
       setCheckError(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: 'Check failed. Try again.' }));
     } finally {
@@ -261,6 +280,23 @@ CRITICAL:
           </p>
         </div>
       )}
+      {project.DataLink && (
+        <div className="text-center mb-6">
+          <div className="inline-block" style={{ maxWidth: '600px', width: '100%' }}>
+            <p className="text-sm text-gray-400" style={{ fontSize: '14px', color: '#9ca3af' }}>
+              <span className='font-semibold'>Data Link -</span>{' '}
+              <a 
+                href={project.DataLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: '#a78bfa', textDecoration: 'underline' }}
+              >
+                click here
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
       <div className="space-y-6 mt-10">
         {project.tasks && Object.entries(project.tasks).map(([taskKey, task]) => {
           const isExpanded = expandedTask === taskKey;
@@ -329,10 +365,10 @@ CRITICAL:
 return (
                       <li
                         key={subIdx}
-                        className="flex text-left items-center justify-between"
+                        className="group flex text-left items-center justify-between"
                         style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4, paddingRight: 0 }}
                       >
-                        <div className="flex items-center gap-3 flex-1" style={{ minWidth: 'calc(100% - 40px)', maxWidth: 'calc(100% - 40px)' }}>
+                        <div className="flex items-center gap-3 flex-1" style={{ minWidth: 'calc(100% - 80px)', maxWidth: 'calc(100% - 80px)' }}>
                           <span
                             className={`text-xs ${checked[taskKey]?.[subIdx] ? 'line-through text-gray-500' : ''}`}
                             style={{ color: checked[taskKey]?.[subIdx] ? '#6b7280' : '#f3f4f6' }}
@@ -341,61 +377,68 @@ return (
                           </span>
                         </div>
                         
+                        {/* Bulb icon for showing reason */}
+                        {(loadingTaskKey === taskKey || (subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined)) && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity relative bulb-icon-container">
+                            <FaLightbulb 
+                              className="text-yellow-400/60 hover:text-yellow-400 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setHoveredReason(prev => {
+                                  const isSame = prev.taskKey === taskKey && prev.subIdx === subIdx && prev.clicked;
+                                  // shift overlay a bit left from the right edge
+                                  const newOffset = 80; // px from right
+                                  return { taskKey, subIdx, left: false, clicked: !isSame, offsetRight: newOffset };
+                                });
+                              }}
+                            />
+                            {hoveredReason.clicked && hoveredReason.taskKey === taskKey && hoveredReason.subIdx === subIdx && (
+                              <div 
+                                ref={tooltipRef}
+                                className="tooltip-container"
+                                style={{
+                                  position: 'fixed',
+                                  right: hoveredReason.offsetRight || 20,
+                                  top: '50%',
+                                  transform: 'translateY(-50%)',
+                                  zIndex: 1000,
+                                  background: '#23232a',
+                                  color: '#e5e7eb',
+                                  fontSize: 14,
+                                  border: '1px solid #444',
+                                  borderRadius: 8,
+                                  padding: '12px 16px',
+                                  maxWidth: 'min(500px, 40vw)',
+                                  minWidth: '300px',
+                                  maxHeight: '80vh',
+                                  overflowY: 'auto',
+                                  whiteSpace: 'pre-line',
+                                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
+                                  lineHeight: '1.5',
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseLeave={() => {
+                                  setHoveredReason({ taskKey: null, subIdx: null, clicked: false });
+                                }}
+                              >
+                                {subtaskCheckResults[taskKey]?.[subIdx]?.reason || 'No reason available'}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
                         {/* Tick/cross for subtask check and reason - positioned at right border */}
                         {loadingTaskKey === taskKey && (!subtaskCheckResults[taskKey] || subtaskCheckResults[taskKey][subIdx] === undefined) ? (
                           <span className="loader" style={{ width: 14, height: 14, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite', marginRight: 0 }} />
                         ) : subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined ? (
-                          <div style={{ position: 'relative', marginRight: 0 }}>
-                            <img
-                              src={subtaskCheckResults[taskKey][subIdx].complete ? applied : cross}
-                              alt=""
-                              className="w-5 cursor-pointer"
-                              onMouseEnter={e => {
-                                clearTimeout(hoverTimeout.current);
-                                const rect = e.target.getBoundingClientRect();
-                                const rightSpace = window.innerWidth - rect.right;
-                                hoverTimeout.current = setTimeout(() => {
-                                  setHoveredReason({ taskKey, subIdx, left: rightSpace < 250 });
-                                }, 200);
-                              }}
-                              onMouseLeave={() => {
-                                clearTimeout(hoverTimeout.current);
-                                hoverTimeout.current = setTimeout(() => {
-                                  setHoveredReason({ taskKey: null, subIdx: null });
-                                }, 200);
-                              }}
-                            />
-                            {(hoveredReason.taskKey === taskKey && hoveredReason.subIdx === subIdx) && (
-                              <div
-                                style={{
-                                  position: 'absolute',
-                                  top: 24,
-                                  left: hoveredReason.left ? 'auto' : 0,
-                                  right: hoveredReason.left ? 0 : 'auto',
-                                  zIndex: 100,
-                                  background: '#23232a',
-                                  color: '#e5e7eb',
-                                  fontSize: 11,
-                                  border: '1px solid #444',
-                                  borderRadius: 0,
-                                  padding: '6px 10px',
-                                  minWidth: 120,
-                                  maxWidth: 220,
-                                  whiteSpace: 'pre-line',
-                                  boxShadow: '0 2px 8px #0006',
-                                  transition: 'opacity 0.4s cubic-bezier(.4,0,.2,1), transform 0.4s cubic-bezier(.4,0,.2,1)',
-                                  opacity: 1,
-                                  transform: 'translateY(0px) scale(1)',
-                                }}
-                              >
-                                {subtaskCheckResults[taskKey][subIdx].reason
-                                  .split(/(?<=[.!?])\s+/)
-                                  .slice(0, 2)
-                                  .join(' ')
-                                  .slice(0, 140)}
-                              </div>
-                            )}
-                          </div>
+                          <img
+                            src={subtaskCheckResults[taskKey][subIdx].complete ? applied : cross}
+                            alt=""
+                            className="w-5"
+                            style={{ marginRight: 0 }}
+                          />
                         ) : null}
                       </li>
                     );

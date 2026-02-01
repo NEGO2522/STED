@@ -14,9 +14,9 @@ function Project() {
   return (
     <div className="flex h-screen pt-12 p-3 bg-[#0F0F0F] w-screen">
       {/* Left side - Colab Panel */}
-      <div className="w-350 border border-white h-full text-white border-white">
+      <div className="border border-white h-full text-white border-white" style={{ width: '950px', minWidth: '350px', maxWidth: '950px', flexShrink: 0 }}>
         <Colab setUserCode={setUserCode}/>
-        </div>
+      </div>
       {/* Right side - Statement / AI Panel */}
       <div
         className="flex-1 h-full text-white p-5 border border-white"
