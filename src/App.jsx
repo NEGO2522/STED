@@ -113,7 +113,7 @@ function AppContent() {
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/home" element={<Python />} />
+          <Route path="/home" element={<Pandas />} />
           <Route path="/public-speaking" element={<PublicSpeaking />} />
           <Route path="/data-science" element={<DataScience />} />
           <Route path="/python" element={<Python />} />

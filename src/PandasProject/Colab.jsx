@@ -104,30 +104,43 @@ function renderNotebookCells(cells) {
 }
 
 function Colab({ setUserCode }) {
-  const { user } = useUser();
+  const { user, isLoaded, isSignedIn } = useUser();
   const [colabLink, setColabLink] = useState('');
   const [savedLink, setSavedLink] = useState('');
   const [showSaved, setShowSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [projectKey, setProjectKey] = useState(null);
   const [error, setError] = useState('');
-  const [notebookCells, setNotebookCells] = useState(() => {
-    // Try to restore notebookCells from localStorage
-    try {
-      const saved = localStorage.getItem('notebookCells');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
+
+  // Fetch project key from user data
+  useEffect(() => {
+    async function fetchProjectKey() {
+      if (!isLoaded || !isSignedIn || !user) return;
+      try {
+        // Get user's data
+        const userRef = ref(db, 'users/' + user.id);
+        const userSnap = await get(userRef);
+        
+        if (!userSnap.exists()) {
+          console.error('User data not found.');
+          return;
+        }
+        
+        const userData = userSnap.val();
+        const pandasData = userData.pandas || {};
+        let currentProjectKey = pandasData.PandasCurrentProject;
+        
+        if (currentProjectKey) {
+          setProjectKey(currentProjectKey);
+        }
+      } catch (err) {
+        console.error('Failed to fetch project key:', err);
+      }
     }
-  });
-  const [lastNotebookCells, setLastNotebookCells] = useState(() => {
-    // Store the previous notebook cells for change detection
-    try {
-      const saved = localStorage.getItem('notebookCells');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+    fetchProjectKey();
+  }, [isLoaded, isSignedIn, user]);
+  const [notebookCells, setNotebookCells] = useState(null);
+  const [lastNotebookCells, setLastNotebookCells] = useState(null);
   const [numChanges, setNumChanges] = useState(0);
   const [loadingNotebook, setLoadingNotebook] = useState(false);
 
@@ -175,10 +188,10 @@ function Colab({ setUserCode }) {
   // Fetch saved link on mount
   useEffect(() => {
     async function fetchSavedLink() {
-      if (!user) return;
+      if (!user || !projectKey) return;
       try {
         const userId = user.id;
-        const projectRef = ref(db, `users/${userId}/pandas/Project1`);
+        const projectRef = ref(db, `users/${userId}/pandas/${projectKey}`);
         const snap = await get(projectRef);
         if (snap.exists() && snap.val().colabLink) {
           setSavedLink(snap.val().colabLink);
@@ -186,12 +199,12 @@ function Colab({ setUserCode }) {
           setShowSaved(true);
         }
       } catch (err) {
-        // ignore
+        console.error('Failed to load colab link:', err);
       }
     }
     fetchSavedLink();
     // eslint-disable-next-line
-  }, [user]);
+  }, [user, projectKey]);
 
   const handleSave = async () => {
     if (!user) {
@@ -257,8 +270,6 @@ function Colab({ setUserCode }) {
       setNumChanges(changes);
       setLastNotebookCells(notebookCells);
       setNotebookCells(notebook.cells);
-      // Save to localStorage for persistence
-      localStorage.setItem('notebookCells', JSON.stringify(notebook.cells));
     } catch (err) {
       setError('Could not fetch notebook: ' + err.message);
     } finally {

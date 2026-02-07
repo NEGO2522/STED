@@ -39,11 +39,32 @@ function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheck
 
   useEffect(() => {
     async function fetchProjectData() {
+      if (!isLoaded || !isSignedIn || !user) return;
       setLoading(true);
       setError('');
       try {
-        // Fetch PandasProject/Project1 from Firebase
-        const projectRef = ref(db, 'PandasProject/Project1');
+        // Get user's data
+        const userRef = ref(db, 'users/' + user.id);
+        const userSnap = await get(userRef);
+        
+        if (!userSnap.exists()) {
+          setError('User data not found.');
+          setLoading(false);
+          return;
+        }
+        
+        const userData = userSnap.val();
+        const pandasData = userData.pandas || {};
+        let projectKey = pandasData.PandasCurrentProject;
+        
+        if (!projectKey) {
+          setError('No pandas project started.');
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch the current project dynamically
+        const projectRef = ref(db, 'PandasProject/' + projectKey);
         const projectSnap = await get(projectRef);
         if (!projectSnap.exists()) {
           setError('Pandas project not found.');
@@ -58,7 +79,7 @@ function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheck
       }
     }
     fetchProjectData();
-  }, []);
+  }, [isLoaded, isSignedIn, user]);
 
   // Close overlay on outside click
   useEffect(() => {
