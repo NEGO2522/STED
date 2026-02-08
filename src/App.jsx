@@ -24,6 +24,8 @@ import UserProfile from './Pages/UserProfile';
 import PublicPythonProject from './PythonProject/PublicPythonProject';
 import { SignedIn, SignedOut, useUser, SignIn, SignUp, UserButton } from '@clerk/clerk-react';
 import Progress from './Pages/Progress';
+import { ref, set, get } from 'firebase/database';
+import { db } from './firebase';
 
 // Component to handle authentication callbacks
 const ClerkAuthCallback = () => {
@@ -47,7 +49,38 @@ const ClerkAuthCallback = () => {
 
 function AppContent() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { isLoaded } = useUser();
+  const { isLoaded, isSignedIn, user } = useUser();
+
+  // Sync user data to Firebase when they sign up
+  useEffect(() => {
+    const syncUserToFirebase = async () => {
+      if (isLoaded && isSignedIn && user) {
+        try {
+          const userRef = ref(db, `users/${user.id}`);
+          const snapshot = await get(userRef);
+          
+          // Only create user data if it doesn't exist (new user)
+          if (!snapshot.exists()) {
+            const email = user.primaryEmailAddress?.emailAddress || '';
+            const name = user.fullName || user.firstName || '';
+            
+            const userData = {
+              email: email,
+              name: name,
+              createdAt: new Date().toISOString()
+            };
+            
+            await set(userRef, userData);
+            console.log('User synced to Firebase:', user.id);
+          }
+        } catch (error) {
+          console.error('Error syncing user to Firebase:', error);
+        }
+      }
+    };
+
+    syncUserToFirebase();
+  }, [isLoaded, isSignedIn, user]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
