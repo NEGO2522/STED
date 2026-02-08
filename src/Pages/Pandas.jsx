@@ -1116,8 +1116,8 @@ IMPORTANT INSTRUCTIONS:
                             </svg>
                           </div>
                           <div className="text-left">
-                            <h3 className="text-white font-bold text-lg">Start New Project</h3>
-                            <p className="text-white/70 text-sm">Begin your coding journey</p>
+                            <h3 className="text-black font-bold text-lg">Start New Project</h3>
+                            <p className="text-slate-500 text-sm">Begin your coding journey</p>
                           </div>
                         </div>
                         <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1140,8 +1140,8 @@ IMPORTANT INSTRUCTIONS:
                             </svg>
                           </div>
                           <div className="text-left">
-                            <h3 className="text-white font-bold text-lg">Custom Project</h3>
-                            <p className="text-white/70 text-sm">Build your own project idea</p>
+                            <h3 className="text-black font-bold text-lg">Custom Project</h3>
+                            <p className="text-slate-500 text-sm">Build your own project idea</p>
                           </div>
                         </div>
                         <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1166,8 +1166,8 @@ IMPORTANT INSTRUCTIONS:
                           </svg>
                         </div>
                         <div className="text-left">
-                          <h3 className="text-white font-bold text-lg">Start New Project</h3>
-                          <p className="text-white/70 text-sm">Begin your coding journey</p>
+                          <h3 className="text-black font-bold text-lg">Start New Project</h3>
+                          <p className="text-slate-500 text-sm">Begin your coding journey</p>
                         </div>
                       </div>
                       <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1189,8 +1189,8 @@ IMPORTANT INSTRUCTIONS:
                           </svg>
                         </div>
                         <div className="text-left">
-                          <h3 className="text-white/50 font-bold text-lg">Custom Project</h3>
-                          <p className="text-white/40 text-sm">Unlock by starting a project</p>
+                          <h3 className="text-black font-bold text-lg">Custom Project</h3>
+                          <p className="text-slate-500 text-sm">Unlock by starting a project</p>
                         </div>
                       </div>
                     </div>
