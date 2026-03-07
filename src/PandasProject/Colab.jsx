@@ -111,6 +111,13 @@ function Colab({ setUserCode }) {
   const [saving, setSaving] = useState(false);
   const [projectKey, setProjectKey] = useState(null);
   const [error, setError] = useState('');
+  
+  // Auto-refresh state
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+  const [autoCheckEnabled, setAutoCheckEnabled] = useState(true);
+  
+  // Ref for scrolling to bottom
+  const notebookContainerRef = React.useRef(null);
 
   // Fetch project key from user data
   useEffect(() => {
@@ -158,6 +165,95 @@ function Colab({ setUserCode }) {
     }
     fetchConfig();
   }, []);
+
+  // Scroll to bottom of notebook content
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (notebookContainerRef.current) {
+        notebookContainerRef.current.scrollTop = notebookContainerRef.current.scrollHeight;
+      }
+    }, 100); // Small delay to ensure content is rendered
+  };
+
+  // Page Visibility API - auto-refresh when user returns to tab
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && savedLink) {
+        // User returned to the tab, auto-refresh the content
+        await autoRefreshContent();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [savedLink]);
+
+  // Periodic check when tab is visible
+  useEffect(() => {
+    if (!savedLink || !autoCheckEnabled) return;
+
+    const intervalId = setInterval(async () => {
+      // Only check if tab is visible
+      if (document.visibilityState === 'visible') {
+        await autoRefreshContent();
+      }
+    }, 10000); // Check every 10 seconds when visible
+
+    return () => clearInterval(intervalId);
+  }, [savedLink, autoCheckEnabled]);
+
+  // Auto-refresh content when user returns to tab
+  const autoRefreshContent = async () => {
+    if (!savedLink) return;
+    
+    setIsAutoRefreshing(true);
+    try {
+      const driveId = extractDriveIdFromColabUrl(savedLink);
+      if (!driveId) throw new Error('Invalid Colab link.');
+      
+      const notebook = await fetchColabNotebookJson(driveId);
+      if (!notebook.cells) throw new Error('No code cells found in notebook.');
+      
+      console.log('New notebook cells:', notebook.cells.length);
+      console.log('Current notebook cells:', notebookCells?.length || 0);
+      
+      // Compare with previous notebookCells to count changes
+      let changes = 0;
+      if (notebookCells && Array.isArray(notebook.cells) && Array.isArray(notebookCells)) {
+        // Count changed cells by comparing source
+        changes = notebook.cells.reduce((acc, cell, idx) => {
+          if (!notebookCells[idx]) return acc + 1;
+          if (cell.source && notebookCells[idx].source && cell.source.join('') !== notebookCells[idx].source.join('')) return acc + 1;
+          return acc;
+        }, 0);
+        // Also count new cells added
+        if (notebook.cells.length > notebookCells.length) {
+          changes += notebook.cells.length - notebookCells.length;
+        }
+      } else if (notebookCells === null && notebook.cells) {
+        changes = notebook.cells.length;
+      }
+      
+      console.log('Setting new notebook cells:', notebook.cells.length, 'changes:', changes);
+      
+      // Update state in correct order - save current as last, then update current
+      setLastNotebookCells(notebookCells);
+      setNumChanges(changes);
+      setNotebookCells(notebook.cells);
+      
+      // Scroll to bottom after content update
+      scrollToBottom();
+    } catch (err) {
+      console.error('Auto-refresh failed:', err.message);
+    } finally {
+      setIsAutoRefreshing(false);
+    }
+  };
 
   // Handler for checking a subtask using Gemini
   const handleGeminiCheck = async (taskKey, subIdx, subDesc) => {
@@ -211,11 +307,15 @@ function Colab({ setUserCode }) {
       setError('You must be signed in to save your Colab link.');
       return;
     }
+    if (!projectKey) {
+      setError('No project selected. Please select a project first.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
       const userId = user.id;
-      const projectRef = ref(db, `users/${userId}/pandas/Project1`);
+      const projectRef = ref(db, `users/${userId}/pandas/${projectKey}`);
       await update(projectRef, { colabLink });
       setSavedLink(colabLink);
       setShowSaved(true);
@@ -270,6 +370,9 @@ function Colab({ setUserCode }) {
       setNumChanges(changes);
       setLastNotebookCells(notebookCells);
       setNotebookCells(notebook.cells);
+      
+      // Scroll to bottom after manual refresh
+      scrollToBottom();
     } catch (err) {
       setError('Could not fetch notebook: ' + err.message);
     } finally {
@@ -279,8 +382,27 @@ function Colab({ setUserCode }) {
 
   return (
     <div
-      className="h-full p-20 border border-white text-white flex flex-col p-4 bg-[#18181b]"
+      className="h-full p-20 border border-white text-white flex flex-col p-4 bg-[#18181b] relative"
     >
+      {/* Auto-check toggle in top right */}
+      {savedLink && (
+        <div className="absolute top-4 right-4 bg-[#23232a] px-3 py-1 rounded border border-gray-600">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Auto-check:</span>
+            <button
+              className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${
+                autoCheckEnabled 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              }`}
+              onClick={() => setAutoCheckEnabled(!autoCheckEnabled)}
+            >
+              {autoCheckEnabled ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        </div>
+      )}
+      
       <h2 className="text-xl font-bold mb-4 text-purple-300">Colab</h2>
       <div className="mb-4">
         <label className="block text-gray-300 mb-2 text-sm font-semibold">Enter your Google Colab link:</label>
@@ -317,8 +439,15 @@ function Colab({ setUserCode }) {
         {numChanges > 0 && (
           <div className="mt-2 text-green-400 text-sm font-bold">{numChanges} change{numChanges > 1 ? 's' : ''} made in Colab</div>
         )}
+        
+        {/* Auto-refresh status indicator */}
+        {isAutoRefreshing && (
+          <div className="mt-2 text-blue-400 text-sm">
+            Auto-refreshing from Google Drive...
+          </div>
+        )}
       </div>
-      <div className="flex-1 text-left overflow-y-auto">
+      <div className="flex-1 text-left overflow-y-auto" ref={notebookContainerRef}>
         {notebookCells ? (
           <div>
             <h3 className="text-lg font-semibold mb-2 text-purple-200">Notebook Preview</h3>
