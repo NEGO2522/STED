@@ -1,39 +1,37 @@
+require('dotenv').config();               // ← load .env first
+
 const express = require('express');
-const fetchColabRouter = require('./fetchColab');
+const fetchColabRouter     = require('./fetchColab');
 const pythonExecutorRouter = require('./pythonExecutor');
+const checkTaskRouter      = require('./checkTask');
 const cors = require('cors');
 
-const app = express();
+const app  = express();
 const PORT = process.env.PORT || 8000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 app.use(fetchColabRouter);
 app.use(pythonExecutorRouter);
+app.use(checkTaskRouter);
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'Backend is running with Python execution support.',
+    message: 'STED Backend running.',
     endpoints: [
-      'POST /api/execute-python - Execute Python code',
-      'GET /api/python-health - Check Python availability',
-      'POST /api/python-input - Send input to running process',
-      'POST /api/stop-python - Stop running process'
+      'GET  /api/fetch_colab    – fetch Google Drive .ipynb',
+      'POST /api/execute-python – run Python code',
+      'POST /api/check-task     – AI task/subtask checker',
     ],
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
-// Test endpoint
 app.get('/api/test', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Backend API is working',
-    timestamp: new Date().toISOString()
-  });
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('Python execution endpoint available at /api/execute-python');
+  console.log(`OpenAI key loaded: ${process.env.OPENAI_API_KEY ? 'YES' : 'NO — check Backend/.env'}`);
 });

@@ -2,490 +2,486 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
-import { getPandasProjectConfig, checkTasksAndSubtasksGemini } from './projectConfig';
 import { FaChevronDown, FaQuestionCircle, FaLightbulb } from 'react-icons/fa';
 import cross from '../assets/cross.png';
 import applied from '../assets/applied.png';
-import tick from '../assets/applied.png';
 
-function Statement({ userCode, taskCheckStatus, setTaskCheckStatus, subtaskCheckResults, setSubtaskCheckResults, expandedTask, setExpandedTask }) {
+// ──────────────────────────────────────────────────────────────────────
+//  Statement.jsx  – task list + OpenAI check button
+//
+//  Calls OpenAI directly from the browser (same pattern as PythonProject).
+//  VITE_OPENAI_API_KEY must be set in the root .env file.
+// ──────────────────────────────────────────────────────────────────────
+
+async function checkSubtaskWithOpenAI(userCode, subtask, taskTitle, projectTitle) {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+  const prompt = `You are evaluating student Pandas/Python code from a Jupyter Notebook.
+
+Project: "${projectTitle || 'Pandas Project'}"
+Task: "${taskTitle || ''}"
+
+Student's Code (including execution outputs):
+\`\`\`python
+${userCode}
+\`\`\`
+
+Subtask to evaluate: "${subtask}"
+
+RULES:
+- Be STRICT: Only mark complete if the specific subtask is ACTUALLY accomplished in the code/output.
+- Just importing libraries or having working code is NOT enough - the subtask requirement must be fulfilled.
+- Example: If subtask is "Show first 5 rows", code must actually display the first 5 rows of a DataFrame.
+- Example: If subtask is "Create a scatter plot", code must actually create and show the plot.
+- Evaluate ONLY this specific subtask. Do NOT fail it because a future subtask is missing.
+- In your Reason, explicitly state what was found (or missing) that justifies your decision.
+
+Reply in EXACTLY this two-line format, nothing else:
+Status: true
+Reason: One concise sentence explaining why the subtask is complete or incomplete, referencing specific evidence from the code/output.`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.1,
+      max_tokens: 150,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `OpenAI error ${response.status}`);
+  }
+
+  const raw = data.choices?.[0]?.message?.content?.trim() || '';
+
+  const statusMatch = raw.match(/^Status\s*:\s*(true|false)/im);
+  const reasonMatch = raw.match(/^Reason\s*:\s*(.+)/im);
+
+  const complete = statusMatch ? statusMatch[1].toLowerCase() === 'true' : false;
+  const reason   = reasonMatch ? reasonMatch[1].trim() : (raw || 'No reason returned.');
+
+  return { complete, reason };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+
+function Statement({
+  userCode,
+  taskCheckStatus,      setTaskCheckStatus,
+  subtaskCheckResults,  setSubtaskCheckResults,
+  expandedTask,         setExpandedTask,
+}) {
   const { isLoaded, isSignedIn, user } = useUser();
-  const [projectKey, setProjectKey] = useState(null);
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [checked, setChecked] = useState({});
-  const [loadingTaskKey, setLoadingTaskKey] = useState(null);
-  const hoverTimeout = useRef();
-  const [showProjectDesc, setShowProjectDesc] = useState(false);
-  const projectDescIconRef = useRef();
-  const [hoveredReason, setHoveredReason] = useState({ taskKey: null, subIdx: null, left: false, clicked: false, offsetRight: 20 });
-  const tooltipRef = useRef(null);
 
-  // Close tooltip when clicking outside
+  const [project,        setProject]        = useState(null);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState('');
+  const [loadingTaskKey, setLoadingTaskKey] = useState(null);
+  const [showProjectDesc,setShowProjectDesc]= useState(false);
+  const [hoveredReason,  setHoveredReason]  = useState({
+    taskKey: null, subIdx: null, clicked: false,
+  });
+  const [noCodeWarning,  setNoCodeWarning]  = useState({});
+  const [checkApiError,  setCheckApiError]  = useState('');
+
+  const projectDescIconRef = useRef();
+  const tooltipRef         = useRef(null);
+
+  // ── close tooltip on outside click ───────────────────────────────
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
-        // Check if the click is not on a bulb icon
-        const isBulbIcon = event.target.closest('.bulb-icon-container');
-        if (!isBulbIcon) {
-          setHoveredReason(prev => ({ ...prev, clicked: false }));
-        }
+    function handle(event) {
+      if (
+        tooltipRef.current &&
+        !tooltipRef.current.contains(event.target) &&
+        !event.target.closest('.bulb-icon-container')
+      ) {
+        setHoveredReason(prev => ({ ...prev, clicked: false }));
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
   }, []);
 
+  // ── fetch project from Firebase ──────────────────────────────────
   useEffect(() => {
     async function fetchProjectData() {
       if (!isLoaded || !isSignedIn || !user) return;
       setLoading(true);
       setError('');
       try {
-        // Get user's data
-        const userRef = ref(db, 'users/' + user.id);
-        const userSnap = await get(userRef);
-        
-        if (!userSnap.exists()) {
-          setError('User data not found.');
-          setLoading(false);
-          return;
-        }
-        
-        const userData = userSnap.val();
-        const pandasData = userData.pandas || {};
-        let projectKey = pandasData.PandasCurrentProject;
-        
-        if (!projectKey) {
-          setError('No pandas project started.');
-          setLoading(false);
-          return;
-        }
-        
-        // Fetch the current project dynamically
-        const projectRef = ref(db, 'PandasProject/' + projectKey);
-        const projectSnap = await get(projectRef);
-        if (!projectSnap.exists()) {
-          setError('Pandas project not found.');
-          setLoading(false);
-          return;
-        }
+        const userSnap = await get(ref(db, 'users/' + user.id));
+        if (!userSnap.exists()) { setError('User data not found.'); setLoading(false); return; }
+
+        const pk = userSnap.val()?.pandas?.PandasCurrentProject;
+        if (!pk) { setError('No pandas project started.'); setLoading(false); return; }
+
+        const projectSnap = await get(ref(db, 'PandasProject/' + pk));
+        if (!projectSnap.exists()) { setError('Pandas project not found.'); setLoading(false); return; }
         setProject(projectSnap.val());
-        setLoading(false);
       } catch (err) {
         setError('Failed to load project: ' + err.message);
+      } finally {
         setLoading(false);
       }
     }
     fetchProjectData();
   }, [isLoaded, isSignedIn, user]);
 
-  // Close overlay on outside click
+  // ── close project desc on outside click ──────────────────────────
   useEffect(() => {
     if (!showProjectDesc) return;
-    function handleClick(e) {
-      if (projectDescIconRef.current && !projectDescIconRef.current.contains(e.target)) {
+    function handle(e) {
+      if (projectDescIconRef.current && !projectDescIconRef.current.contains(e.target))
         setShowProjectDesc(false);
-      }
     }
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
   }, [showProjectDesc]);
 
-  // Checklist state handler
-  const handleCheck = (task, subtask) => {
-    setChecked((prev) => ({
-      ...prev,
-      [task]: {
-        ...prev[task],
-        [subtask]: !prev[task]?.[subtask],
-      },
-    }));
-  };
-
-
-  // OpenAI check state
-  const [checkResults, setCheckResults] = useState({});
-  const [checking, setChecking] = useState({});
-  const [checkError, setCheckError] = useState({});
-
-  // Handler for checking a task using OpenAI
+  // ── Task Check — calls OpenAI per subtask ─────────────────────────
   const handleTaskCheck = async (taskKey, task) => {
-    if (!userCode) return;
+    console.log('[STED] handleTaskCheck called. userCode length:', userCode?.length, 'userCode:', userCode?.substring(0, 100));
+    
+    if (!userCode || !userCode.trim()) {
+      console.log('[STED] No userCode! Setting warning for task:', taskKey);
+      setNoCodeWarning(prev => ({ ...prev, [taskKey]: true }));
+      setTimeout(() => setNoCodeWarning(prev => ({ ...prev, [taskKey]: false })), 4000);
+      return;
+    }
+
+    setNoCodeWarning(prev => ({ ...prev, [taskKey]: false }));
+    setCheckApiError('');
     setLoadingTaskKey(taskKey);
+
+    // Clear previous results immediately so spinners appear
+    setSubtaskCheckResults(prev => ({ ...prev, [taskKey]: [] }));
+    setTaskCheckStatus(prev => ({ ...prev, [taskKey]: undefined }));
+
+    const subtasks = task.subtasks || [];
+    const results  = [];
+    let   allDone  = true;
+
     try {
-      const subtasks = task.subtasks || [];
-      let allComplete = true;
-      const subtaskResults = [];
       for (let i = 0; i < subtasks.length; i++) {
         const subtask = subtasks[i];
-        const prompt = `User's Code:
 
-${userCode}
-
-Subtask to evaluate: "${subtask}"
-
-CRITICAL INSTRUCTIONS - READ CAREFULLY:
-You are evaluating ONLY this specific subtask. Do NOT consider any future subtasks or functionality that comes after this one in the sequence.
-
-EVALUATION RULES:
-1. Evaluate ONLY what THIS specific subtask requires - nothing more, nothing less
-2. DO NOT check if future subtasks are implemented
-3. DO NOT mark this subtask as incomplete because future functionality is missing
-4. Each subtask is INDEPENDENT and should be evaluated on its own merits
-5. If a subtask asks to "create a DataFrame", ONLY check if a DataFrame is created
-6. If a subtask asks to "filter data", ONLY check if filtering is done
-7. If a subtask asks to "handle missing values", ONLY then check for missing value handling
-
-Respond in this exact format:
-Status: [true/false]
-Reason: [Your explanation - mention ONLY what THIS subtask requires]
-
-The reason must:
-- Only address THIS specific subtask's requirements
-- NOT mention future subtasks or unrelated functionality
-- Be specific about what's implemented or missing for THIS subtask ONLY`;
-        let isSubtaskComplete = false;
-        let reason = '';
         try {
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
-            },
-            body: JSON.stringify({
-              model: 'gpt-4o-mini',
-              messages: [{ role: 'user', content: prompt }],
-              temperature: 0.2,
-              max_tokens: 256
-            })
-          });
-          const data = await response.json();
-          let answer = '';
-          if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
-            answer = data.choices[0].message.content.trim().toLowerCase();
-          }
-          // Parse status and reason from the single response
-          const statusMatch = answer.match(/Status\s*:?\s*(true|false)/i);
-          const reasonMatch = answer.split(/\n/).find(line => line.toLowerCase().startsWith('reason:'));
-          
-          if (statusMatch) {
-            isSubtaskComplete = statusMatch[1].toLowerCase() === 'true';
-          }
-          
-          if (reasonMatch) {
-            reason = reasonMatch.replace(/^reason\s*:?\s*/i, '').trim();
-          } else {
-            // If no reason found, use the rest of the response
-            reason = answer.replace(/Status\s*:?\s*(true|false)[\s\n]*/i, '').trim();
-          }
-          
-          // Ensure we have a reason
-          if (!reason) {
-            reason = isSubtaskComplete 
-              ? 'The task requirements appear to be met.' 
-              : 'The task requirements are not fully implemented.';
-          }
-        } catch (e) {
-          // On error, treat as not complete and no reason
+          const { complete, reason } = await checkSubtaskWithOpenAI(
+            userCode,
+            subtask,
+            task.title    || taskKey,
+            project?.title || 'Pandas Project',
+          );
+          results.push({ subtask, complete, reason });
+          if (!complete) allDone = false;
+        } catch (subErr) {
+          results.push({ subtask, complete: false, reason: subErr.message });
+          allDone = false;
         }
-        subtaskResults.push({ subtask, complete: isSubtaskComplete, reason });
-        // Update subtasks UI as each result comes in
-        setSubtaskCheckResults(prev => ({
-          ...prev,
-          [taskKey]: [...subtaskResults]
-        }));
-        if (!isSubtaskComplete) allComplete = false;
-      }
-      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: allComplete }));
-      if (!allComplete) {
-        // Optionally, show modal with missing subtasks (reuse modal logic)
-      }
-    } catch (e) {
-      // Optionally handle error
-    }
-    setLoadingTaskKey(null);
-  };
 
-  // Handler for checking a subtask using OpenAI
-  const handleOpenAICheck = async (taskKey, subIdx, subDesc) => {
-    setChecking(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: true }));
-    setCheckError(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: '' }));
-    try {
-      // Get project config (from Firebase or fallback)
-      const config = await getPandasProjectConfig('Project1');
-      // Use only the code from userCode (should be the Colab code as string)
-      const result = await checkTasksAndSubtasksGemini(userCode, config);
-      // result: { [taskKey]: { completed: [], reasons: {} } }
-      const isComplete = result[taskKey]?.completed?.includes(subDesc);
-      const reason = result[taskKey]?.reasons?.[subDesc] || '';
-      setCheckResults(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: { complete: isComplete, reason } }));
-    } catch (e) {
-      setCheckError(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: 'Check failed. Try again.' }));
+        // Stream each result into UI as it arrives
+        setSubtaskCheckResults(prev => ({ ...prev, [taskKey]: [...results] }));
+      }
+
+      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: allDone }));
+
+    } catch (err) {
+      setCheckApiError(`Check failed: ${err.message}`);
+      setTaskCheckStatus(prev => ({ ...prev, [taskKey]: false }));
     } finally {
-      setChecking(prev => ({ ...prev, [`${taskKey}_${subIdx}`]: false }));
+      setLoadingTaskKey(null);
     }
   };
 
-  if (loading) {
-    return <div className="p-8 text-lg text-white">Loading project statement...</div>;
-  }
-  if (error) {
-    return <div className="p-8 text-lg text-red-500">{error}</div>;
-  }
-  if (!project) {
-    return <div className="p-8 text-lg text-slate-600">No project data.</div>;
-  }
+  // ── Loading / error states ────────────────────────────────────────
+  if (loading) return (
+    <div className="p-8 text-white flex items-center gap-3">
+      <span style={{
+        width: 18, height: 18, border: '2px solid #fff', borderTop: '2px solid #555',
+        borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite',
+      }} />
+      Loading project…
+    </div>
+  );
+  if (error)    return <div className="p-8 text-red-400">{error}</div>;
+  if (!project) return <div className="p-8 text-gray-400">No project data.</div>;
 
+  // ── Render ────────────────────────────────────────────────────────
   return (
     <div
-      className="p-8 max-w-2xl shadow-lg mt-6 animate-fadeIn"
+      className="p-8 max-w-2xl shadow-lg mt-6"
       style={{
-        maxHeight: '79vh',
-        overflowY: 'auto',
-        background: '#18181b',
-        color: '#f3f4f6',
+        maxHeight: '79vh', overflowY: 'auto',
+        background: '#18181b', color: '#f3f4f6',
         boxShadow: '0 4px 32px #000a',
       }}
     >
-      <h1 className="text-3xl text-center justify-center font-bold mb-2 flex gap-2 items-center relative" style={{ color: '#a78bfa' }}>
+      {/* ── Sync status banner ── */}
+      {!userCode?.trim() ? (
+        <div className="mb-5 flex items-start gap-2 bg-yellow-900/40 border border-yellow-700/50 rounded px-3 py-2 text-yellow-300 text-xs">
+          <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          </svg>
+          <span>
+            <b>No code synced yet.</b> In JupyterLite → <b>File → Download</b>, then click{' '}
+            <b>Sync Notebook</b> in the left toolbar. The Check button will work right after.
+          </span>
+        </div>
+      ) : (
+        <div className="mb-5 flex items-center gap-2 bg-green-900/30 border border-green-700/40 rounded px-3 py-2 text-green-400 text-xs">
+          <svg className="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l7.879-7.879a1 1 0 011.414 0z"
+                  clipRule="evenodd"/>
+          </svg>
+          <span><b>Notebook synced.</b> Click <b>Check</b> on any task to evaluate your code.</span>
+        </div>
+      )}
+
+      {/* ── API error banner ── */}
+      {checkApiError && (
+        <div className="mb-4 flex items-start gap-2 bg-red-900/40 border border-red-700/50 rounded px-3 py-2 text-red-300 text-xs">
+          <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          <span>{checkApiError}</span>
+        </div>
+      )}
+
+      {/* ── Project title ── */}
+      <h1 className="text-3xl text-center font-bold mb-2 flex gap-2 items-center justify-center relative"
+          style={{ color: '#a78bfa' }}>
         {project.title}
-        <span ref={projectDescIconRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+        <span ref={projectDescIconRef}
+              style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
           <FaQuestionCircle
-            style={{
-              color: '#e5e7eb',
-              fontSize: 22,
-              marginLeft: 8,
-              cursor: 'pointer',
-              verticalAlign: 'middle',
-              opacity: 0.85,
-              transition: 'color 0.2s'
-            }}
+            style={{ color: '#e5e7eb', fontSize: 22, marginLeft: 8, cursor: 'pointer', opacity: 0.85 }}
             onClick={() => setShowProjectDesc(v => !v)}
-            title="Show project description"
           />
           {showProjectDesc && (
-            <div
-              style={{
-                position: 'absolute',
-                top: 32,
-                right: 0,
-                zIndex: 100,
-                background: '#23232a',
-                color: '#e5e7eb',
-                border: '1px solid #444',
-                borderRadius: 8,
-                padding: '16px 20px',
-                minWidth: 350,
-                maxWidth: 340,
-                boxShadow: '0 4px 24px #000a',
-                fontSize: 16,
-                lineHeight: '1.6',
-                whiteSpace: 'pre-line',
-                transition: 'opacity 0.3s cubic-bezier(.4,0,.2,1), transform 0.3s cubic-bezier(.4,0,.2,1)',
-                opacity: 1,
-                transform: 'translateY(0px) scale(1)'
-              }}
-            >
+            <div style={{
+              position: 'absolute', top: 32, right: 0, zIndex: 100,
+              background: '#23232a', color: '#e5e7eb', border: '1px solid #444',
+              borderRadius: 8, padding: '16px 20px', minWidth: 320, maxWidth: 340,
+              boxShadow: '0 4px 24px #000a', fontSize: 15, lineHeight: '1.6',
+              whiteSpace: 'pre-line',
+            }}>
               {project.description}
             </div>
           )}
         </span>
       </h1>
+
       {project.Concept && (
-        <div className="text-center mb-6">
-          <p className="text-sm text-gray-400" style={{ fontSize: '14px', color: '#9ca3af' }}>
-            <span className='font-semibold'>Concepts Used:</span> {project.Concept}
+        <div className="text-center mb-3">
+          <p className="text-sm" style={{ color: '#9ca3af' }}>
+            <span className="font-semibold">Concepts Used:</span> {project.Concept}
           </p>
         </div>
       )}
+
       {project.DataLink && (
         <div className="text-center mb-6">
-          <div className="inline-block" style={{ maxWidth: '600px', width: '100%' }}>
-            <p className="text-sm text-gray-400" style={{ fontSize: '14px', color: '#9ca3af' }}>
-              <span className='font-semibold'>Data Link -</span>{' '}
-              <a 
-                href={project.DataLink} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ color: '#a78bfa', textDecoration: 'underline' }}
-              >
-                click here
-              </a>
-            </p>
-          </div>
+          <p className="text-sm" style={{ color: '#9ca3af' }}>
+            <span className="font-semibold">Data Link — </span>
+            <a href={project.DataLink} target="_blank" rel="noopener noreferrer"
+               style={{ color: '#a78bfa', textDecoration: 'underline' }}>
+              click here
+            </a>
+          </p>
         </div>
       )}
-      <div className="space-y-6 mt-10">
+
+      {/* ── Tasks ── */}
+      <div className="space-y-6 mt-8">
         {project.tasks && Object.entries(project.tasks).map(([taskKey, task]) => {
           const isExpanded = expandedTask === taskKey;
+          const isChecking = loadingTaskKey === taskKey;
+          const taskDone   = taskCheckStatus[taskKey];
+          const noCode     = noCodeWarning[taskKey];
+          const results    = subtaskCheckResults[taskKey] || [];
+
           return (
-            <div
-              key={taskKey}
-              className="p-4 shadow border"
-              style={{ background: '#23232a', borderColor: '#444', borderRadius: 0 }}
-            >
+            <div key={taskKey} className="p-4 shadow border"
+                 style={{ background: '#23232a', borderColor: '#444', borderRadius: 0 }}>
+
+              {/* Task header */}
               <div
-                className="font-semibold mb-2 text-lg flex items-center justify-between cursor-pointer select-none"
-                style={{ color: '#e5e7eb', borderRadius: 0, fontSize: 24, lineHeight: '2.2rem' }}
+                className="font-semibold mb-2 flex items-center justify-between cursor-pointer select-none"
+                style={{ color: '#e5e7eb', fontSize: 16, lineHeight: '2.2rem' }}
                 onClick={() => setExpandedTask(isExpanded ? null : taskKey)}
               >
                 <span className="flex items-center gap-2">
-                  <FaChevronDown
-                    style={{
-                      transition: 'transform 0.3s',
-                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      fontSize: 16,
-                    }}
-                  />
-                  <span
-                    className="px-3 py-1"
-                    style={{ background: '#23232a',textAlign: 'left', color: '#e5e7eb', borderRadius: 0, fontWeight: 400, fontSize: 16, lineHeight: '2.2rem' }}
-                  >
-                    {task.title}
-                  </span>
+                  <FaChevronDown style={{
+                    transition: 'transform 0.3s',
+                    transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    fontSize: 14,
+                  }} />
+                  {task.title}
                 </span>
-                <button
-                  className="ml-4 px-3 py-1 text-white font-semibold text-sm flex items-center gap-2"
-                  style={{ minWidth: 70, minHeight: 32, position: 'relative', background: '#333', borderRadius: 0, border: '1px solid #444' }}
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleTaskCheck(taskKey, task);
-                  }}
-                  disabled={loadingTaskKey === taskKey}
-                >
-                  {loadingTaskKey === taskKey ? (
-                    <span className="loader mr-2" style={{ width: 16, height: 16, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
-                  ) : taskCheckStatus[taskKey] === true ? (
-                    <img src={tick} alt="" className='w-5' />
-                  ) : taskCheckStatus[taskKey] === false ? (
-                    <img src={cross} alt="" className='w-5' />
-                  ) : (
-                    'Check'
+
+                <div className="flex flex-col items-end gap-1">
+                  <button
+                    className="ml-4 px-3 py-1 text-white font-semibold text-sm flex items-center gap-2"
+                    style={{
+                      minWidth: 70, minHeight: 32,
+                      background: noCode ? '#7c2d12' : '#333',
+                      borderRadius: 0,
+                      border: noCode ? '1px solid #ef4444' : '1px solid #444',
+                      cursor: isChecking ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.2s',
+                    }}
+                    onClick={e => { e.stopPropagation(); handleTaskCheck(taskKey, task); }}
+                    disabled={isChecking}
+                  >
+                    {isChecking ? (
+                      <span style={{
+                        width: 14, height: 14,
+                        border: '2px solid #fff', borderTop: '2px solid #555',
+                        borderRadius: '50%', display: 'inline-block',
+                        animation: 'spin 1s linear infinite',
+                      }} />
+                    ) : taskDone === true ? (
+                      <img src={applied} alt="done" className="w-5" />
+                    ) : taskDone === false ? (
+                      <img src={cross} alt="fail" className="w-5" />
+                    ) : (
+                      'Check'
+                    )}
+                  </button>
+                  {noCode && (
+                    <span className="text-red-400 text-[10px] text-right leading-tight"
+                          style={{ maxWidth: 130 }}>
+                      Sync notebook first
+                    </span>
                   )}
-                </button>
+                </div>
               </div>
+
+              {/* Expanded content */}
               {isExpanded && (
                 <div className="ml-2 mt-2">
-                  {/* Display Goal if exists */}
                   {task.Goal && (
-                    <div className="mb-4 p-3" style={{ background: '#1a1a1d', border: '1px solid #444', borderRadius: 0 }}>
-                      <h4 className="text-sm text-left font-semibold mb-2" style={{ color: '#a78bfa', fontSize: 14 }}>Goal</h4>
-                      <p className="text-xs text-left" style={{ color: '#e5e7eb', lineHeight: '1.4' }}>{task.Goal}</p>
+                    <div className="mb-4 p-3"
+                         style={{ background: '#1a1a1d', border: '1px solid #444' }}>
+                      <h4 className="text-xs font-semibold mb-1 text-left" style={{ color: '#a78bfa' }}>Goal</h4>
+                      <p className="text-xs text-left" style={{ color: '#e5e7eb', lineHeight: 1.4 }}>
+                        {task.Goal}
+                      </p>
                     </div>
                   )}
-                  
+
                   <ul className="space-y-2">
-                    {task.subtasks && task.subtasks.map((subDesc, subIdx) => {
-                    const checkKey = `${taskKey}_${subIdx}`;
-                    const result = checkResults[checkKey];
-                    const isChecking = checking[checkKey];
-                    const errorMsg = checkError[checkKey];
-return (
-                      <li
-                        key={subIdx}
-                        className="group flex text-left items-center justify-between"
-                        style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4, paddingRight: 0 }}
-                      >
-                        <div className="flex items-center gap-3 flex-1" style={{ minWidth: 'calc(100% - 80px)', maxWidth: 'calc(100% - 80px)' }}>
-                          <span
-                            className={`text-xs ${checked[taskKey]?.[subIdx] ? 'line-through text-gray-500' : ''}`}
-                            style={{ color: checked[taskKey]?.[subIdx] ? '#6b7280' : '#f3f4f6' }}
-                          >
+                    {(task.subtasks || []).map((subDesc, subIdx) => {
+                      const subResult    = results[subIdx];
+                      const subLoading   = isChecking && subResult === undefined;
+                      const isReasonOpen =
+                        hoveredReason.clicked &&
+                        hoveredReason.taskKey === taskKey &&
+                        hoveredReason.subIdx  === subIdx;
+
+                      return (
+                        <li key={subIdx}
+                            className="group flex text-left items-center justify-between"
+                            style={{ borderBottom: '1px solid #333', paddingBottom: 6, marginBottom: 4 }}>
+
+                          <span className="text-xs flex-1 mr-3" style={{ color: '#f3f4f6' }}>
                             {subDesc}
                           </span>
-                        </div>
-                        
-                        {/* Bulb icon for showing reason */}
-                        {(loadingTaskKey === taskKey || (subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined)) && (
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity relative bulb-icon-container">
-                            <FaLightbulb 
-                              className="text-yellow-400/60 hover:text-yellow-400 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setHoveredReason(prev => {
-                                  const isSame = prev.taskKey === taskKey && prev.subIdx === subIdx && prev.clicked;
-                                  // shift overlay a bit left from the right edge
-                                  const newOffset = 80; // px from right
-                                  return { taskKey, subIdx, left: false, clicked: !isSame, offsetRight: newOffset };
-                                });
-                              }}
-                            />
-                            {hoveredReason.clicked && hoveredReason.taskKey === taskKey && hoveredReason.subIdx === subIdx && (
-                              <div 
-                                ref={tooltipRef}
-                                className="tooltip-container"
-                                style={{
-                                  position: 'fixed',
-                                  right: hoveredReason.offsetRight || 20,
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  zIndex: 1000,
-                                  background: '#23232a',
-                                  color: '#e5e7eb',
-                                  fontSize: 14,
-                                  border: '1px solid #444',
-                                  borderRadius: 8,
-                                  padding: '12px 16px',
-                                  maxWidth: 'min(500px, 40vw)',
-                                  minWidth: '300px',
-                                  maxHeight: '80vh',
-                                  overflowY: 'auto',
-                                  whiteSpace: 'pre-line',
-                                  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
-                                  lineHeight: '1.5',
-                                  wordBreak: 'break-word',
-                                  overflowWrap: 'break-word'
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                                onMouseLeave={() => {
-                                  setHoveredReason({ taskKey: null, subIdx: null, clicked: false });
-                                }}
-                              >
-                                {subtaskCheckResults[taskKey]?.[subIdx]?.reason || 'No reason available'}
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {/* Lightbulb reason tooltip */}
+                            {subResult !== undefined && (
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity relative bulb-icon-container">
+                                <FaLightbulb
+                                  className="text-yellow-400/60 hover:text-yellow-400 cursor-pointer"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    setHoveredReason(prev => ({
+                                      taskKey, subIdx,
+                                      clicked: !(prev.taskKey === taskKey && prev.subIdx === subIdx && prev.clicked),
+                                    }));
+                                  }}
+                                />
+                                {isReasonOpen && (
+                                  <div
+                                    ref={tooltipRef}
+                                    className="tooltip-container"
+                                    style={{
+                                      position: 'fixed', right: 80, top: '50%',
+                                      transform: 'translateY(-50%)', zIndex: 1000,
+                                      background: '#23232a', color: '#e5e7eb',
+                                      fontSize: 13, border: '1px solid #555',
+                                      borderRadius: 8, padding: '12px 16px',
+                                      maxWidth: 'min(480px, 38vw)', minWidth: 260,
+                                      maxHeight: '80vh', overflowY: 'auto',
+                                      whiteSpace: 'pre-line',
+                                      boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
+                                      lineHeight: 1.5, wordBreak: 'break-word',
+                                    }}
+                                    onClick={e => e.stopPropagation()}
+                                    onMouseLeave={() =>
+                                      setHoveredReason({ taskKey: null, subIdx: null, clicked: false })
+                                    }
+                                  >
+                                    <div className={`text-xs font-semibold mb-1 ${subResult.complete ? 'text-green-400' : 'text-red-400'}`}>
+                                      {subResult.complete ? '✓ Complete' : '✗ Incomplete'}
+                                    </div>
+                                    {subResult.reason}
+                                  </div>
+                                )}
                               </div>
                             )}
+
+                            {/* Spinner while this subtask is being checked */}
+                            {subLoading && (
+                              <span style={{
+                                width: 13, height: 13,
+                                border: '2px solid #fff', borderTop: '2px solid #555',
+                                borderRadius: '50%', display: 'inline-block',
+                                animation: 'spin 1s linear infinite',
+                              }} />
+                            )}
+
+                            {/* Tick / cross */}
+                            {subResult !== undefined && (
+                              <img
+                                src={subResult.complete ? applied : cross}
+                                alt={subResult.complete ? 'complete' : 'incomplete'}
+                                className="w-4"
+                              />
+                            )}
                           </div>
-                        )}
-                        
-                        {/* Tick/cross for subtask check and reason - positioned at right border */}
-                        {loadingTaskKey === taskKey && (!subtaskCheckResults[taskKey] || subtaskCheckResults[taskKey][subIdx] === undefined) ? (
-                          <span className="loader" style={{ width: 14, height: 14, border: '2px solid #fff', borderTop: '2px solid #888', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite', marginRight: 0 }} />
-                        ) : subtaskCheckResults[taskKey] && subtaskCheckResults[taskKey][subIdx] !== undefined ? (
-                          <img
-                            src={subtaskCheckResults[taskKey][subIdx].complete ? applied : cross}
-                            alt=""
-                            className="w-5"
-                            style={{ marginRight: 0 }}
-                          />
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                </ul>
-                
-                {/* Display Output if exists - show after subtasks */}
-                {task.Output && (
-                  <div className="mt-4 p-3" style={{ background: '#1a1a1d', border: '1px solid #444', borderRadius: 0 }}>
-                    <h4 className="text-sm font-semibold mb-2" style={{ color: '#a78bfa', fontSize: 14 }}>Expected Output</h4>
-                    {task.Output && task.Output.startsWith('http') ? (
-                      <img 
-                        src={task.Output} 
-                        alt="Expected Output" 
-                        style={{ 
-                          maxWidth: '100%', 
-                          height: 'auto', 
-                          borderRadius: 0,
-                          border: '1px solid #444'
-                        }} 
-                      />
-                    ) : (
-                      <p className="text-xs" style={{ color: '#e5e7eb', lineHeight: '1.4' }}>{task.Output}</p>
-                    )}
-                  </div>
-                )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {task.Output && (
+                    <div className="mt-4 p-3"
+                         style={{ background: '#1a1a1d', border: '1px solid #444' }}>
+                      <h4 className="text-xs font-semibold mb-2" style={{ color: '#a78bfa' }}>
+                        Expected Output
+                      </h4>
+                      {task.Output.startsWith('http') ? (
+                        <img src={task.Output} alt="Expected Output"
+                             style={{ maxWidth: '100%', height: 'auto', border: '1px solid #444' }} />
+                      ) : (
+                        <p className="text-xs" style={{ color: '#e5e7eb', lineHeight: 1.4 }}>
+                          {task.Output}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
