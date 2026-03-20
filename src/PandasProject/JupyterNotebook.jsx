@@ -20,7 +20,6 @@ import { db } from '../firebase';
 // ──────────────────────────────────────────────────────────────────────
 
 const JUPYTERLITE_LAB  = '/jupyterlite/lab/index.html';
-const POLL_INTERVAL_MS = 20000;
 
 /** Concatenate all code-cell sources into one string, including outputs */
 function codeFromNotebook(nb) {
@@ -393,7 +392,7 @@ export default function JupyterNotebook({ setUserCode, onCodeSync }) {
     }, 5000);
   }, [activeNb, bridgeReady, injectBridge]);
 
-  // ── 6. On iframe load: inject bridge, start auto-poll ─────────────
+  // ── 6. On iframe load: inject bridge ─────────────────────────────
   const handleIframeLoad = useCallback(() => {
     setIframeReady(true);
     // Give JupyterLite ~4s to fully initialise before injecting
@@ -404,12 +403,12 @@ export default function JupyterNotebook({ setUserCode, onCodeSync }) {
     }, 4000);
   }, [injectBridge, requestNotebook]);
 
-  // ── 7. Auto-poll every 20 s ───────────────────────────────────────
-  useEffect(() => {
-    if (!iframeReady) return;
-    pollTimer.current = setInterval(() => requestNotebook(true), POLL_INTERVAL_MS);
-    return () => clearInterval(pollTimer.current);
-  }, [iframeReady, requestNotebook]);
+  // Auto-poll removed - manual sync only
+  // useEffect(() => {
+  //   if (!iframeReady) return;
+  //   pollTimer.current = setInterval(() => requestNotebook(true), POLL_INTERVAL_MS);
+  //   return () => clearInterval(pollTimer.current);
+  // }, [iframeReady, requestNotebook]);
 
   // ── Helpers ──────────────────────────────────────────────────────
   const showToast = (msg, type = 'info') => {
@@ -507,9 +506,6 @@ export default function JupyterNotebook({ setUserCode, onCodeSync }) {
         </div>
       </div>
 
-      {/* ── Banner ── */}
-      <HowToBanner iframeReady={iframeReady} synced={!!lastSyncedAt} />
-
       {/* ── Main area ── */}
       <div className="flex flex-1 overflow-hidden min-h-0">
 
@@ -542,28 +538,6 @@ export default function JupyterNotebook({ setUserCode, onCodeSync }) {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────
-function HowToBanner({ iframeReady, synced }) {
-  const [dismissed, setDismissed] = useState(
-    () => sessionStorage.getItem('jupyter_banner_v4') === '1'
-  );
-  if (dismissed) return null;
-  return (
-    <div className="flex items-start gap-3 bg-indigo-950/70 border-b border-indigo-800/50 px-4 py-2 text-xs text-indigo-200 shrink-0">
-      <svg className="w-4 h-4 mt-0.5 shrink-0 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20A10 10 0 0012 2z"/>
-      </svg>
-      {synced
-        ? <span><b className="text-green-400">✓ Code is synced.</b> STED auto-reads your notebook every 20s. Click <b>Sync Code</b> for an instant update after changes.</span>
-        : <span>Write your code in JupyterLite below. STED will read it <b>automatically</b> — no download needed. Click <b>Sync Code</b> to sync immediately.</span>
-      }
-      <button onClick={() => { sessionStorage.setItem('jupyter_banner_v4', '1'); setDismissed(true); }}
-              className="ml-auto text-indigo-400 hover:text-white shrink-0 text-base leading-none">✕</button>
     </div>
   );
 }
