@@ -1,21 +1,13 @@
 {
   "rewrites": [
-    { "source": "/jupyterlite/(.*)", "destination": "/jupyterlite/$1" },
     { "source": "/(.*)", "destination": "/" }
   ],
   "headers": [
     {
-      "source": "/jupyterlite/(.*)",
-      "headers": [
-        { "key": "Cross-Origin-Resource-Policy", "value": "cross-origin" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" }
-      ]
-    },
-    {
       "source": "/(.*)",
       "headers": [
-        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
-        { "key": "Cross-Origin-Embedder-Policy", "value": "require-corp" }
+        { "key": "Cross-Origin-Opener-Policy",   "value": "same-origin" },
+        { "key": "Cross-Origin-Embedder-Policy",  "value": "credentialless" }
       ]
     }
   ]
