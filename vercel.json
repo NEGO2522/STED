@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/jupyterlite/(.*)", "destination": "/jupyterlite/$1" },
     { "source": "/(.*)", "destination": "/" }
   ],
   "headers": [
