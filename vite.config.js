@@ -10,7 +10,6 @@ export default defineConfig({
 
   server: {
     headers: {
-      // Required for JupyterLite / Pyodide SharedArrayBuffer support
       'Cross-Origin-Opener-Policy':   'same-origin',
       'Cross-Origin-Embedder-Policy': 'credentialless',
     },
