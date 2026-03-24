@@ -94,12 +94,9 @@ function AllSkills() {
 
     useEffect(() => {
         if (isLoaded && !isSignedIn) {
-            navigate('/');
+            setIsLoading(false);
+            return;
         }
-    }, [isLoaded, isSignedIn, navigate]);
-
-    
-    useEffect(() => {
         if (isLoaded && isSignedIn) {
             const userRef = ref(db, 'users/' + user.id);
 

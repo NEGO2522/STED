@@ -66,14 +66,12 @@ function Profile() {
         return userData[listType] || [];
     };
 
-    useEffect(() => {
-        if (isLoaded && !isSignedIn) {
-            navigate('/');
-        }
-    }, [isLoaded, isSignedIn, navigate]);
-
-    useEffect(() => {
-        if (isLoaded && isSignedIn) {
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      setIsLoading(false);
+      return;
+    }
+    if (isLoaded && isSignedIn) {
             const userRef = ref(db, 'users/' + user.id);
             // Set up real-time listener
             const unsubscribe = onValue(userRef, async (snapshot) => {

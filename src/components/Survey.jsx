@@ -13,11 +13,7 @@ function Survey() {
   const navigate = useNavigate();
   const { isLoaded, isSignedIn, user } = useUser();
 
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      navigate('/');
-    }
-  }, [isLoaded, isSignedIn, navigate]);
+  // Removed authentication redirect to allow public access
 
   useEffect(() => {
     const checkIfAlreadySubmitted = async () => {

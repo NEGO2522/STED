@@ -107,11 +107,9 @@ function Pandas() {
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
-      navigate("/");
+      setIsLoading(false);
+      return;
     }
-  }, [isLoaded, isSignedIn, navigate]);
-
-  useEffect(() => {
     if (!user) return;
     // Real-time listener for user data
     const userRef = ref(db, 'users/' + user.id);

@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Routes, Route, useNavigate, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import './App.css';
 import Start from './Pages/Start';
 import Login from './Pages/Login';
@@ -38,8 +39,8 @@ const ClerkAuthCallback = () => {
         // Redirect to python page after successful sign-in
         navigate('/python');
       } else {
-        // If not signed in, redirect to sign-in page
-        navigate('/login');
+        // If not signed in, redirect to start page or keep public
+        navigate('/');
       }
     }
   }, [isLoaded, isSignedIn, navigate]);
@@ -93,6 +94,8 @@ function AppContent() {
     };
   }, []);
 
+  const location = useLocation();
+
   if (!isOnline) {
     return (
       <div style={{ minHeight: '100vh' }} className="flex flex-col items-center justify-center bg-slate-50">
@@ -127,44 +130,37 @@ function AppContent() {
           },
         }}
       />
-      <Routes>
-        {/* Clerk Auth Routes */}
-        <Route path="/sign-in/*" element={<SignIn routing="path" path="/sign-in" />} />
-        <Route path="/sign-up/*" element={<SignUp routing="path" path="/sign-up" />} />
-        <Route path="/sso-callback" element={<ClerkAuthCallback />} />
-        <Route path="/login/sso-callback" element={<ClerkAuthCallback />} />
-        
-        {/* Public Routes */}
-        <Route path="/" element={<Start />} />
-        <Route path="/start" element={<Start />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/contact" element={<Contact />} />
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          {/* Public Routes */}
+          <Route path="/" element={<Start />} />
+          <Route path="/start" element={<Start />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<Contact />} />
 
-        <Route path="/login" element={<SignedOut><Login /></SignedOut>} />
-        <Route path="/signup" element={<SignedOut><Signup /></SignedOut>} />
-
-        {/* Protected Routes */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/home" element={<Pandas />} />
-          <Route path="/public-speaking" element={<PublicSpeaking />} />
-          <Route path="/data-science" element={<DataScience />} />
-          <Route path="/python" element={<Python />} />
-          <Route path="/powerbi" element={<PowerBi />} />
-          <Route path="/datascience" element={<Pandas />} />
-          <Route path="/python/project" element={<Project />} />
-          <Route path="/datascience/project" element={<PandasProject />} />
-          <Route path="/All-skills" element={<AllSkills />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/progress" element={<Progress />} />
-          <Route path="/task/:taskId" element={<Task />} />
-        </Route>
-        
-        {/* Public profile routes */}
-        <Route path="/userprofile/:id" element={<UserProfile />} />
-        <Route path="/python-project/:userId/:projectId" element={<PublicPythonProject />} />
-        
-      </Routes>
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/home" element={<Pandas />} />
+            <Route path="/public-speaking" element={<PublicSpeaking />} />
+            <Route path="/data-science" element={<DataScience />} />
+            <Route path="/python" element={<Python />} />
+            <Route path="/powerbi" element={<PowerBi />} />
+            <Route path="/datascience" element={<Pandas />} />
+            <Route path="/python/project" element={<Project />} />
+            <Route path="/datascience/project" element={<PandasProject />} />
+            <Route path="/All-skills" element={<AllSkills />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/progress" element={<Progress />} />
+            <Route path="/task/:taskId" element={<Task />} />
+          </Route>
+          
+          {/* Public profile routes */}
+          <Route path="/userprofile/:id" element={<UserProfile />} />
+          <Route path="/python-project/:userId/:projectId" element={<PublicPythonProject />} />
+          
+        </Routes>
+      </AnimatePresence>
     </>
   );
 }
@@ -173,12 +169,13 @@ function AppContent() {
 const ProtectedRoute = () => {
   return (
     <>
-      <SignedIn>
+      <Outlet />
+      {/* <SignedIn>
         <Outlet />
       </SignedIn>
       <SignedOut>
         <Navigate to="/login" replace />
-      </SignedOut>
+      </SignedOut> */}
     </>
   );
 };

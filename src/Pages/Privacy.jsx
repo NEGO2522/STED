@@ -1,204 +1,150 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@clerk/clerk-react';
 import ProfileIcon from '../components/ProfileIcon';
+
+function FallingStars() {
+  const starsArray = Array.from({ length: 15 });
+  return (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      {starsArray.map((_, i) => (
+        <motion.div
+            key={i}
+            initial={{ 
+              top: "-10%",
+              left: Math.random() * 100 + "%",
+              opacity: 0,
+              scale: 0.5 + Math.random()
+            }}
+            animate={{
+              top: "110%",
+              left: i % 2 === 0 ? "-10%" : "110%",
+              opacity: [0, 0.7, 0],
+            }}
+            transition={{
+              duration: 5 + Math.random() * 5,
+              repeat: Infinity,
+              delay: Math.random() * 15,
+              ease: "linear"
+            }}
+            className="absolute w-[3px] h-[150px] bg-gradient-to-t from-transparent via-blue-500/60 to-transparent"
+            style={{ transform: i % 2 === 0 ? "rotate(45deg)" : "rotate(-45deg)" }}
+        />
+      ))}
+    </div>
+  );
+}
 
 function Privacy() {
   const { isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
   if (!isLoaded) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center font-['Comic_Sans_MS',_cursive]">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -right-20 w-96 h-96 bg-blue-100 rounded-full opacity-40 blur-3xl animate-float" />
-        <div className="absolute bottom-1/3 -left-20 w-80 h-80 bg-indigo-100 rounded-full opacity-40 blur-3xl animate-float animation-delay-2000" />
-        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-violet-100 rounded-full opacity-30 blur-3xl animate-float animation-delay-4000" />
-      </div>
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
-        <header className="py-6">
+    <motion.div
+      initial={{ x: "100%", opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: "-100%", opacity: 0 }}
+      transition={{ type: "spring", damping: 25, stiffness: 200 }}
+      className="min-h-screen bg-white text-slate-800 font-['Comic_Sans_MS',_cursive] antialiased relative overflow-hidden selection:bg-blue-100"
+    >
+      <FallingStars />
+      
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 relative z-10 flex flex-col min-h-screen">
+        <header className="py-10">
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-blue-700 cursor-pointer" onClick={() => navigate('/')}>STED-LS</div>
-            <div className="flex items-center space-x-4">
-              {isSignedIn ? (
-                <ProfileIcon />
-              ) : (
-                <>
-                  <Link to="/login" className="text-slate-700 hover:text-blue-600 transition-colors">Sign In</Link>
-                  <Link to="/signup" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">Get Started</Link>
-                </>
-              )}
+            <Link to="/" className="text-3xl font-black tracking-tighter text-blue-600">
+              STED
+            </Link>
+            <div className="flex items-center space-x-6">
+              <Link to="/home" className="text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest">
+                Go to App
+              </Link>
+              {isSignedIn && <ProfileIcon />}
             </div>
           </div>
         </header>
-        
-        <main className="flex-1 py-12">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.5 }} 
-            className="w-full max-w-7xl mx-auto bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-white/20 p-10"
-          >
-            <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-slate-800 mb-2">Privacy Policy</h1>
-              <p className="text-slate-600">Last updated: {new Date().toLocaleDateString()}</p>
+
+        <main className="flex-1 py-16">
+          <div className="flex flex-col lg:flex-row gap-20 items-start">
+            
+            {/* Left Side: Headline */}
+            <div className="lg:w-1/3">
+              <h1 className="text-6xl font-black text-slate-900 mb-8 leading-[0.9] tracking-tighter">Privacy.</h1>
+              <p className="text-slate-400 text-sm font-bold uppercase tracking-[0.2em] mb-8">Data Ethics at STED</p>
+              <p className="text-slate-500 leading-relaxed max-w-sm">
+                We believe in total transparency. Your data is your property, and we treat it with the highest level of respect and security.
+              </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-8">
-                <div className="bg-slate-50 p-6 rounded-xl hover:shadow-md transition-shadow">
-                  <h2 className="text-xl font-semibold text-slate-800 mb-4">Information We Collect</h2>
-                  <p className="text-slate-600 mb-4">
-                    We collect information that you provide directly to us, including:
-                  </p>
-                  <ul className="space-y-2 text-slate-600">
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Account information (name, email, password)</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Profile information you choose to provide</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Content you create, upload, or receive</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>Communications between you and STED</span>
-                    </li>
-                  </ul>
+            {/* Right Side: Privacy Content */}
+            <div className="flex-1 space-y-16">
+              <section className="space-y-6">
+                <div className="w-10 h-1 rounded-full bg-blue-600"></div>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Security First</h2>
+                <div className="grid gap-12 sm:grid-cols-2">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-slate-700">Data Encryption</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">
+                      All your progress, projects, and personal details are encrypted at rest and in transit using industry-standard protocols.
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-slate-700">Minimal Collection</h3>
+                    <p className="text-slate-500 text-sm leading-relaxed">
+                      We only collect the minimum amount of information necessary to provide you with a high-quality learning experience.
+                    </p>
+                  </div>
                 </div>
+              </section>
 
-                <div className="bg-slate-50 p-6 rounded-xl hover:shadow-md transition-shadow">
-                  <h2 className="text-xl font-semibold text-slate-800 mb-4">Information Sharing</h2>
-                  <p className="text-slate-600 mb-4">
-                    We do not share your personal information with third parties except:
-                  </p>
-                  <ul className="space-y-2 text-slate-600">
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>With your consent</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>For legal reasons or to prevent harm</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>With service providers who assist in our operations</span>
-                    </li>
-                    <li className="flex items-start">
-                      <svg className="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>In connection with a merger or acquisition</span>
-                    </li>
-                  </ul>
-                </div>
+              <section className="space-y-6">
+                <div className="w-10 h-1 rounded-full bg-blue-600/30"></div>
+                <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Cookie Policy</h2>
+                <p className="text-slate-500 leading-relaxed text-[15px]">
+                  STED uses cookies to remember your preferences and keep you logged in. We do not use tracking cookies for third-party advertising. Your learning journey remains private and focused.
+                </p>
+              </section>
 
-              </div>
-
-              <div className="space-y-8">
-                <div className="bg-slate-50 p-6 rounded-xl hover:shadow-md transition-shadow">
-                  <h2 className="text-xl font-semibold text-slate-800 mb-4">How We Use Your Information</h2>
-                  <ul className="space-y-3 text-slate-600">
-                    <li className="flex items-start">
-                      <div className="bg-blue-100 p-1.5 rounded-full mr-3 flex-shrink-0">
-                        <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <span>Provide, maintain, and improve our services</span>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="bg-blue-100 p-1.5 rounded-full mr-3 flex-shrink-0">
-                        <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <span>Personalize your experience</span>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="bg-blue-100 p-1.5 rounded-full mr-3 flex-shrink-0">
-                        <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <span>Send you technical notices and support messages</span>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="bg-blue-100 p-1.5 rounded-full mr-3 flex-shrink-0">
-                        <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <span>Monitor and analyze trends and usage</span>
-                    </li>
-                    <li className="flex items-start">
-                      <div className="bg-blue-100 p-1.5 rounded-full mr-3 flex-shrink-0">
-                        <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                      </div>
-                      <span>Detect, investigate, and prevent security issues</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="bg-slate-50 p-6 rounded-xl hover:shadow-md transition-shadow">
-                  <h2 className="text-xl font-semibold text-slate-800 mb-4">Data Security</h2>
-                  <p className="text-slate-600 mb-4">
-                    We implement appropriate security measures to protect your information. However, no method of transmission over the internet is 100% secure.
-                  </p>
-                </div>
-
-                <div className="bg-slate-50 p-6 rounded-xl hover:shadow-md transition-shadow">
-                  <h2 className="text-xl font-semibold text-slate-800 mb-4">Changes to This Policy</h2>
-                  <p className="text-slate-600 mb-4">
-                    We may update this Privacy Policy from time to time. We will notify you of any changes by updating the "Last updated" date.
-                  </p>
-                </div>
-
-              </div>
+              <section className="space-y-6 p-10 bg-slate-50 rounded-[48px]">
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Your Rights</h2>
+                <ul className="space-y-6 text-slate-500 text-[15px]">
+                  <li className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-blue-600 shadow-sm">1</div>
+                    <span>Right to access and export all your data anytime.</span>
+                  </li>
+                  <li className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-blue-600 shadow-sm">2</div>
+                    <span>Right to permanent deletion of your account.</span>
+                  </li>
+                  <li className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-bold text-blue-600 shadow-sm">3</div>
+                    <span>Right to request corrections to any information.</span>
+                  </li>
+                </ul>
+              </section>
             </div>
-          </motion.div>
+          </div>
         </main>
 
-        {/* Footer */}
-        <footer className="py-6 border-t border-slate-100 mt-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-slate-500 text-sm mb-4 md:mb-0">
-              &copy; {new Date().getFullYear()} STED. All rights reserved.
+        <footer className="py-12 border-t border-slate-100/50 mt-20">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+              &copy; 2026 STED Technologies Inc.
             </div>
-            <div className="flex space-x-6">
-              <Link to="/terms" className="text-slate-500 hover:text-blue-600 text-sm transition-colors">Terms of Service</Link>
-              <Link to="/privacy" className="text-slate-500 hover:text-blue-600 text-sm transition-colors">Privacy Policy</Link>
-              <Link to="/contact" className="text-slate-500 hover:text-blue-600 text-sm transition-colors">Contact Us</Link>
+            <div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+              <Link to="/terms" className="hover:text-blue-600 transition-colors">Terms of Service</Link>
+              <Link to="/privacy" className="text-blue-600 font-bold transition-colors">Privacy Policy</Link>
+              <Link to="/contact" className="hover:text-blue-600 transition-colors">Contact US</Link>
             </div>
           </div>
         </footer>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
