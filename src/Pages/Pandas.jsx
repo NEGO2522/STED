@@ -618,7 +618,7 @@ IMPORTANT INSTRUCTIONS:
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 relative pt-20">
+    <div className="h-screen overflow-hidden bg-slate-50 relative pt-20 flex flex-col">
       {/* Professional top accent line */}
       <div className="absolute top-0 left-0 w-full h-1 bg-[#6366F1]" />
 
@@ -656,549 +656,172 @@ IMPORTANT INSTRUCTIONS:
       )}
 
       {/* Main content */}
-      <div className="w-full relative px-4 lg:px-8 pb-12 max-w-7xl mx-auto">
+      <div className="w-full relative px-4 lg:px-8 max-w-7xl mx-auto flex-1 overflow-hidden">
           {/* Header Section */}
            
-              <div className="text-left mt-6">
-                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-slate-800 via-[#6366F1] to-indigo-700 bg-clip-text text-transparent tracking-tight">Data Science</h1>
+              <div className="text-left mt-20">
+                <h1 className="text-4xl font-extrabold bg-gradient-to-r from-slate-800 via-[#6366F1] to-indigo-700 bg-clip-text text-transparent tracking-tight" style={{ fontFamily: "'Josefin Sans', sans-serif" }}>Data Science</h1>
             </div>
           
 
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {/* Projects Completed Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white rounded-xl shadow-md p-6 ring-1 ring-slate-200 hover:shadow-lg transition-all"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Projects Completed</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mt-1">
-                    {completedProjects.length}
-                    </h3>
-                  </div>
-                  <div className="bg-gradient-to-br from-[#f0f1ff] to-[#e0e1ff] p-3 rounded-full ring-1 ring-[#e0e1ff]">
-                    <span className=""><img className="w-7" src={Project} alt="" /></span>
-                  </div>
+          {/* Quick Stats Grid - hidden */}
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <motion.div ...>Projects Completed</motion.div>
+            <motion.div ...>Concepts Learned</motion.div>
+            <motion.div ...>Concepts Applied</motion.div>
+          </div> */}
+
+          {/* ── Static Info Section ── */}
+          <div className="mt-10 space-y-8">
+
+            {/* Hero banner */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#4f46e5] via-[#6366F1] to-[#818cf8] p-8 shadow-xl">
+              {/* decorative blobs */}
+              <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full bg-white/10 blur-2xl" />
+              <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                  <p className="text-indigo-200 text-sm font-semibold uppercase tracking-widest mb-2">Your learning path</p>
+                  <h2 className="text-3xl font-extrabold text-white mb-3" style={{ fontFamily: "'Josefin Sans', sans-serif" }}>Master Pandas & Data Science</h2>
+                  <p className="text-indigo-100 text-base max-w-xl leading-relaxed">Work through hands-on projects that teach you to manipulate, analyse, and visualise real-world data using the industry-standard Python stack.</p>
                 </div>
-              </motion.div>
-
-            
-
-                        {/* Concepts Learned Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-xl shadow-md p-6 ring-1 ring-slate-200 hover:shadow-lg transition-all"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Concepts Learned</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mt-1">
-                      {conceptStats.learned} / {conceptStats.total}
-                    </h3>
-                  </div>
-                  <div className="bg-yellow-50 p-3 rounded-full ring-1 ring-yellow-100">
-                    <span className="text-2xl"><img className="w-7" src={Learned} alt="" /></span>
-                  </div>
-                </div>
-              </motion.div>
-
-            {/* Concepts Applied Card */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-all ring-1 ring-slate-200"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Concepts Applied</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mt-1">
-                      {conceptStats.applied} / {conceptStats.learned}
-                    </h3>
-                  </div>
-                  <div className="bg-green-50 p-3 rounded-full ring-1 ring-green-100">
-                    <span className="text-2xl"><img className="w-7" src={Applied} alt="" /></span>
-                  </div>
-                </div>
-              </motion.div>
-
-            </div>
-
-          {/* Assignment Section */}
-         
-
-          {/* Main Content Grid */}
-          <div className="flex flex-col lg:flex-row gap-6 mt-13 items-start">
-            {/* Learning Resources - Commented out */}
-            {/* <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white/90 backdrop-blur-sm w-full lg:w-2/3 rounded-xl shadow-md p-6 ring-1 ring-slate-200"
-            >
-              <MemoizedConceptLearned 
-                skillName="pandas"
-                completedProjects={completedProjects}
-                onConceptClick={(conceptDetails) => {
-                  setSelectedConceptDetails(conceptDetails);
-                  setShowConceptDetailsOverlay(true);
-                  setIsEditingStatus(false);
-                  setNewStatus(conceptDetails.status || '');
-                }}
-              />
-            </motion.div> */}
-
-            {/* Concept Details Overlay */}
-            {showConceptDetailsOverlay && selectedConceptDetails && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative max-h-[90vh] overflow-y-auto">
-                  <button
-                    className="absolute top-4 right-4 text-slate-500 hover:text-slate-800 text-2xl font-bold"
-                    onClick={() => setShowConceptDetailsOverlay(false)}
-                  >
-                    ×
-                  </button>
-                  
-                  {/* Concept Name */}
-                  <div className="mb-8">
-                    <div className="flex items-center gap-4 mb-2">
-                      <h2 className="text-4xl font-bold text-[#4f46e5]">
-                        {selectedConceptDetails.name}
-                      </h2>
-                      <span className="inline-block bg-[#e0e1ff] text-[#4f46e5] px-3 py-1 rounded-full text-sm font-medium capitalize">
-                        {selectedConceptDetails.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mb-3">
-                      {selectedConceptDetails.addedAt && (
-                        <span className="text-sm text-slate-500">
-                          📅 Added on {new Date(selectedConceptDetails.addedAt).toLocaleDateString()} at {new Date(selectedConceptDetails.addedAt).toLocaleTimeString()}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Concept Status */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-slate-700">Status:</span>
-                        {isEditingStatus ? (
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={newStatus}
-                              onChange={(e) => setNewStatus(e.target.value)}
-                              className="border border-slate-300 rounded px-2 py-1 text-sm"
-                              disabled={isSavingStatus}
-                            >
-                              <option value="">Select status</option>
-                              <option value="Clear">Clear</option>
-                              <option value="Unclear">Unclear</option>
-                              <option value="confused">Confused</option>
-                            </select>
-                            <button
-                              onClick={handleSaveStatus}
-                              disabled={isSavingStatus || !newStatus}
-                              className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
-                            >
-                              {isSavingStatus ? 'Saving...' : 'Save'}
-                            </button>
-                            <button
-                              onClick={() => {
-                                setIsEditingStatus(false);
-                                setNewStatus(selectedConceptDetails.status || '');
-                              }}
-                              className="text-sm text-slate-500 hover:text-slate-700"
-                              disabled={isSavingStatus}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <>
-                            <span 
-                              className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                selectedConceptDetails.status === 'Clear' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : selectedConceptDetails.status === 'Unclear' 
-                                    ? 'bg-yellow-100 text-yellow-800' 
-                                    : selectedConceptDetails.status === 'confused' 
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-slate-100 text-slate-800'
-                              }`}
-                            >
-                              {selectedConceptDetails.status || 'Not Set'}
-                            </span>
-                            <button
-                              onClick={() => setIsEditingStatus(true)}
-                              className="text-sm text-blue-600 hover:text-blue-800"
-                            >
-                              Edit
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Sources Section */}
-                  {selectedConceptDetails.sources?.length > 0 && (
-                    <div className="mb-8 text-left">
-                      <h3 className="text-lg font-semibold text-slate-800 mb-4">Learning Sources</h3>
-                      <div className="space-y-2">
-                        {selectedConceptDetails.sources.map((source, index) => (
-                          <div key={index} className="flex items-center justify-between bg-slate-50 p-3 rounded-lg">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900 truncate">{source.sourceName}</p>
-                              <a
-                                href={source.sourceLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-600 hover:underline truncate block overflow-hidden"
-                              >
-                                {source.sourceLink}
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Applied In Section */}
-                  {selectedConceptDetails.appliedIn?.length > 0 && (
-                    <div className="mb-8">
-                      <h3 className="text-lg font-semibold text-slate-800 mb-4">Applied In</h3>
-                      <div className="space-y-3">
-                        {selectedConceptDetails.appliedIn.map((project, index) => (
-                          <div key={index} className="bg-slate-50 p-3 rounded-lg">
-                            <div className="flex justify-between items-center">
-                              <div>
-                                <p className="font-medium text-slate-900">{project.title}</p>
-                                <p className="text-sm text-slate-500">
-                                  {project.date ? new Date(project.date).toLocaleDateString() : 'Date not available'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Close Button */}
-                  <div className="flex justify-end pt-4 border-t border-slate-200">
-                    <button
-                      onClick={() => setShowConceptDetailsOverlay(false)}
-                      className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
-                    >
-                      Close
-                    </button>
-                  </div>
+                <div className="flex-shrink-0 bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-5 text-center border border-white/30">
+                  <p className="text-4xl font-black text-white">🐼</p>
+                  <p className="text-indigo-100 text-xs mt-1 font-medium">pandas · numpy · matplotlib</p>
                 </div>
               </div>
-            )}
-
-            {/* Concept Status Box - Commented out */}
-            {/* <motion.div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 w-full max-w-md h-auto min-h-[22rem] flex flex-col justify-between ring-1 ring-slate-200">
-              <div>
-                <p className="text-sm text-slate-600 font-medium mb-4">Concepts Status</p>
-                {(() => {
-                  let learnedConcepts = userData.pandas?.learnedConcepts || [];
-                  if (typeof learnedConcepts === 'object' && !Array.isArray(learnedConcepts)) {
-                    learnedConcepts = Object.values(learnedConcepts);
-                  }
-                  const totalLearned = learnedConcepts.length;
-                  const statusCounts = learnedConcepts.reduce((acc, c) => {
-                    if (c.status === 'Clear') acc.Clear++;
-                    else if (c.status === 'Unclear') acc.Unclear++;
-                    else if (c.status === 'confused') acc.confused++;
-                    return acc;
-                  }, { Clear: 0, Unclear: 0, confused: 0 });
-
-                  // Chart data
-                  const chartData = {
-                    labels: ['Clear', 'Unclear', 'Confused'],
-                    datasets: [
-                      {
-                        data: [statusCounts.Clear, statusCounts.Unclear, statusCounts.confused],
-                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-                        borderWidth: 0,
-                      },
-                    ],
-                  };
-
-                  const chartOptions = {
-                    cutout: '70%',
-                    plugins: {
-                      legend: {
-                        display: false,
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: function(context) {
-                            const label = context.label || '';
-                            const value = context.raw || 0;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = Math.round((value / total) * 100) || 0;
-                            return `${label}: ${value} (${percentage}%)`;
-                          }
-                        }
-                      }
-                    },
-                  };
-
-                  return (
-                    <div className="flex flex-col items-center px-2">
-                      <div className="relative w-32 h-32 mb-4">
-                        <Doughnut data={chartData} options={chartOptions} />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="text-xl font-bold text-slate-800">{totalLearned}</div>
-                            <div className="text-xs text-slate-500">Total</div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="w-full px-2">
-                        <div className="space-y-3 py-1">
-                            <div className="flex items-center justify-between w-full bg-green-50 px-4 py-2 rounded-lg">
-                              <div className="flex items-center">
-                                <span className="w-2 h-2 rounded-full bg-green-500 mr-2 flex-shrink-0"></span>
-                                <span className="text-sm text-slate-800">Clear</span>
-                              </div>
-                              <span className="text-sm font-medium text-slate-900">{statusCounts.Clear}</span>
-                          </div>
-                            <div className="flex items-center justify-between w-full bg-amber-50 px-4 py-2 rounded-lg">
-                              <div className="flex items-center">
-                                <span className="w-2 h-2 rounded-full bg-amber-500 mr-2 flex-shrink-0"></span>
-                                <span className="text-sm text-slate-800">Unclear</span>
-                              </div>
-                              <span className="text-sm font-medium text-slate-900">{statusCounts.Unclear}</span>
-                          </div>
-                            <div className="flex items-center justify-between w-full bg-red-50 px-4 py-2 rounded-lg">
-                              <div className="flex items-center">
-                                <span className="w-2 h-2 rounded-full bg-red-500 mr-2 flex-shrink-0"></span>
-                                <span className="text-sm text-slate-800">Confused</span>
-                              </div>
-                              <span className="text-sm font-medium text-slate-900">{statusCounts.confused}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </motion.div> */}
-          </div>
-
-          {/* --- Project/Assignment Grid --- */}
-          <h2 className="text-2xl text-left font-bold text-slate-800 mb-6 mt-10 tracking-tight">Apply learning</h2>
-          <div className="grid grid-cols-1 gap-6 items-start">
-            {/* Commented out Assignment Box
-            <div className="w-full">
-              <Assignment learnedConcepts={userData.pandas?.learnedConcepts || []} />
             </div>
-            */}
-            {/* Project Box */}
-            <motion.div className="w-full bg-white rounded-2xl shadow-md overflow-hidden lg:sticky lg:top-28 ring-1 ring-slate-200">
-              {/* Header Section */}
-              <div className="backdrop-blur-sm border-b border-white/20 px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white ring-1 ring-slate-200 rounded p-2">
-                    <svg className="w-6 h-6 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+            {/* 3-column info cards — What You'll Learn | Pro Tips | Projects KPI */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* What you'll learn */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-indigo-50 p-2.5 rounded-xl">
+                    <svg className="w-5 h-5 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                  </div>
+                  <h3 className="font-bold text-slate-800">What You'll Learn</h3>
+                </div>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  {["DataFrame creation & indexing","Data cleaning & wrangling","GroupBy & aggregations","Merging & joining datasets","Data visualisation with matplotlib"].map(item => (
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#6366F1] flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Pro tips */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-rose-50 p-2.5 rounded-xl">
+                    <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <h3 className="font-bold text-slate-800">Pro Tips</h3>
+                </div>
+                <ul className="space-y-2.5 text-sm text-slate-600">
+                  {[
+                    "Always inspect your data with .info() and .describe() first",
+                    "Use .copy() to avoid SettingWithCopyWarning",
+                    "Chain methods for clean, readable pipelines",
+                    "Vectorise operations — avoid Python loops over rows",
+                  ].map((tip, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-rose-400 font-bold flex-shrink-0">{i + 1}.</span>
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Projects KPI — inline here */}
+              <motion.div className="bg-white rounded-2xl shadow-sm overflow-hidden ring-1 ring-slate-200 hover:shadow-md transition-shadow">
+                <div className="border-b border-slate-100 px-5 py-3 flex items-center gap-2">
+                  <div className="bg-indigo-50 rounded-lg p-1.5">
+                    <svg className="w-4 h-4 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-2xl text-left font-bold tracking-tight">Projects</h2>
-                    <p className="text-[#6D7D92] text-sm">Start building amazing projects</p>
+                    <h2 className="text-base font-bold text-slate-800 tracking-tight">Apply Learning</h2>
+                    <p className="text-[#6D7D92] text-xs">Start a project</p>
                   </div>
                 </div>
-              </div>
-
-              {/* Content Section */}
-              <div className="p-6">
-              {userData.pandas && userData.pandas.PandasCurrentProject ? (
-                projectLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-white text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-3"></div>
-                      <p>Loading project...</p>
-                    </div>
-                  </div>
-                ) : projectError ? (
-                  <div className="bg-red-500/20 border border-red-300/30 rounded-xl p-4 text-red-100">
-                    {projectError}
-                  </div>
-                ) : projectData ? (
-                  <div className="space-y-4">
-                    {/* New Project Button */}
-                    <button
-                      onClick={handleNextProjectClick}
-                      disabled={isGeneratingProject}
-                      className={`group w-full ring-1 ring-slate-200 rounded-xl p-5 transition-all duration-300 ${
-                        isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform">
-                            {isGeneratingProject ? (
-                              <svg className="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : (
-                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                              </svg>
-                            )}
-                          </div>
-                          <div className="text-left">
-                            <h3 className="text-black font-bold text-lg">
-                              {isGeneratingProject ? 'Generating...' : 'Next Project'}
-                            </h3>
-                            <p className="text-slate-500 text-sm">
-                              {isGeneratingProject ? 'Finding the perfect project for you' : 'Discover new challenges'}
-                            </p>
-                          </div>
-                        </div>
-                        {!isGeneratingProject && (
-                          <svg className="w-6 h-6 text-slate-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-                    
-                    {/* Custom Project Button */}
-                    <button
-                      onClick={handleCustomProjectClick}
-                      className="group w-full ring-1 ring-slate-200 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                          </div>
-                          <div className="text-left">
-                            <h3 className="text-black font-bold text-lg">Custom Project</h3>
-                            <p className="text-slate-500 text-sm">Build your own project idea</p>
-                          </div>
-                        </div>
-                        <svg className="w-6 h-6 text-slate-500 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {/* New Project Button */}
-                    <button
-                      onClick={handleNextProjectClick}
-                      className="group w-full bg-white/10 backdrop-blur-sm lg:cursor-pointer hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-gradient-to-br bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                          </div>
-                          <div className="text-left">
-                            <h3 className="text-black font-bold text-lg">Start New Project</h3>
-                            <p className="text-slate-500 text-sm">Begin your coding journey</p>
-                          </div>
-                        </div>
-                        <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </button>
-                    
-                    {/* Custom Project Button */}
-                    <button
-                      onClick={handleCustomProjectClick}
-                      className="group w-full bg-gradient-to-r bg-[#6366F1] lg:cursor-pointer hover:bg-[#6366F1]/90 border-2 border-[#c0c1ff]/40 hover:border-[#d0d1ff]/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="bg-gradient-to-br bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform shadow-md">
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                          </div>
-                          <div className="text-left">
-                            <h3 className="text-black font-bold text-lg">Custom Project</h3>
-                            <p className="text-slate-500 text-sm">Build your own project idea</p>
-                          </div>
-                        </div>
-                        <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
-                )
-              ) : (
-                <div className="space-y-4">
-                  {/* Start New Project Button */}
+                <div className="p-4 space-y-3">
+                  {/* Start New Project */}
                   <button
                     onClick={handleNextProjectClick}
-                    className="group w-full bg-white/10 backdrop-blur-sm lg:cursor-pointer hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                    disabled={isGeneratingProject}
+                    className={`group w-full ring-1 ring-slate-200 rounded-xl p-3 transition-all duration-300 ${
+                      isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-gradient-to-br bg-[#6366F1] rounded-lg p-3 group-hover:scale-110 transition-transform">
-                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
+                      <div className="flex items-center gap-3">
+                        <div className="bg-[#6366F1] rounded-lg p-2 group-hover:scale-110 transition-transform">
+                          {isGeneratingProject ? (
+                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          )}
                         </div>
                         <div className="text-left">
-                          <h3 className="text-black font-bold text-lg">Start New Project</h3>
-                          <p className="text-slate-500 text-sm">Begin your coding journey</p>
+                          <h3 className="text-black font-bold text-sm">{isGeneratingProject ? 'Generating...' : 'Start New Project'}</h3>
+                          <p className="text-slate-500 text-xs">{isGeneratingProject ? 'Finding the perfect project' : 'Begin your coding journey'}</p>
                         </div>
                       </div>
-                      <svg className="w-6 h-6 text-white/80 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
+                      {!isGeneratingProject && <svg className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
                     </div>
                   </button>
-                  
-                  {/* Custom Project Button - Disabled */}
+                  {/* Custom Project - Locked */}
                   <button
                     disabled
-                    className="group w-full bg-white/5 border-2 border-white/10 rounded-xl p-5 cursor-not-allowed opacity-60"
+                    className="group w-full bg-slate-100 border border-slate-200 rounded-xl p-3 opacity-70 cursor-not-allowed"
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-gray-400/30 rounded-lg p-3">
-                          <svg className="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-slate-200 rounded-lg p-2">
+                          <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                           </svg>
                         </div>
                         <div className="text-left">
-                          <h3 className="text-black font-bold text-lg">Custom Project</h3>
-                          <p className="text-slate-500 text-sm">Unlock by starting a project</p>
+                          <h3 className="text-slate-500 font-bold text-sm">Custom Project</h3>
+                          <p className="text-slate-400 text-xs text-left">Coming Soon · Locked</p>
                         </div>
                       </div>
+                      <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
                     </div>
                   </button>
                 </div>
-              )}
-              </div>
-            </motion.div>
-           
+              </motion.div>
+            </div>
+
+            {/* Tools strip */}
+            <div className="bg-white rounded-2xl px-6 py-5 shadow-sm ring-1 ring-slate-200 flex flex-wrap items-center gap-6">
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mr-2">Stack used in projects</p>
+              {[
+                { name: "Python 3", emoji: "🐍" },
+                { name: "pandas", emoji: "🐼" },
+                { name: "NumPy", emoji: "🔢" },
+                { name: "Matplotlib", emoji: "📊" },
+                { name: "Jupyter", emoji: "📓" },
+                { name: "CSV / JSON", emoji: "📁" },
+              ].map(({ name, emoji }) => (
+                <div key={name} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
+                  <span className="text-lg">{emoji}</span>
+                  <span className="text-sm font-medium text-slate-700">{name}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
             {/* Project Details Overlay */}
@@ -1492,60 +1115,11 @@ IMPORTANT INSTRUCTIONS:
           
         </div>
 
-      {/* Project History Section */}
-      <div className="w-full relative px-4 lg:px-8 max-w-7xl mx-auto text-left mb-10">
-        
+      {/* Project History Section - hidden */}
+      {/* <div className="w-full relative px-4 lg:px-8 max-w-7xl mx-auto text-left mb-10">
         <h2 className="text-2xl font-bold text-slate-800 mb-6">Project & Task History</h2>
-        <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-6 ring-1 ring-slate-200">
-          {completedProjects.length === 0 ? (
-            <div className="text-slate-500 italic">No completed projects or tasks yet.</div>
-          ) : (
-              <ul className="divide-y divide-slate-200">
-              {completedProjects.map((project, idx) => (
-                <li 
-                  key={project.key} 
-                  className="group flex flex-col md:flex-row gap-2 md:gap-6 py-4 cursor-pointer transition-all rounded-lg hover:bg-gray-50 hover:shadow-sm hover:translate-x-[2px]"
-                  onClick={() => handleProjectClick(project)}
-                >
-                    <div className="flex-1">
-                    <div className="text-2xl font-semibold text-slate-800 group-hover:text-[#4f46e5] transition-colors">{project.projectTitle || project.key}</div>
-                    <div className="text-slate-500 text-sm mt-2">Completed: {new Date(project.completedAt).toLocaleDateString()}</div>
-                    </div>
-                    <div className="flex-none flex flex-col items-end gap-2 md:gap-3">
-                    <span className="inline-block text-slate-700/80 px-3 py-1 text-lg group-hover:text-[#4f46e5] transition-colors">Click to view details</span>
-                    {project.publicUrl && (
-                      <div className="flex gap-2 mt-2">
-                        <button
-                          className="px-3 py-1 bg-[#e0e1ff] text-[#4f46e5] rounded hover:bg-purple-200 active:scale-[0.98] text-xs font-semibold border border-[#d0d1ff] transition-all"
-                          onClick={e => {
-                            e.stopPropagation();
-                            const url = project.publicUrl.replace('/public/datascience-project/', '/datascience-project/');
-                            navigator.clipboard.writeText(window.location.origin + url);
-                            setCopiedProjectId(project._projectKey);
-                            setTimeout(() => setCopiedProjectId(null), 1500);
-                          }}
-                        >
-                          {copiedProjectId === project._projectKey ? 'Copied!' : 'Share'}
-                        </button>
-                        <a
-                          href={project.publicUrl.replace('/public/datascience-project/', '/datascience-project/')}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 active:scale-[0.98] text-xs font-semibold border border-blue-200 transition-all"
-                          style={{ fontWeight: 500 }}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          Preview
-                        </a>
-                      </div>
-                    )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-          )}
-        </div>
-      </div>
+        ... (commented out)
+      </div> */}
 
       {/* Project Details Overlay */}
       <AnimatePresence>
