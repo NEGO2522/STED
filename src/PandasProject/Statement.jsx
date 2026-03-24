@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { ref, get } from 'firebase/database';
+import { ref, get, onValue } from 'firebase/database';
 import { db } from '../firebase';
 import { FaChevronDown, FaQuestionCircle, FaLightbulb } from 'react-icons/fa';
 import cross from '../assets/cross.png';
@@ -83,9 +83,10 @@ function Statement({
   const { isLoaded, isSignedIn, user } = useUser();
 
   const [project,        setProject]        = useState(null);
-  const [loading,        setLoading]        = useState(true);
+  const [loading,        setLoading]        = useState(false);
   const [error,          setError]          = useState('');
   const [loadingTaskKey, setLoadingTaskKey] = useState(null);
+  const [projectId,      setProjectId]      = useState(null);
   const [showProjectDesc,setShowProjectDesc]= useState(false);
   const [hoveredReason,  setHoveredReason]  = useState({ taskKey: null, subIdx: null, clicked: false });
   const [noCodeWarning,  setNoCodeWarning]  = useState({});
@@ -104,22 +105,60 @@ function Statement({
   }, []);
 
   useEffect(() => {
-    async function fetchProjectData() {
-      if (!isLoaded || !isSignedIn || !user) return;
-      setLoading(true); setError('');
+    let isMounted = true;
+    
+    // Get project ID from URL parameter (e.g. /datascience/project?id=project1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlId = urlParams.get('id');
+
+    async function fetchFromMaster(pk) {
+      if (!isMounted || !pk) return;
+      setProjectId(pk);
+      setLoading(true);
+      console.log('[STED] Fetching project details directly for key:', pk);
       try {
-        const userSnap = await get(ref(db, 'users/' + user.id));
-        if (!userSnap.exists()) { setError('User data not found.'); setLoading(false); return; }
-        const pk = userSnap.val()?.pandas?.PandasCurrentProject;
-        if (!pk) { setError('No pandas project started.'); setLoading(false); return; }
-        const projectSnap = await get(ref(db, 'PandasProject/' + pk));
-        if (!projectSnap.exists()) { setError('Pandas project not found.'); setLoading(false); return; }
-        setProject(projectSnap.val());
+        const projectSnap = await get(ref(db, `PandasProject/${pk}`));
+        if (!isMounted) return;
+        if (projectSnap.exists()) {
+          console.log('[STED] Project data loaded from key:', pk);
+          setProject(projectSnap.val());
+          setError('');
+        } else {
+          setError(`Pandas project matching key "${pk}" was not found.`);
+        }
       } catch (err) {
-        setError('Failed to load project: ' + err.message);
-      } finally { setLoading(false); }
+        console.error('[STED] Direct fetch error:', err);
+        setError('Failed to load project details: ' + err.message);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     }
-    fetchProjectData();
+
+    // 1. If we have it in the URL, load it IMMEDIATELY (Removes Auth Block)
+    if (urlId) {
+      fetchFromMaster(urlId);
+    } 
+
+    // 2. Set up listener (background sync)
+    let unsubscribe = () => {};
+    if (isLoaded && isSignedIn && user?.id) {
+      const userPandasRef = ref(db, `users/${user.id}/pandas`);
+      unsubscribe = onValue(userPandasRef, (snapshot) => {
+        if (!isMounted) return;
+        if (snapshot.exists()) {
+          const pk = snapshot.val()?.PandasCurrentProject;
+          // Only fetch from user if we DON'T have a URL ID or if they differ
+          if (pk && pk !== urlId) {
+            fetchFromMaster(pk);
+          }
+        }
+      });
+    }
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
   }, [isLoaded, isSignedIn, user]);
 
   useEffect(() => {
@@ -169,9 +208,23 @@ function Statement({
     }
   };
 
-  if (loading) return <div className="p-8 text-white">Loading project…</div>;
+  if (loading) return (
+    <div className="p-8 text-white">
+      <div className="flex items-center gap-3">
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+        <span>Loading project details...</span>
+      </div>
+      {!user && <p className="mt-2 text-xs text-yellow-400">Waiting for user session...</p>}
+      {projectId && <p className="mt-2 text-xs text-gray-400">Database key: {projectId}</p>}
+    </div>
+  );
   if (error)   return <div className="p-8 text-red-400">{error}</div>;
-  if (!project)return <div className="p-8 text-gray-400">No project data.</div>;
+  if (!project)return (
+    <div className="p-8 text-gray-400">
+      <p>No project data found for key: <code className="text-white">{projectId || 'undefined'}</code></p>
+      <p className="mt-2 text-sm italic">Please restart the project from the dashboard.</p>
+    </div>
+  );
 
   return (
     <div className="p-8 max-w-2xl shadow-lg mt-6"

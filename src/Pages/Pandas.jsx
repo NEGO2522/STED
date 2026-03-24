@@ -104,6 +104,7 @@ function Pandas() {
   
   const [generatingCustomProject, setGeneratingCustomProject] = useState(false);
   const [isGeneratingProject, setIsGeneratingProject] = useState(false);
+  const [startingProject, setStartingProject] = useState(false);
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -639,13 +640,13 @@ IMPORTANT INSTRUCTIONS:
           </div>
           <div className="flex gap-4 mt-4 md:mt-0">
             <button
-              className="bg-[#6366F1] hover:bg-[#4f46e5] active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
+              className="bg-[#6366F1] hover:bg-[#4f46e5] lg:cursor-pointer active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
               onClick={() => navigate('/datascience/project')}
             >
               Continue Project
             </button>
             <button
-              className="bg-red-500 hover:bg-red-600 active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
+              className="bg-red-500 hover:bg-red-600 lg:cursor-pointer active:scale-[0.98] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all"
               onClick={handleEndProject}
             >
               End Project
@@ -1104,7 +1105,7 @@ IMPORTANT INSTRUCTIONS:
                     {/* New Project Button */}
                     <button
                       onClick={handleNextProjectClick}
-                      className="group w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                      className="group w-full bg-white/10 backdrop-blur-sm lg:cursor-pointer hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -1127,7 +1128,7 @@ IMPORTANT INSTRUCTIONS:
                     {/* Custom Project Button */}
                     <button
                       onClick={handleCustomProjectClick}
-                      className="group w-full bg-gradient-to-r bg-[#6366F1] hover:bg-[#6366F1]/90 border-2 border-[#c0c1ff]/40 hover:border-[#d0d1ff]/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
+                      className="group w-full bg-gradient-to-r bg-[#6366F1] lg:cursor-pointer hover:bg-[#6366F1]/90 border-2 border-[#c0c1ff]/40 hover:border-[#d0d1ff]/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] shadow-md"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -1154,7 +1155,7 @@ IMPORTANT INSTRUCTIONS:
                   {/* Start New Project Button */}
                   <button
                     onClick={handleNextProjectClick}
-                    className="group w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
+                    className="group w-full bg-white/10 backdrop-blur-sm lg:cursor-pointer hover:bg-white/20 border-2 border-white/30 hover:border-white/50 rounded-xl p-5 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -1229,7 +1230,7 @@ IMPORTANT INSTRUCTIONS:
                                 <div className="group">
                                   <button
                                     onClick={handleOverlayNextClick}
-                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#d0d1ff] bg-white/80 hover:bg-[#f0f1ff] text-[#6366F1] hover:text-[#4f46e5] text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+                                    className="group flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#d0d1ff] bg-white/80 lg:cursor-pointer hover:bg-[#f0f1ff] text-[#6366F1] hover:text-[#4f46e5] text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
                                   >
                                     <img 
                                       className="w-5 h-5" 
@@ -1275,49 +1276,58 @@ IMPORTANT INSTRUCTIONS:
                           <div className="flex gap-4">
                            <button
                             onClick={async () => {
-                              if (!user) return;
+                              if (startingProject) return;
+                              setStartingProject(true);
+                              console.log('[STED] Starting project click...');
 
                               try {
                                 // Save custom project to Firebase if it's a custom-generated project
                                 if (nextProject.id && nextProject.id.startsWith('custom_project_')) {
-                                  const projectRef = ref(db, 'PandasProject');
-                                  const customProjectRef = child(projectRef, nextProject.id);
-                                  await set(customProjectRef, nextProject);
-                                  console.log('Custom project saved to Firebase');
+                                  await set(ref(db, `PandasProject/${nextProject.id}`), nextProject);
+                                  console.log('[STED] Custom project saved');
                                 }
 
-                                // Set this project as the user's current project in Firebase
-                                const userRef = ref(db, 'users/' + user.id);
-                                let projectKey = nextProject.id;
-                                await update(userRef, {
-                                  'pandas/PandasCurrentProject': projectKey,
-                                  'pandas/PandasProjectStarted': true
-                                });
+                                let projectKey = nextProject.id || nextProject.title;
 
-                                setUserData(prev => ({
-                                  ...prev,
-                                  pandas: {
-                                    ...prev.pandas,
+                                if (user?.id) {
+                                  const userProjectRef = ref(db, `users/${user.id}/pandas`);
+                                  
+                                  console.log('[STED] Setting current project to:', projectKey);
+                                  await update(userProjectRef, {
                                     PandasCurrentProject: projectKey,
                                     PandasProjectStarted: true
-                                  }
-                                }));
+                                  });
+                                }
 
-                                setShowProjectOverlay(false);
-                                navigate('/datascience/project');
+                                // Short delay to show the "Setting Up Workspace" state
+                                setTimeout(() => {
+                                  console.log('[STED] Navigation triggered with projectKey:', projectKey);
+                                  setShowProjectOverlay(false);
+                                  navigate(`/datascience/project?id=${encodeURIComponent(projectKey)}`);
+                                  setStartingProject(false);
+                                }, 1500);
+                                
                               } catch (error) {
-                                console.error('Error saving project to Firebase:', error);
-                                alert('Failed to save project. Please try again.');
+                                console.error('[STED] Start project failed:', error);
+                                setStartingProject(false);
                               }
                             }}
-                            className="flex-1 bg-gradient-to-r from-[#4f46e5] to-[#4338ca] hover:from-[#4338ca] hover:to-[#3730a3] active:scale-[0.98] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl"
+                            disabled={startingProject}
+                            className={`flex-1 bg-gradient-to-r from-[#4f46e5] to-[#4338ca] hover:from-[#4338ca] lg:cursor-pointer hover:to-[#3730a3] active:scale-[0.98] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl ${startingProject ? 'opacity-70 cursor-not-allowed' : ''}`}
                           >
-                            🚀 Start Project
+                            {startingProject ? (
+                              <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                Setting Up Workspace...
+                              </>
+                            ) : (
+                              <>🚀 Start Project</>
+                            )}
                           </button>
 
                             <button
                               onClick={handleCloseProjectOverlay}
-                              className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 active:scale-[0.98] hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
+                              className="px-8 py-4 border-2 border-slate-300 lg:cursor-pointer text-slate-700 hover:bg-slate-50 active:scale-[0.98] hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
                             >
                               Cancel
                             </button>
@@ -1360,7 +1370,7 @@ IMPORTANT INSTRUCTIONS:
                                       <div className="group">
                                         <button
                                           onClick={getNextProject}
-                                          className="text-[#6366F1] hover:text-[#4f46e5] text-sm font-semibold transition-colors relative"
+                                          className="text-[#6366F1] hover:text-[#4f46e5] lg:cursor-pointer text-sm font-semibold transition-colors relative"
                                           disabled={generatingProject}
                                         >
                                           <img 
@@ -1406,42 +1416,54 @@ IMPORTANT INSTRUCTIONS:
                                 </div>
                       </div>
 
-                              <div className="flex gap-4"><button
+                              <div className="flex gap-4">
+                                <button
                                   onClick={async () => {
-                                    if (!user) return;
+                                    if (startingProject) return;
+                                    setStartingProject(true);
+                                    console.log('[STED] Recommended project click...');
                                     
-                                    // Save generated project to Firebase if it's a new Gemini-generated project
-                                    if (recommendedProject.id && recommendedProject.id.startsWith('generated_project_')) {
-                                      const saved = await saveProjectToFirebase(recommendedProject);
-                                      if (!saved) {
-                                        alert('Failed to save project. Please try again.');
-                                        return;
+                                    try {
+                                      // Save generated project to Firebase if it's a new Gemini-generated project
+                                      if (recommendedProject.id && recommendedProject.id.startsWith('generated_project_')) {
+                                        const saved = await saveProjectToFirebase(recommendedProject);
+                                        if (!saved) {
+                                          console.error('[STED] Failed to save recommended project');
+                                        }
                                       }
+                                      
+                                      if (user?.id) {
+                                        const userProjectRef = ref(db, `users/${user.id}/pandas`);
+                                        let projectKey = recommendedProject.id || recommendedProject.title;
+                                        
+                                        console.log('[STED] Setting recommended project:', projectKey);
+                                        await update(userProjectRef, {
+                                          PandasCurrentProject: projectKey,
+                                          PandasProjectStarted: true
+                                        });
+                                      }
+                                      
+                                      setTimeout(() => {
+                                        console.log('[STED] Navigation triggered with projectKey:', projectKey);
+                                        setShowProjectOverlay(false);
+                                        navigate(`/datascience/project?id=${encodeURIComponent(projectKey)}`);
+                                        setStartingProject(false);
+                                      }, 1500);
+
+                                    } catch (error) {
+                                      console.error('[STED] Start recommended failed:', error);
+                                      setStartingProject(false);
                                     }
-                                    
-                                    // Set this project as the user's current project in Firebase
-                                    const userRef = ref(db, 'users/' + user.id);
-                                    let projectKey = recommendedProject.id || recommendedProject.title;
-                                    
-                                    await update(userRef, {
-                                      'pandas/PandasCurrentProject': projectKey,
-                                      'pandas/PandasProjectStarted': true
-                                    });
-                                    setUserData(prev => ({
-                                      ...prev,
-                                      pandas: {
-                                        ...prev.pandas,
-                                        PandasCurrentProject: projectKey,
-                                        PandasProjectStarted: true
-                                      }
-                                    }));
-                                    setShowProjectOverlay(false);
-                                    navigate('/datascience/project');
                                   }}
-                                  className="flex-1 bg-gradient-to-r from-[#4f46e5] to-[#4338ca] hover:from-[#4338ca] hover:to-[#3730a3] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
-                                  disabled={generatingProject}
+                                  className={`flex-1 bg-gradient-to-r from-[#4f46e5] to-[#4338ca] hover:from-[#4338ca] lg:cursor-pointer hover:to-[#3730a3] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${startingProject ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                  disabled={generatingProject || startingProject}
                         >
-                          {generatingProject ? (
+                          {startingProject ? (
+                            <>
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                              Setting Up Workspace...
+                            </>
+                          ) : generatingProject ? (
                             <>
                               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                               Generating...
@@ -1452,7 +1474,7 @@ IMPORTANT INSTRUCTIONS:
                         </button>
                         <button
                           onClick={handleCloseProjectOverlay}
-                                  className="px-8 py-4 border-2 border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
+                                  className="px-8 py-4 border-2 border-slate-300 lg:cursor-pointer text-slate-700 hover:bg-slate-50 hover:border-slate-400 rounded-xl transition-all duration-300 font-semibold text-lg"
                         >
                           Cancel
                         </button>

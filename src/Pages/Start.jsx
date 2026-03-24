@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import photo1 from '../assets/Photo1.jpeg';
 import photo2 from '../assets/Photo2.webp';
 import photo3 from '../assets/Photo3.webp';
-import { FiArrowRight, FiCheck, FiCode, FiDatabase, FiBarChart } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiCode, FiDatabase, FiBarChart, FiCpu, FiLayers, FiZap, FiActivity } from 'react-icons/fi';
+import { SiPython, SiPandas, SiNumpy, SiScikitlearn, SiTableau, SiPytorch, SiTensorflow } from 'react-icons/si';
 
 function FallingStars() {
   const starsArray = Array.from({ length: 15 });
@@ -38,6 +39,97 @@ function FallingStars() {
   );
 }
 
+function AmbientGlows() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-100/30 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-100/20 blur-[100px] rounded-full" />
+      <div className="absolute top-[30%] right-[10%] w-[20%] h-[30%] bg-blue-50/40 blur-[80px] rounded-full" />
+    </div>
+  );
+}
+
+function TechMarquee() {
+  const techs = [
+    { icon: <SiPython />, name: 'Python', color: 'text-yellow-500' },
+    { icon: <SiPandas />, name: 'Pandas', color: 'text-blue-900' },
+    { icon: <SiNumpy />, name: 'NumPy', color: 'text-blue-500' },
+    { icon: <SiScikitlearn />, name: 'Scikit-Learn', color: 'text-orange-500' },
+    { icon: <FiBarChart />, name: 'Power BI', color: 'text-yellow-600' },
+    { icon: <SiTableau />, name: 'Tableau', color: 'text-blue-400' },
+    { icon: <SiPytorch />, name: 'PyTorch', color: 'text-red-500' },
+    { icon: <SiTensorflow />, name: 'TensorFlow', color: 'text-orange-600' },
+  ];
+
+  return (
+    <div className="relative w-full py-12 overflow-hidden bg-white/50 backdrop-blur-sm border-y border-slate-50">
+      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white to-transparent z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-white to-transparent z-10" />
+      
+      <motion.div 
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="flex space-x-12 items-center whitespace-nowrap w-fit px-12"
+      >
+        {[...techs, ...techs].map((tech, i) => (
+          <div key={i} className="flex items-center space-x-3 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all cursor-default group">
+            <span className="text-2xl group-hover:text-blue-600 transition-colors">{tech.icon}</span>
+            <span className="text-xs font-black uppercase tracking-[0.2em]">{tech.name}</span>
+          </div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+function StatsSection() {
+  const stats = [
+    { label: 'Active Learners', value: '12K+', icon: <FiActivity /> },
+    { label: 'Courses Built', value: '45+', icon: <FiLayers /> },
+    { label: 'Success Rate', value: '98%', icon: <FiZap /> },
+    { label: 'Real Projects', value: '150+', icon: <FiCode /> },
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-24">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {stats.map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+            className="text-center p-8 rounded-[32px] bg-slate-50/50 border border-slate-100/50 hover:bg-white hover:shadow-xl hover:shadow-blue-500/5 transition-all group"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-blue-600 text-xl mx-auto mb-6 shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all">
+              {stat.icon}
+            </div>
+            <div className="text-4xl font-black text-slate-800 mb-2">{stat.value}</div>
+            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function useScrollProgress() {
+  const [completion, setCompletion] = useState(0);
+  useEffect(() => {
+    const updateScrollCompletion = () => {
+      const currentProgress = window.scrollY;
+      const scrollHeight = document.body.scrollHeight - window.innerHeight;
+      if (scrollHeight) {
+        setCompletion(Number((currentProgress / scrollHeight).toFixed(2)));
+      }
+    };
+    window.addEventListener("scroll", updateScrollCompletion);
+    return () => window.removeEventListener("scroll", updateScrollCompletion);
+  }, []);
+  return completion;
+}
+
 function Start() {
   const images = [photo1, photo2, photo3];
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -58,6 +150,11 @@ function Start() {
       className="min-h-screen bg-white text-slate-800 font-['Comic_Sans_MS',_cursive] antialiased relative overflow-hidden selection:bg-blue-100"
     >
       <FallingStars />
+      <AmbientGlows />
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-blue-600 origin-left z-[100]"
+        style={{ scaleX: useScrollProgress() }}
+      />
       {/* Navbar */}
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-5xl z-50 bg-white/95 backdrop-blur-md border border-slate-100 rounded-full shadow-lg">
         <div className="px-8 flex justify-between items-center h-16">
@@ -129,11 +226,11 @@ function Start() {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-5"
               >
-                <Link to="/home" className="w-full sm:w-auto px-12 py-5 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-50">
+                <Link to="/home" className="w-full sm:w-auto px-12 py-5 rounded-full bg-blue-600 text-white font-bold text-lg hover:bg-blue-700 hover:scale-[1.02] hover:shadow-[0_20px_40px_-10px_rgba(37,99,235,0.4)] transition-all flex items-center justify-center gap-2 group shadow-lg shadow-blue-50">
                   Start Now
                   <FiArrowRight className="group-hover:translate-x-1" />
                 </Link>
-                <Link to="/All-skills" className="w-full sm:w-auto px-12 py-5 rounded-full bg-white text-slate-600 font-bold text-lg border border-slate-200 hover:border-slate-300 transition-all flex items-center justify-center gap-2">
+                <Link to="/All-skills" className="w-full sm:w-auto px-12 py-5 rounded-full bg-white text-slate-600 font-bold text-lg border border-slate-200 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/10 transition-all flex items-center justify-center gap-2">
                   Catalog
                 </Link>
               </motion.div>
@@ -162,8 +259,14 @@ function Start() {
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ 
+                rotateX: -2, 
+                rotateY: 5, 
+                scale: 1.01,
+                transition: { duration: 0.4, ease: "easeOut" }
+              }}
               transition={{ duration: 0.8 }}
-              className="flex-1 w-full max-w-lg"
+              className="flex-1 w-full max-w-lg perspective-[1000px]"
             >
               <div className="relative aspect-square sm:aspect-[4/3] rounded-[48px] overflow-hidden border-[16px] border-white shadow-[0_48px_80px_-24px_rgba(0,0,0,0.1)] bg-white">
                 <AnimatePresence mode="wait">
@@ -196,6 +299,11 @@ function Start() {
           </div>
         </div>
       </section>
+
+      <TechMarquee />
+
+      {/* Stats Breakdown */}
+      <StatsSection />
 
       {/* Simplified Features section */}
       <section id="features" className="py-32 bg-white">

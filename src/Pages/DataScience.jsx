@@ -185,7 +185,7 @@ function DataScience() {
                             </div>
                             <Link
                                 to="/task"
-                                className="inline-flex items-center text-white hover:text-purple-200 font-medium"
+                                className="inline-flex items-center text-white lg:cursor-pointer hover:text-purple-200 font-medium"
                             >
                                 Start Project
                                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

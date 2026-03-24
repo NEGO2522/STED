@@ -243,15 +243,15 @@ EXAMPLE PROJECT IDEAS (for inspiration only):
         
         // Find all projects where all required concepts are learned - make it more flexible
         const matchingProjects = [];
-        Object.values(projects).forEach(project => {
+        Object.entries(projects).forEach(([id, project]) => {
           if (!project.Concept) {
-            // console.log('Project has no Concept field:', project.title || project.id);
+            // console.log('Project has no Concept field:', project.title || id);
             return;
           }
           
           // Split concepts by comma and trim
           const required = project.Concept.split(',').map(s => s.toLowerCase().trim());
-          // console.log('Required concepts for project:', project.title || project.id, required);
+          // console.log('Required concepts for project:', project.title || id, required);
           
           // Check if all required concepts are learned - make it more flexible
           let learnedCount = 0;
@@ -260,18 +260,18 @@ EXAMPLE PROJECT IDEAS (for inspiration only):
           required.forEach(concept => {
             if (learnedSet.has(concept)) {
               learnedCount++;
-              // console.log(`✓ Concept "${concept}" is learned for project "${project.title || project.id}"`);
+              // console.log(`✓ Concept "${concept}" is learned for project "${project.title || id}"`);
             } else {
-              // console.log(`✗ Concept "${concept}" not learned for project "${project.title || project.id}"`);
+              // console.log(`✗ Concept "${concept}" not learned for project "${project.title || id}"`);
             }
           });
           
           // For now, let's show projects if at least one concept is learned (more lenient)
           if (learnedCount > 0) {
-            // console.log(`Project "${project.title || project.id}" matches - ${learnedCount}/${totalRequired} concepts learned`);
-            matchingProjects.push(project);
+            // console.log(`Project "${project.title || id}" matches - ${learnedCount}/${totalRequired} concepts learned`);
+            matchingProjects.push({ ...project, id });
           } else {
-            // console.log(`Project "${project.title || project.id}" skipped - no concepts learned (0/${totalRequired})`);
+            // console.log(`Project "${project.title || id}" skipped - no concepts learned (0/${totalRequired})`);
           }
         });
         
@@ -280,9 +280,9 @@ EXAMPLE PROJECT IDEAS (for inspiration only):
         // If no projects match by concepts, let's show all projects for debugging
         if (matchingProjects.length === 0 && learnedSet.size > 0) {
           // console.log('No projects match by concepts, showing all projects for debugging');
-          Object.values(projects).forEach(project => {
+          Object.entries(projects).forEach(([id, project]) => {
             if (project.Concept) {
-              matchingProjects.push(project);
+              matchingProjects.push({ ...project, id });
             }
           });
         }
@@ -290,9 +290,9 @@ EXAMPLE PROJECT IDEAS (for inspiration only):
         // If still no projects and no learned concepts, show all projects
         if (matchingProjects.length === 0 && learnedSet.size === 0) {
           // console.log('No concepts learned yet, showing all projects');
-          Object.values(projects).forEach(project => {
+          Object.entries(projects).forEach(([id, project]) => {
             if (project.Concept) {
-            matchingProjects.push(project);
+            matchingProjects.push({ ...project, id });
           }
         });
         }
