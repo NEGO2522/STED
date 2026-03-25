@@ -24,9 +24,9 @@ function Navbar() {
             <Link to="/home" className={`text-[11px] font-black uppercase tracking-widest transition-colors ${isActive('/home') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-900'}`}>
               Home
             </Link>
-            <Link to="/All-skills" className={`text-[11px] font-black uppercase tracking-widest transition-colors ${isActive('/All-skills') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-900'}`}>
+            {/* <Link to="/All-skills" className={`text-[11px] font-black uppercase tracking-widest transition-colors ${isActive('/All-skills') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-900'}`}>
               Skills
-            </Link>
+            </Link> */}
             <Link to="/contact" className={`text-[11px] font-black uppercase tracking-widest transition-colors ${isActive('/contact') ? 'text-blue-600' : 'text-slate-400 hover:text-slate-900'}`}>
               Support
             </Link>

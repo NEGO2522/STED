@@ -230,9 +230,9 @@ function Start() {
                   Start Now
                   <FiArrowRight className="group-hover:translate-x-1" />
                 </Link>
-                <Link to="/All-skills" className="w-full sm:w-auto px-12 py-5 rounded-full bg-white text-slate-600 font-bold text-lg border border-slate-200 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/10 transition-all flex items-center justify-center gap-2">
+                {/* <Link to="/All-skills" className="w-full sm:w-auto px-12 py-5 rounded-full bg-white text-slate-600 font-bold text-lg border border-slate-200 hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/10 transition-all flex items-center justify-center gap-2">
                   Catalog
-                </Link>
+                </Link> */}
               </motion.div>
 
               <motion.div 

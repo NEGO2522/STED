@@ -686,24 +686,23 @@ IMPORTANT INSTRUCTIONS:
                   <p className="text-indigo-100 text-base max-w-xl leading-relaxed">Work through hands-on projects that teach you to manipulate, analyse, and visualise real-world data using the industry-standard Python stack.</p>
                 </div>
                 <div className="flex-shrink-0 bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-5 text-center border border-white/30">
-                  <p className="text-4xl font-black text-white">🐼</p>
-                  <p className="text-indigo-100 text-xs mt-1 font-medium">pandas · numpy · matplotlib</p>
+                  <p className="text-indigo-100 text-xs mt-1 font-medium">pandas · numpy · matplotlib and more</p>
                 </div>
               </div>
             </div>
 
-            {/* 3-column info cards — What You'll Learn | Pro Tips | Projects KPI */}
+            {/* 2-column layout: What You'll Be Able To Do | Apply Learning (wider) */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {/* What you'll learn */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 hover:shadow-md transition-shadow">
+              {/* What you'll learn - takes 1 column */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 hover:shadow-md transition-shadow md:col-span-1">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-indigo-50 p-2.5 rounded-xl">
                     <svg className="w-5 h-5 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                   </div>
-                  <h3 className="font-bold text-slate-800">What You'll Learn</h3>
+                  <h3 className="font-bold text-slate-800">What You'll Be Able To Do</h3>
                 </div>
                 <ul className="space-y-2 text-sm text-slate-600">
-                  {["DataFrame creation & indexing","Data cleaning & wrangling","GroupBy & aggregations","Merging & joining datasets","Data visualisation with matplotlib"].map(item => (
+                  {["Turn raw data into meaningful insights","Solve real-world problems using data","Answer real business questions","Build end-to-end data projects","Stop depending on project tutorials"].map(item => (
                     <li key={item} className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#6366F1] flex-shrink-0" />
                       {item}
@@ -712,31 +711,10 @@ IMPORTANT INSTRUCTIONS:
                 </ul>
               </div>
 
-              {/* Pro tips */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm ring-1 ring-slate-200 hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-rose-50 p-2.5 rounded-xl">
-                    <svg className="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                  </div>
-                  <h3 className="font-bold text-slate-800">Pro Tips</h3>
-                </div>
-                <ul className="space-y-2.5 text-sm text-slate-600">
-                  {[
-                    "Always inspect your data with .info() and .describe() first",
-                    "Use .copy() to avoid SettingWithCopyWarning",
-                    "Chain methods for clean, readable pipelines",
-                    "Vectorise operations — avoid Python loops over rows",
-                  ].map((tip, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="text-rose-400 font-bold flex-shrink-0">{i + 1}.</span>
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+             
 
-              {/* Projects KPI — inline here */}
-              <motion.div className="bg-white rounded-2xl shadow-sm overflow-hidden ring-1 ring-slate-200 hover:shadow-md transition-shadow">
+              {/* Projects KPI — spans 2 columns, wider */}
+              <motion.div className="bg-white rounded-2xl shadow-sm overflow-hidden ring-1 ring-slate-200 hover:shadow-md transition-shadow md:col-span-2">
                 <div className="border-b border-slate-100 px-5 py-3 flex items-center gap-2">
                   <div className="bg-indigo-50 rounded-lg p-1.5">
                     <svg className="w-4 h-4 text-[#6366F1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -805,23 +783,7 @@ IMPORTANT INSTRUCTIONS:
               </motion.div>
             </div>
 
-            {/* Tools strip */}
-            <div className="bg-white rounded-2xl px-6 py-5 shadow-sm ring-1 ring-slate-200 flex flex-wrap items-center gap-6">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 mr-2">Stack used in projects</p>
-              {[
-                { name: "Python 3", emoji: "🐍" },
-                { name: "pandas", emoji: "🐼" },
-                { name: "NumPy", emoji: "🔢" },
-                { name: "Matplotlib", emoji: "📊" },
-                { name: "Jupyter", emoji: "📓" },
-                { name: "CSV / JSON", emoji: "📁" },
-              ].map(({ name, emoji }) => (
-                <div key={name} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2 border border-slate-200">
-                  <span className="text-lg">{emoji}</span>
-                  <span className="text-sm font-medium text-slate-700">{name}</span>
-                </div>
-              ))}
-            </div>
+            
           </div>
 
             {/* Project Details Overlay */}
