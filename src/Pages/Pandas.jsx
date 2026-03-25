@@ -731,30 +731,41 @@ IMPORTANT INSTRUCTIONS:
                   <button
                     onClick={handleNextProjectClick}
                     disabled={isGeneratingProject}
-                    className={`group w-full ring-1 ring-slate-200 rounded-xl p-3 transition-all duration-300 ${
-                      isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:shadow-md hover:scale-[1.02] active:scale-[0.98]'
+                    className={`group w-full rounded-xl p-5 transition-all duration-300 relative overflow-hidden ${
+                      isGeneratingProject ? 'opacity-80 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-[#6366F1] rounded-lg p-2 group-hover:scale-110 transition-transform">
+                    {/* Animated rainbow border */}
+                    <div 
+                      className="absolute inset-0 rounded-xl p-[3px]"
+                      style={{
+                        background: 'linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6, #22c55e, #eab308, #ef4444, #ec4899)',
+                        backgroundSize: '200% 100%',
+                        animation: 'rainbow-move 3s linear infinite'
+                      }}
+                    >
+                      <div className="w-full h-full rounded-xl bg-white"></div>
+                    </div>
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-[#6366F1] rounded-xl p-3 group-hover:scale-110 transition-transform">
                           {isGeneratingProject ? (
-                            <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                            <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                             </svg>
                           ) : (
-                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                           )}
                         </div>
                         <div className="text-left">
-                          <h3 className="text-black font-bold text-sm">{isGeneratingProject ? 'Generating...' : 'Start New Project'}</h3>
-                          <p className="text-slate-500 text-xs">{isGeneratingProject ? 'Finding the perfect project' : 'Begin your coding journey'}</p>
+                          <h3 className="text-slate-800 font-bold text-lg">{isGeneratingProject ? 'Generating...' : 'Start New Project'}</h3>
+                          <p className="text-slate-500 text-sm">{isGeneratingProject ? 'Finding the perfect project' : 'Begin your coding journey'}</p>
                         </div>
                       </div>
-                      {!isGeneratingProject && <svg className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
+                      {!isGeneratingProject && <svg className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
                     </div>
                   </button>
                   {/* Custom Project - Locked */}
